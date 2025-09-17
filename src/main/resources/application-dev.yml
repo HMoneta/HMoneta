@@ -1,0 +1,55 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: HMoneta
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://10.5.20.103:5432/home_lab_server_test
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+    hikari:
+      pool-name: HomeLabPostgreSQLPool        # 设置连接池名称
+      maximum-pool-size: 20                   # 最大连接数
+      minimum-idle: 5                         # 最小空闲连接数
+      connection-timeout: 30000               # 连接超时 (30秒)
+      idle-timeout: 600000                    # 空闲超时 (10分钟)
+      max-lifetime: 1800000                   # 连接最大生命周期 (30分钟)
+      leak-detection-threshold: 60000         # 连接泄漏检测
+      connection-test-query: SELECT 1         # 连接测试查询
+      auto-commit: false
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+          batch_size: 20
+
+  task:
+    scheduling:
+      pool:
+        size: 1
+
+logging:
+  level:
+    sql: info
+
+hmoneta:
+  version: @project.version@
+  master:
+    report-url: http://10.5.20.205
+  agent:
+    port: 477
+    report-delay: 60000
+  acme:
+    uri: https://acme-staging-v02.api.letsencrypt.org/directory
+
+
