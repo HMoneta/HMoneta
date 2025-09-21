@@ -12,7 +12,8 @@ import fan.summer.hmoneta.common.enums.exception.HMExceptionEnum;
 public enum UserExceptionEnum implements HMExceptionEnum {
     USER_NAME_ERROR("USER_001", "用户名错误"),
     USER_PASSWORD_ERROR("USER_002", "用户密码错误"),
-    USER_NAME_EXIT_ERROR("USER_002", "用户已存在")
+    USER_NAME_EXIT_ERROR("USER_003", "用户已存在"),
+    USER_INFO_MISSED_ERROR("USER_004", "用户信息缺失")
     ;
     private final String code;
     private final String message;
