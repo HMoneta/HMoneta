@@ -5,7 +5,9 @@ import fan.summer.hmoneta.common.exception.HMException;
 import fan.summer.hmoneta.controller.entity.user.req.UserReq;
 import fan.summer.hmoneta.database.entity.user.UserEntity;
 import fan.summer.hmoneta.database.repository.user.UserRepository;
+import fan.summer.hmoneta.util.JwtUtil;
 import fan.summer.hmoneta.util.Md5Util;
+import fan.summer.hmoneta.util.ObjectUtil;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,21 +20,20 @@ import java.util.Random;
 import java.util.StringJoiner;
 
 /**
- * 类的详细说明
- *
- * @author phoebej
- * @version 1.00
- * @Date 2025/9/19
+ * 用户服务类，提供用户相关的操作功能。
  */
 @Service
 public class UserService {
 
     private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
 
+    private final JwtUtil jwtUtil;
+
     private final UserRepository userRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository,JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
     }
     
@@ -89,8 +90,19 @@ public class UserService {
         }
     }
 
-    public void login(){
-
+    public String login(UserReq req){
+        if(ObjectUtil.isEmpty(req.getUsername()) || ObjectUtil.isEmpty(req.getPassword())){
+            throw new HMException(UserExceptionEnum.USER_INFO_MISSED_ERROR);
+        }
+        UserEntity byUsername = userRepository.findByUsername(req.getUsername());
+        if(byUsername == null){
+            throw new HMException(UserExceptionEnum.USER_NAME_ERROR);
+        }
+        if(Md5Util.md5Digest(req.getPassword(), byUsername.getSalt()).equals(byUsername.getPassword())){
+            return this.jwtUtil.createTokenForObject(byUsername);
+        }else {
+            throw new HMException(UserExceptionEnum.USER_PASSWORD_ERROR);
+        }
     }
 
 }
