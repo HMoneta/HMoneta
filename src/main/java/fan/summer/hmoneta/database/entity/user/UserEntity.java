@@ -1,6 +1,7 @@
 package fan.summer.hmoneta.database.entity.user;
 
 import fan.summer.hmoneta.database.repository.user.UserRepository;
+import fan.summer.hmoneta.util.JwtUtil;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -21,7 +22,8 @@ public class UserEntity {
 
     private String username;
 
+    @JwtUtil.JwtExclude
     private String password;
-
+    @JwtUtil.JwtExclude
     private int salt;
 }
