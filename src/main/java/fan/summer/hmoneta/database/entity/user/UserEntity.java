@@ -2,9 +2,7 @@ package fan.summer.hmoneta.database.entity.user;
 
 import fan.summer.hmoneta.database.repository.user.UserRepository;
 import fan.summer.hmoneta.util.JwtUtil;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 /**
@@ -18,6 +16,7 @@ import lombok.Data;
 @Data
 public class UserEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String username;
