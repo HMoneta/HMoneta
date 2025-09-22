@@ -1,0 +1,17 @@
+###
+// 测试可正常获取token的情况
+POST http://localhost:8080/hm/user/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "tyQBK3:r2("
+}
+
+
+###
+//测试用户信息缺失
+POST http://localhost:8080/hm/user/login
+Content-Type: application/json
+
+{}
