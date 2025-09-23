@@ -29,10 +29,29 @@
       <v-btn color="orange" text="登陆" @click="login"></v-btn>
     </v-card-actions>
   </v-card>
+
+  <v-snackbar
+    v-model="snackbar"
+    :timeout="2000"
+  >
+    {{ text }}
+
+    <template v-slot:actions>
+      <v-btn
+        color="pink"
+        variant="text"
+        @click="snackbar = false"
+      >
+        关闭
+      </v-btn>
+    </template>
+  </v-snackbar>
 </template>
 
 <script setup lang="js">
 import {http} from "@/common/request.js";
+import {useUserStore} from "@/stores/app.js";
+import router from "@/router/index.js";
 
 const visible = ref(false)
 const loginInfo = reactive({
@@ -40,11 +59,19 @@ const loginInfo = reactive({
   password: "",
 })
 
+const snackbar = ref(false);
+const text = ref('');
+
 const login = async () => {
-  console.log(loginInfo);
-  const json = await http.post("/user/login", loginInfo);
-  console.log(json)
-  return json;
+  try{
+    const json = await http.post("/user/login", loginInfo);
+    const userStore = useUserStore();
+    userStore.login(json);
+    await router.push('/');
+  }catch (e) {
+    snackbar.value =true;
+    text.value = e.message;
+  }
 }
 </script>
 

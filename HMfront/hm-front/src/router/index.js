@@ -8,23 +8,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { setupLayouts } from 'virtual:generated-layouts'
 import { routes } from 'vue-router/auto-routes'
+import {useUserStore} from "@/stores/app.js";
+import {el} from "vuetify/locale";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: setupLayouts(routes),
 })
 
-// 检查用户是否已登录的函数
-const isAuthenticated = () => {
-  // 这里可以检查 localStorage、sessionStorage、cookie 或状态管理中的登录状态
-  // 示例：检查 localStorage 中的 token
-  const token = localStorage.getItem('authToken')
-  return !!token
-
-  // 或者检查其他登录标识
-  // const isLoggedIn = localStorage.getItem('isLoggedIn')
-  // return isLoggedIn === 'true'
-}
 
 // 全局前置守卫
 router.beforeEach((to, from, next) => {
@@ -38,12 +29,18 @@ router.beforeEach((to, from, next) => {
   }
 
   // 检查用户是否已登录
-  if (!isAuthenticated()) {
+  const userStore = useUserStore();
+  if (!userStore.checkAuth()) {
     // 未登录，重定向到登录页
     next('/login')
   } else {
-    // 已登录，允许访问
-    next()
+    // 强制推送至About界面
+    if(to.path === '/'){
+      next('about')
+    }else{
+      next()
+    }
+
   }
 })
 
