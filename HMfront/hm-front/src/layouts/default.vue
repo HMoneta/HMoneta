@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app class="app-container">
     <v-app-bar app title="HMoneta"></v-app-bar>
     <v-navigation-drawer
       app
@@ -15,7 +15,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-main class="d-flex justify-center">
+    <v-main class="main-content">
       <v-container>
         <v-sheet>
           <router-view></router-view>
@@ -37,3 +37,22 @@ const menuItems = ref([
   { title: '测试', route: '/HelloWorld' },
 ]);
 </script>
+<style>
+html, body {
+  height: 100%;
+  overflow: hidden; /* 防止整体页面滚动 */
+}
+
+.app-container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-content {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+}
+
+</style>
