@@ -28,8 +28,9 @@ registerPlugins(app)
 
 const userStore = useUserStore();
 userStore.checkAuth();
+app.mount('#app')
 
 // 确保路由准备好后再挂载应用
-router.isReady().then(() => {
-  app.mount('#app')
-})
+// router.isReady().then(() => {
+//   app.mount('#app')
+// })

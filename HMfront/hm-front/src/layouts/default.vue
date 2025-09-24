@@ -2,6 +2,7 @@
   <v-app class="app-container">
     <v-app-bar app title="HMoneta"></v-app-bar>
     <v-navigation-drawer
+      v-if="isLoggedIn"
       app
       expand-on-hover
       permanent
@@ -30,12 +31,22 @@
 <script setup>
 import { ref } from 'vue';
 import AppFooter from "@/components/AppFooter.vue";
+import {useUserStore} from "@/stores/app.js";
 
 // 定义菜单项
 const menuItems = ref([
   { title: '关于', route: '/about' },
   { title: '测试', route: '/HelloWorld' },
 ]);
+const isLoggedIn = ref(false);
+const userStore = useUserStore()
+watch(() => userStore.token, () => {
+  isLoggedIn.value = userStore.checkAuth();
+});
+
+onMounted(()=> {
+  isLoggedIn.value = userStore.checkAuth();
+})
 </script>
 <style>
 html, body {
