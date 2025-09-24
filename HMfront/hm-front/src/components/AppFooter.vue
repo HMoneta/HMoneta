@@ -7,16 +7,16 @@
       class="text-caption text-disabled"
       style="position: absolute; right: 16px;"
     >
-      &copy; 2024-{{ (new Date()).getFullYear() }} <span class="d-none d-sm-inline-block">Vuetify, LLC</span>
+      &copy; 2024-{{ (new Date()).getFullYear() }} <span class="d-none d-sm-inline-block">HMoneta</span>
       —
 
       <a
         class="text-decoration-none on-surface"
-        href="https://vuetifyjs.com/about/licensing/"
+        href="https://github.com/HMoneta/HMoneta/blob/main/LICENSE"
         rel="noopener noreferrer"
         target="_blank"
       >
-        MIT License
+        GNU General Public License v3.0
       </a>
       <a
         v-for="item in items"
@@ -39,9 +39,9 @@
 <script setup>
   const items = [
     {
-      title: 'Vuetify GitHub',
+      title: 'HMoneta GitHub',
       icon: `mdi-github`,
-      href: 'https://github.com/vuetifyjs/vuetify',
+      href: 'https://github.com/HMoneta/HMoneta',
     }
   ]
 </script>
