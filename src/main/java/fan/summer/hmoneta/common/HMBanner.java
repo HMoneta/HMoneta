@@ -13,18 +13,21 @@ import java.io.PrintStream;
  */
 public class HMBanner implements Banner {
     private static final String BANNER =
-            " _    _  __  __                           _        \n" +
-                    "| |  | ||  \\/  |                         | |       \n" +
-                    "| |__| || \\  / | ___  _ __ ___   ___  ___| |_ __ _ \n" +
-                    "|  __  || |\\/| |/ _ \\| '_ ` _ \\ / _ \\/ __| __/ _` |\n" +
-                    "| |  | || |  | | (_) | | | | | |  __/ (__| || (_| |\n" +
-                    "|_|  |_||_|  |_|\\___/|_| |_| |_|\\___|\\___|\\__\\__,_|\n" +
-                    "                                                  \n" +
-                    "                    HMoneta (ver)               \n";
+            """
+                            _    _  __  __                           _       \s
+                            | |  | ||  \\/  |                         | |      \s
+                            | |__| || \\  / | ___  _ __ ___   ___  ___| |_ __ _\s
+                            |  __  || |\\/| |/ _ \\| '_ ` _ \\ / _ \\/ __| __/ _` |
+                            | |  | || |  | | (_) | | | | | |  __/ (__| || (_| |
+                            |_|  |_||_|  |_|\\___/|_| |_| |_|\\___|\\___|\\__\\__,_|
+                                                                             \s
+                                                HMoneta (ver)
+                    """;
+
     @Override
     public void printBanner(Environment environment, Class<?> sourceClass, PrintStream out) {
         String version = environment.getProperty("hmoneta.version");
-        if(version == null){
+        if (version == null) {
             version = "config file can not be loaded";
         }
         String banner = BANNER.replace("ver", version);
