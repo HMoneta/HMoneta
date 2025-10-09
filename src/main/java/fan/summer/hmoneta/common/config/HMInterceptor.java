@@ -20,6 +20,7 @@ public class HMInterceptor implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(apiInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/hm/user/login");
+                .excludePathPatterns("/hm/user/login",
+                        "/hm/user/valid");
     }
 }
