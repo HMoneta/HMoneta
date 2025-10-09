@@ -1,0 +1,23 @@
+###
+// 测试无Token
+GET http://localhost:8080/hm/dns/query_all
+
+###
+// 测试携带错误Token
+GET http://localhost:8080/hm/dns/query_all
+HMToken: dfasofnajkfbqifbajkhfvbaufnjkabviaufniakvnq
+
+
+###
+// 测试携带正确Token
+GET http://localhost:8080/hm/dns/query_all
+HMToken: {{hmToken}}
+
+> {%
+    const token = client.global.get("hmToken");
+    if (!token) {
+        console.error("❌ 未找到 hmToken");
+    } else {
+        console.log("✅ Token 存在: " + token);
+    }
+%}
