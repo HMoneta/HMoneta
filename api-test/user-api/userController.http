@@ -5,8 +5,20 @@ Content-Type: application/json
 
 {
   "username": "admin",
-  "password": "tyQBK3:r2("
+  "password": "bh(.&23OsE"
 }
+
+> {%
+    // 从响应中提取 token 并保存到全局变量
+    client.test("Login successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    // 根据您的响应结构调整路径
+    // 假设响应格式：{"code": 200, "data": {"token": "xxx"}}
+    client.global.set("hmtoken", response.body);
+    console.log("Token saved: " + response.body);
+%}
 
 
 ###
