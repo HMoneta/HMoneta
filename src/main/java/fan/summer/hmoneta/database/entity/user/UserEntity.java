@@ -1,5 +1,6 @@
 package fan.summer.hmoneta.database.entity.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fan.summer.hmoneta.database.repository.user.UserRepository;
 import fan.summer.hmoneta.util.JwtUtil;
 import jakarta.persistence.*;
@@ -14,6 +15,7 @@ import lombok.Data;
 @Entity
 @Table(name = "hm_user")
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true) // 反序列化时忽略没有的字段
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
