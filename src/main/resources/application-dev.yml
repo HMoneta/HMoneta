@@ -42,14 +42,7 @@ logging:
   level:
     sql: info
 
-hmoneta:
-  version: @project.version@
-  master:
-    report-url: http://10.5.20.205
-  agent:
-    port: 477
-    report-delay: 60000
-  acme:
-    uri: https://acme-staging-v02.api.letsencrypt.org/directory
-
+jwt:
+  secret: povTvh!U7e9aJCwLUmp^qIVRCrgOAa=a
+  expiration: 86400
 
