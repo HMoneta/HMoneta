@@ -9,28 +9,33 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { setupLayouts } from 'virtual:generated-layouts'
 import { routes } from 'vue-router/auto-routes'
 import {useUserStore} from "@/stores/app.js";
-import {el} from "vuetify/locale";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: setupLayouts(routes),
 })
-
-
+let userStore = null
 // 全局前置守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   // 不需要认证的路由列表
   const publicRoutes = ['/login', '/register', '/forgot-password']
+  // 检查用户是否已登录
+  if(userStore == null) {
+    userStore = useUserStore();
+  }
 
   // 如果目标路由不需要认证，直接通过
   if (publicRoutes.includes(to.path)) {
     next()
     return
   }
-
-  // 检查用户是否已登录
-  const userStore = useUserStore();
-  if (!userStore.checkAuth()) {
+  let isAuthenticated
+  if(!userStore.isValidToken) {
+    isAuthenticated = await userStore.checkAuth()
+  }else {
+    isAuthenticated = true
+  }
+  if (!isAuthenticated) {
     // 未登录，重定向到登录页
     next('/login')
   } else {
