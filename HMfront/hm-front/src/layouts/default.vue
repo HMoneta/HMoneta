@@ -37,6 +37,7 @@ import {useUserStore} from "@/stores/app.js";
 const menuItems = ref([
   { title: '关于', route: '/about' },
   { title: '测试', route: '/HelloWorld' },
+  { title: 'DNS', route: '/dns' },
 ]);
 const isLoggedIn = ref(false);
 const userStore = useUserStore()
