@@ -9,7 +9,7 @@ async function request(url, options = {}) {
 
   const config = {
     method: options.method || 'GET',
-    headers: { ...defaultHeaders, ...(options.headers || {}) },
+    headers: {...defaultHeaders, ...(options.headers || {})},
     ...options,
   };
 
@@ -21,7 +21,7 @@ async function request(url, options = {}) {
   // 登录相关接口不加 token
   const needAuth = !NO_AUTH_URLS.some(u => url.startsWith(u));
   if (needAuth) {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('HMToken');
     if (token) {
       config.headers['HMToken'] = token;
     }
@@ -52,15 +52,15 @@ async function request(url, options = {}) {
 export const http = {
   get: (url, params, options = {}) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return request(url + query, { ...options, method: 'GET' });
+    return request(url + query, {...options, method: 'GET'});
   },
 
   post: (url, body, options = {}) =>
-    request(url, { ...options, method: 'POST', body }),
+    request(url, {...options, method: 'POST', body}),
 
   put: (url, body, options = {}) =>
-    request(url, { ...options, method: 'PUT', body }),
+    request(url, {...options, method: 'PUT', body}),
 
   delete: (url, options = {}) =>
-    request(url, { ...options, method: 'DELETE' }),
+    request(url, {...options, method: 'DELETE'}),
 };
