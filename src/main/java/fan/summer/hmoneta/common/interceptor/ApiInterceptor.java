@@ -26,7 +26,18 @@ public class ApiInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         try {
+            // ✅放行 OPTIONS 预检请求
+            if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+                response.setStatus(HttpServletResponse.SC_OK);
+                return true;
+            }
             logger.info("===============Api访问鉴权===============");
+            // ✅放行 OPTIONS 预检请求
+            if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+                logger.info(">>>>>>>>>>✅放行 OPTIONS 预检请求>>>>>>>>>>");
+                response.setStatus(HttpServletResponse.SC_OK);
+                return true;
+            }
             String hmToken = request.getHeader("HMToken");
             if (ObjectUtil.isNotEmpty(hmToken)) {
                 logger.info(">>>>>>>>>>验证HMToken:{}合法性>>>>>>>>>>", hmToken);
@@ -48,12 +59,11 @@ public class ApiInterceptor implements HandlerInterceptor {
                 return false;
             }
 
-        }catch (Exception e) {
+        } catch (Exception e) {
             logger.error("<<<<<<<<<<<鉴权过程发生异常<<<<<<<<<<<", e);
             sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "鉴权失败：" + e.getMessage());
             return false;
-        }
-        finally {
+        } finally {
             logger.info("===============完成Api访问鉴权===============");
         }
     }
