@@ -2,11 +2,14 @@
 
 import {http} from "@/common/request.js";
 
+const loading = ref(false);
 const step = ref(1)
 const dnsProviderDic = ref({})
 const options = ref([])
 const selected = ref()
 const providerDesc = ref([])
+
+const providerAuth = reactive({id: null, key: null})
 
 const queryDnsProvider = () => {
   http.get('/dns/query_all').then(resp => {
@@ -18,6 +21,10 @@ const queryDnsProvider = () => {
       }
     }
   })
+}
+
+const handleSubmit = () => {
+  
 }
 // 监听DNS服务商选择变化
 watch(selected, (newVal) => {
@@ -52,7 +59,7 @@ onMounted(() => {
     <v-stepper
       width="1200px"
       v-model="step"
-      :items="['选择DNS服务商', '分组名称', '需解析的域名']">
+      :items="['选择DNS服务商', '服务商账号', '需解析的域名']">
       <template v-slot:item.1>
         <v-card>
           <v-container>
@@ -99,14 +106,15 @@ onMounted(() => {
               </v-col>
             </v-row>
           </v-container>
-
-
         </v-card>
 
       </template>
 
       <template v-slot:item.2>
-        <v-card title="Step Two" flat>...</v-card>
+        <v-card title="授权信息" flat>
+          <v-text-field v-model="providerAuth.id" clearable label="授权ID" variant="outlined"></v-text-field>
+          <v-text-field v-model="providerAuth.key" clearable label="授权Key" variant="outlined"></v-text-field>
+        </v-card>
       </template>
 
       <template v-slot:item.3>
