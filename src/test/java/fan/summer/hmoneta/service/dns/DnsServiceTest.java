@@ -1,5 +1,7 @@
 package fan.summer.hmoneta.service.dns;
 
+import fan.summer.hmoneta.common.enums.exception.dns.DnsExceptionEnum;
+import fan.summer.hmoneta.common.exception.HMException;
 import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
 import fan.summer.hmoneta.database.repository.dns.DnsProviderRepository;
 import org.junit.jupiter.api.Test;
@@ -13,8 +15,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +43,14 @@ class DnsServiceTest {
         assertNotNull(dnsProviderEntities);
         assertEquals(10, dnsProviderEntities.size());
 
+    }
+
+    @Test
+    void should_raise_exception_when_dns_resolve_group_empty_() {
+        HMException ex = assertThrows(HMException.class,
+                () -> dnsService.insertDnsResolveGroup(null));
+        assertEquals(DnsExceptionEnum.DNS_GROUP_EMPTY_ERROR.getMessage(),
+                ex.getMessage());
     }
 
 }
