@@ -1,4 +1,4 @@
-package fan.summer.hmoneta.controller.entity.user.req;
+package fan.summer.hmoneta.controller.user.entity.req;
 
 import lombok.Data;
 

@@ -2,7 +2,7 @@ package fan.summer.hmoneta.service.user;
 
 import fan.summer.hmoneta.common.enums.exception.user.UserExceptionEnum;
 import fan.summer.hmoneta.common.exception.HMException;
-import fan.summer.hmoneta.controller.entity.user.req.UserReq;
+import fan.summer.hmoneta.controller.user.entity.req.UserReq;
 import fan.summer.hmoneta.database.entity.user.UserEntity;
 import fan.summer.hmoneta.database.repository.user.UserRepository;
 import fan.summer.hmoneta.util.JwtUtil;
@@ -32,11 +32,11 @@ public class UserService {
     private final UserRepository userRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository,JwtUtil jwtUtil) {
+    public UserService(UserRepository userRepository, JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
     }
-    
+
     /**
      * 初始化系统用户的方法。此方法在Spring容器初始化完成后自动调用。
      * 方法首先检查数据库中是否存在任何用户，如果不存在，则创建一个默认的管理员用户（用户名为"admin"），
@@ -44,11 +44,11 @@ public class UserService {
      * 整个过程中会记录相应的日志信息以便于跟踪初始化状态。
      */
     @PostConstruct
-    public void initHMUser(){
+    public void initHMUser() {
         LOG.info("===============初始化系统用户===============");
         List<UserEntity> all = userRepository.findAll();
         LOG.info(">>>>>>>>>>检查是否存在系统用户>>>>>>>>>>");
-        if(all.isEmpty()){
+        if (all.isEmpty()) {
             LOG.warn("<<<<<<<<<<<系统用户不存在<<<<<<<<<<<");
             LOG.info(">>>>>>>>>>开始创建系统用户>>>>>>>>>>");
             String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
@@ -64,43 +64,43 @@ public class UserService {
             entity.setSalt(Md5Util.saltGenerator());
             this.register(entity);
             LOG.info("<<<<<<<<<<<完成系统用户创建<<<<<<<<<<<");
-            LOG.info("系统用户信息->Username:admin;Password:{}",password);
-        }else {
+            LOG.info("系统用户信息->Username:admin;Password:{}", password);
+        } else {
             LOG.info("<<<<<<<<<<<已存系统用户系统用户<<<<<<<<<<<");
         }
         LOG.info("===============完成系统用户初始化===============");
     }
-    
+
     /**
      * 用户注册方法。
-     *
+     * <p>
      * 该方法首先通过用户名查找数据库中是否存在相同的用户。如果存在，则抛出一个表示用户名已存在的异常；如果不存在，
      * 则对用户的密码进行MD5加密（使用盐值），然后保存用户实体到数据库中。
      *
      * @param entity 待注册的用户实体
      * @throws HMException 当用户名已存在时抛出此异常
      */
-    public void register(UserEntity entity){
+    public void register(UserEntity entity) {
         UserEntity byUsername = userRepository.findByUsername(entity.getUsername());
-        if(byUsername != null){
+        if (byUsername != null) {
             throw new HMException(UserExceptionEnum.USER_NAME_EXIT_ERROR);
-        }else{
+        } else {
             entity.setPassword(Md5Util.md5Digest(entity.getPassword(), entity.getSalt()));
             userRepository.save(entity);
         }
     }
 
-    public String login(UserReq req){
-        if(ObjectUtil.isEmpty(req.getUsername()) || ObjectUtil.isEmpty(req.getPassword())){
+    public String login(UserReq req) {
+        if (ObjectUtil.isEmpty(req.getUsername()) || ObjectUtil.isEmpty(req.getPassword())) {
             throw new HMException(UserExceptionEnum.USER_INFO_MISSED_ERROR);
         }
         UserEntity byUsername = userRepository.findByUsername(req.getUsername());
-        if(byUsername == null){
+        if (byUsername == null) {
             throw new HMException(UserExceptionEnum.USER_NAME_ERROR);
         }
-        if(Md5Util.md5Digest(req.getPassword(), byUsername.getSalt()).equals(byUsername.getPassword())){
+        if (Md5Util.md5Digest(req.getPassword(), byUsername.getSalt()).equals(byUsername.getPassword())) {
             return this.jwtUtil.createTokenForObject(byUsername);
-        }else {
+        } else {
             throw new HMException(UserExceptionEnum.USER_PASSWORD_ERROR);
         }
     }

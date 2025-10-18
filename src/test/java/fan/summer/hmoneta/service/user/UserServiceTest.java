@@ -2,7 +2,7 @@ package fan.summer.hmoneta.service.user;
 
 import fan.summer.hmoneta.common.enums.exception.user.UserExceptionEnum;
 import fan.summer.hmoneta.common.exception.HMException;
-import fan.summer.hmoneta.controller.entity.user.req.UserReq;
+import fan.summer.hmoneta.controller.user.entity.req.UserReq;
 import fan.summer.hmoneta.database.entity.user.UserEntity;
 import fan.summer.hmoneta.database.repository.user.UserRepository;
 import fan.summer.hmoneta.util.JwtUtil;
@@ -12,10 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,7 +34,7 @@ class UserServiceTest {
     private UserRepository userRepository;
 
     @Test
-    void should_throw_exception_when_username_exists () {
+    void should_throw_exception_when_username_exists() {
         // 测试数据
         String username = "admin";
         UserEntity entity = new UserEntity();
@@ -59,10 +57,10 @@ class UserServiceTest {
     }
 
     @Test
-    void should_save_user_success(){
-        try(MockedStatic<Md5Util> mocked = mockStatic(Md5Util.class)){
+    void should_save_user_success() {
+        try (MockedStatic<Md5Util> mocked = mockStatic(Md5Util.class)) {
             // 定义Md5Util中md5Digest在测试时返回的值
-            mocked.when(()-> Md5Util.md5Digest("123456",10)).thenReturn("b3d4f8e8c7a7e5f6a1b3c4d5e6f7a8b9");
+            mocked.when(() -> Md5Util.md5Digest("123456", 10)).thenReturn("b3d4f8e8c7a7e5f6a1b3c4d5e6f7a8b9");
             // 测试数据
             UserEntity entity = new UserEntity();
             entity.setUsername("admin");
@@ -81,7 +79,7 @@ class UserServiceTest {
     }
 
     @Test
-    void should_not_init_sys_admin(){
+    void should_not_init_sys_admin() {
         UserEntity entity = new UserEntity();
         entity.setUsername("admin");
         entity.setPassword("123456");
@@ -98,10 +96,10 @@ class UserServiceTest {
     }
 
     @Test
-    void should_init_sys_admin(){
-        try(MockedStatic<Md5Util> mocked = mockStatic(Md5Util.class)){
+    void should_init_sys_admin() {
+        try (MockedStatic<Md5Util> mocked = mockStatic(Md5Util.class)) {
             mocked.when(Md5Util::saltGenerator).thenReturn(10);
-            mocked.when(()->Md5Util.md5Digest(anyString(),eq(10))).thenReturn("b3d4f8e8c7a7e5f6a1b3c4d5e6f7a8b9");
+            mocked.when(() -> Md5Util.md5Digest(anyString(), eq(10))).thenReturn("b3d4f8e8c7a7e5f6a1b3c4d5e6f7a8b9");
 
             UserEntity entity = new UserEntity();
             entity.setUsername("admin");
@@ -127,9 +125,9 @@ class UserServiceTest {
     }
 
     @Test
-    void should_success_login(){
-        try(MockedStatic<Md5Util> mocked = mockStatic(Md5Util.class)){
-            mocked.when(() -> Md5Util.md5Digest(anyString(),eq(10))).thenReturn("b3d4f8e8c7a7e5f6a1b3c4d5e6f7a8b9");
+    void should_success_login() {
+        try (MockedStatic<Md5Util> mocked = mockStatic(Md5Util.class)) {
+            mocked.when(() -> Md5Util.md5Digest(anyString(), eq(10))).thenReturn("b3d4f8e8c7a7e5f6a1b3c4d5e6f7a8b9");
 
             UserReq req = new UserReq();
             req.setUsername("admin");
@@ -149,6 +147,7 @@ class UserServiceTest {
             assertEquals("uerTestToken", token);
         }
     }
+
     @Test
     void should_throw_user_info_misses_when_login() {
         try (MockedStatic<Md5Util> mocked = mockStatic(Md5Util.class); MockedStatic<ObjectUtil> mockedObj = mockStatic(ObjectUtil.class)) {
@@ -196,7 +195,7 @@ class UserServiceTest {
     }
 
     @Test
-    void should_throw_password_error_when_login(){
+    void should_throw_password_error_when_login() {
         try (MockedStatic<Md5Util> mocked = mockStatic(Md5Util.class); MockedStatic<ObjectUtil> mockedObj = mockStatic(ObjectUtil.class)) {
             mocked.when(() -> Md5Util.md5Digest(anyString(), eq(10))).thenReturn("b3d4f8e8c7a7e5f6a1b3c4d5e6f7a8b9");
 
