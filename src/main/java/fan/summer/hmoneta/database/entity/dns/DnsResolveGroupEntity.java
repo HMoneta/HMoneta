@@ -5,14 +5,8 @@ import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 /**
- * 类的详细说明
- *
- * @author phoebej
- * @version 1.00
- * @Date 2025/10/15
+ * 记录每个解析组的信息
  */
 @Entity
 @Getter
@@ -27,7 +21,5 @@ public class DnsResolveGroupEntity {
     private String authId;
 
     private String authKey;
-
-    private List<String> urls;
 
 }

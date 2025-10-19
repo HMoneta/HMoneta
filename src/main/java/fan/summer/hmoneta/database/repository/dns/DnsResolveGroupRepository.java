@@ -1,4 +1,4 @@
-package fan.summer.hmoneta.database.repository;
+package fan.summer.hmoneta.database.repository.dns;
 
 import fan.summer.hmoneta.database.entity.dns.DnsResolveGroupEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
