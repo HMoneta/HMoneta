@@ -23,6 +23,8 @@ public class DnsResolveUrlEntity {
 
     private Integer resolveStatus;
 
+    private String ipAddress;
+
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;
