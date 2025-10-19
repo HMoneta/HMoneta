@@ -1,6 +1,7 @@
 package fan.summer.hmoneta.controller.dns;
 
 import fan.summer.hmoneta.controller.dns.entity.req.DnsResolveReq;
+import fan.summer.hmoneta.controller.dns.entity.resp.DnsResolveResp;
 import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
 import fan.summer.hmoneta.service.dns.DnsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,12 @@ public class DnsController {
     public ResponseEntity<List<DnsProviderEntity>> getDnsService() {
         List<DnsProviderEntity> dnsProviderEntities = dnsService.queryAllDnsProvider();
         return ResponseEntity.ok(dnsProviderEntities);
+    }
+
+    @GetMapping("/resolve_info")
+    public ResponseEntity<List<DnsResolveResp>> queryAllDnsResolve() {
+        List<DnsResolveResp> resolveResps = dnsService.queryAllDnsResolve();
+        return ResponseEntity.ok(resolveResps);
     }
 
     @PostMapping("/insert_group")

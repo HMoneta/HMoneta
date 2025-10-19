@@ -3,6 +3,7 @@ package fan.summer.hmoneta.service.dns;
 import fan.summer.hmoneta.common.enums.exception.dns.DnsExceptionEnum;
 import fan.summer.hmoneta.common.exception.HMException;
 import fan.summer.hmoneta.controller.dns.entity.req.DnsResolveReq;
+import fan.summer.hmoneta.controller.dns.entity.resp.DnsResolveResp;
 import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
 import fan.summer.hmoneta.database.entity.dns.DnsResolveGroupEntity;
 import fan.summer.hmoneta.database.entity.dns.DnsResolveUrlEntity;
@@ -93,7 +94,19 @@ public class DnsService {
     }
 
 
-    public List<DnsResolveGroupEntity> queryAllDnsResolveGroup() {
-        return dnsResolveGroupRepository.findAll();
+    public List<DnsResolveResp> queryAllDnsResolve() {
+        List<DnsResolveResp> resolveResps = new ArrayList<>();
+        List<DnsResolveGroupEntity> allGroup = dnsResolveGroupRepository.findAll();
+        if (ObjectUtil.isNotEmpty(allGroup)) {
+            allGroup.forEach(group -> {
+                List<DnsResolveUrlEntity> allUrl = dnsResolveUrlRepository.findAllByGroupId(group.getId());
+                DnsResolveResp resp = new DnsResolveResp();
+                resp.setGroupId(group.getId());
+                resp.setUrls(allUrl);
+                resolveResps.add(resp);
+            });
+        }
+
+        return resolveResps;
     }
 }
