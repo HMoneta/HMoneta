@@ -11,11 +11,10 @@ const providerDesc = ref([])
 const urls = ref()
 const dialog = ref(false)
 
-const providerAuth = reactive({id: null, key: null})
 const dnsGroup = reactive({
   'providerId': null,
-  'authID': providerAuth.id,
-  'authKey': providerAuth.key,
+  'authId': null,
+  'authKey': null,
   'urls': null
 })
 
@@ -35,9 +34,13 @@ const queryDnsProvider = () => {
   })
 }
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
+  const resp = await http.post('/dns/insert_group', dnsGroup)
   dialog.value = false
+}
 
+const queryAllDnsResolveInfo = async () => {
+  const resp = await http.get('/dns/resolve_info')
 }
 
 // 监听DNS服务商选择变化
@@ -60,6 +63,7 @@ watch(urls, (newVal) => {
 
 onMounted(() => {
   queryDnsProvider()
+  queryAllDnsResolveInfo()
 })
 </script>
 
@@ -136,8 +140,8 @@ onMounted(() => {
 
         <template v-slot:item.2>
           <v-card title="授权信息" flat>
-            <v-text-field v-model="providerAuth.id" clearable label="授权ID" variant="outlined"></v-text-field>
-            <v-text-field v-model="providerAuth.key" clearable label="授权Key" variant="outlined"></v-text-field>
+            <v-text-field v-model="dnsGroup.authId" clearable label="授权ID" variant="outlined"></v-text-field>
+            <v-text-field v-model="dnsGroup.authKey" clearable label="授权Key" variant="outlined"></v-text-field>
           </v-card>
         </template>
 
@@ -192,6 +196,10 @@ onMounted(() => {
     </v-card>
 
   </v-dialog>
+  <v-card title="测试">
+
+
+  </v-card>
 </template>
 
 <style scoped>
