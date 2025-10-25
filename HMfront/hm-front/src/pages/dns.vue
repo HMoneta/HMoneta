@@ -1,7 +1,9 @@
 <script setup>
 
 import {http} from "@/common/request.js";
+import {userNotificationStore} from '@/stores/app.js';
 
+let notificationStore = userNotificationStore();
 const loading = ref(false);
 const step = ref(1)
 const dnsProviderDic = ref({})
@@ -12,11 +14,23 @@ const urls = ref()
 const dialog = ref(false)
 
 const dnsGroup = reactive({
-  'providerId': null,
-  'authId': null,
-  'authKey': null,
-  'urls': null
+  providerId: null,
+  authId: null,
+  authKey: null,
+  urls: null
 })
+
+const dnsGroups = ref()
+
+// Table
+const headers = ref([
+  {title: '网址', key: 'url', align: 'center'},
+  {title: '解析状态', key: 'resolveStatus', align: 'center'},
+  {title: 'Ip地址', key: 'ipAddress', align: 'center'},
+  {title: '创建时间', key: 'createTime', align: 'center'},
+  {title: '更新时间', key: 'updateTime', align: 'center'},
+  {title: '操作', key: 'action', align: 'center'},
+])
 
 
 const addDns = () => {
@@ -35,12 +49,27 @@ const queryDnsProvider = () => {
 }
 
 const handleSubmit = async () => {
-  const resp = await http.post('/dns/insert_group', dnsGroup)
-  dialog.value = false
+  try {
+    await http.post('/dns/insert_group', dnsGroup)
+    notificationStore.showSuccess("分组添加成功")
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 const queryAllDnsResolveInfo = async () => {
   const resp = await http.get('/dns/resolve_info')
+  dnsGroups.value = resp
+}
+
+const deleteItem = async (item) => {
+  try {
+    await http.post('/dns/delete', item.id)
+    notificationStore.showSuccess("删除" + item.url + "DNS解析成功")
+    queryAllDnsResolveInfo()
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 // 监听DNS服务商选择变化
@@ -196,8 +225,34 @@ onMounted(() => {
     </v-card>
 
   </v-dialog>
-  <v-card title="测试">
+  <v-card class="mt-5" v-for="group in dnsGroups" :key="group.id" :title="group.groupId">
+    <v-data-table-server
+      :headers="headers"
+      :items="group.urls"
+      item-value="name"
+    >
+      <template v-slot:item.resolveStatus="{ item }">
+        <span v-if="item.resolveStatus === 0"><v-badge inline location="top right" color="error"
+                                                       content="解析失败"/></span>
+        <span v-else><v-badge inline location="top right" color="success" content="解析成功"/></span>
+      </template>
+      <template v-slot:item.action="{ item }">
+        <v-btn
+          icon="mdi-pencil"
+          size="small"
+          variant="text"
+          @click="editItem(item)"
+        ></v-btn>
+        <v-btn
+          icon="mdi-delete"
+          size="small"
+          variant="text"
+          color="error"
+          @click="deleteItem(item)"
+        ></v-btn>
+      </template>
 
+    </v-data-table-server>
 
   </v-card>
 </template>

@@ -38,4 +38,10 @@ public class DnsController {
         dnsService.insertDnsResolveGroup(req);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/delete")
+    public ResponseEntity<String> deleteDnsResolveUrl(@RequestBody String urlId) {
+        dnsService.deleteDnsResolveUrl(urlId);
+        return ResponseEntity.ok().build();
+    }
 }

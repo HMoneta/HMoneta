@@ -109,4 +109,8 @@ public class DnsService {
 
         return resolveResps;
     }
+
+    public void deleteDnsResolveUrl(String urlId) {
+        dnsResolveUrlRepository.deleteById(urlId);
+    }
 }
