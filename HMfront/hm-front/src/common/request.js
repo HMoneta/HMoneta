@@ -1,3 +1,6 @@
+import {userNotificationStore} from '@/stores/app.js';
+
+
 const BASE_URL = 'http://localhost:8080/hm';
 const NO_AUTH_URLS = ['/login', '/register'];
 
@@ -32,6 +35,8 @@ async function request(url, options = {}) {
 
     if (!res.ok) {
       const errorText = await res.text();
+      const notificationStore = userNotificationStore();
+      notificationStore.showError(`请求失败: ${errorText || res.statusText}`);
       throw new Error(`HTTP ${res.status}: ${errorText}`);
     }
 
@@ -43,7 +48,10 @@ async function request(url, options = {}) {
       return await res.text();
     }
   } catch (err) {
-    console.error('请求失败:', err);
+    if (!err.message.startsWith('HTTP')) {
+      const notificationStore = userNotificationStore();
+      notificationStore.showError('网络连接失败，请检查网络');
+    }
     throw err;
   }
 }
