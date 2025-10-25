@@ -1,5 +1,5 @@
 // Utilities
-import { defineStore } from 'pinia'
+import {defineStore} from 'pinia'
 import {http} from "@/common/request.js"
 
 export const useUserStore = defineStore('user', {
@@ -24,7 +24,7 @@ export const useUserStore = defineStore('user', {
           this.token = token;
           this.isValidToken = valid;
           return valid;
-        }else {
+        } else {
           sessionStorage.removeItem('HMToken');
           this.isValidToken = false;
           return false;
@@ -36,4 +36,24 @@ export const useUserStore = defineStore('user', {
       }
     },
   },
+});
+
+export const userNotificationStore = defineStore('userNotification', {
+  state: () => ({
+    show: false,
+    message: '',
+    color: 'error'
+  }),
+  actions: {
+    showError(msg) {
+      this.message = msg;
+      this.color = 'error';
+      this.show = true;
+    },
+    showSuccess(msg) {
+      this.message = msg;
+      this.color = 'success';
+      this.show = true;
+    }
+  }
 });
