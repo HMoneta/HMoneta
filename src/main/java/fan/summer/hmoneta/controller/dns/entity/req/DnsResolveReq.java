@@ -11,6 +11,8 @@ import java.util.List;
 public class DnsResolveReq {
     private String providerId;
 
+    private String groupName;
+
     private String authId;
 
     private String authKey;

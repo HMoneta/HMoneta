@@ -11,10 +11,11 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-
 public class DnsResolveGroupEntity {
     @Id
     private String id;
+
+    private String groupName;
 
     private String providerId;
 

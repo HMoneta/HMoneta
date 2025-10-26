@@ -59,10 +59,14 @@ public class DnsService {
         if (ObjectUtil.isEmpty(req.getAuthKey())) {
             throw new HMException(DnsExceptionEnum.DNS_GROUP_AUTH_EMPTY_ERROR);
         }
+        if (ObjectUtil.isEmpty(req.getGroupName())) {
+            req.setGroupName(String.valueOf(req.getProviderId()) + System.currentTimeMillis());
+        }
         DnsResolveGroupEntity entity = new DnsResolveGroupEntity();
 
         // 创建DNS解析组数据库实体
         entity.setId(UUID.randomUUID().toString());
+        entity.setGroupName(req.getGroupName());
         entity.setAuthId(req.getAuthId());
         entity.setAuthKey(req.getAuthKey());
         entity.setProviderId(req.getProviderId());
@@ -103,6 +107,7 @@ public class DnsService {
                 DnsResolveResp resp = new DnsResolveResp();
                 resp.setGroupId(group.getId());
                 resp.setUrls(allUrl);
+                resp.setGroupName(group.getGroupName());
                 resolveResps.add(resp);
             });
         }

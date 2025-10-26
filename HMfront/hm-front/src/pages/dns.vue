@@ -15,6 +15,7 @@ const dialog = ref(false)
 
 const dnsGroup = reactive({
   providerId: null,
+  groupName: null,
   authId: null,
   authKey: null,
   urls: null
@@ -116,7 +117,7 @@ onMounted(() => {
       <v-stepper
         width="1200px"
         v-model="step"
-        :items="['选择DNS服务商', '服务商账号', '需解析的域名']">
+        :items="['选择DNS服务商', '分组及服务商基本信息', '需解析的域名']">
         <template v-slot:item.1>
           <v-card>
             <v-container>
@@ -168,9 +169,10 @@ onMounted(() => {
         </template>
 
         <template v-slot:item.2>
-          <v-card title="授权信息" flat>
-            <v-text-field v-model="dnsGroup.authId" clearable label="授权ID" variant="outlined"></v-text-field>
-            <v-text-field v-model="dnsGroup.authKey" clearable label="授权Key" variant="outlined"></v-text-field>
+          <v-card title="分组及服务商基本信息" flat>
+            <v-text-field v-model="dnsGroup.groupName" clearable label="分组名称" variant="outlined"/>
+            <v-text-field v-model="dnsGroup.authId" clearable label="服务商授权ID" variant="outlined"></v-text-field>
+            <v-text-field v-model="dnsGroup.authKey" clearable label="服务商授权Key" variant="outlined"></v-text-field>
           </v-card>
         </template>
 
@@ -225,7 +227,7 @@ onMounted(() => {
     </v-card>
 
   </v-dialog>
-  <v-card class="mt-5" v-for="group in dnsGroups" :key="group.id" :title="group.groupId">
+  <v-card class="mt-5" v-for="group in dnsGroups" :key="group.id" :title="group.groupName">
     <v-data-table-server
       :headers="headers"
       :items="group.urls"
