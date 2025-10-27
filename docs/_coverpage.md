@@ -2,6 +2,5 @@
 
 > 致力于每人都可以玩转家庭服务
 
-[//]: # ([GitHub]&#40;https://github.com/docsifyjs/docsify/&#41;)
-
-[//]: # ([Get Started]&#40;README&#41;)
+[GitHub](https://github.com/HMoneta/HMoneta)
+[Get Started](README)
