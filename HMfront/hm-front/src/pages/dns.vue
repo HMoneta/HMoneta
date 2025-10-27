@@ -21,6 +21,15 @@ const dnsGroup = reactive({
   urls: null
 })
 
+const modifyGroupDialog = ref(false)
+
+const modifyGroup = reactive({
+  id: "",
+  groupName: "",
+  authId: "",
+  authKey: "",
+})
+
 const dnsGroups = ref()
 
 // Table
@@ -53,6 +62,8 @@ const handleSubmit = async () => {
   try {
     await http.post('/dns/insert_group', dnsGroup)
     notificationStore.showSuccess("分组添加成功")
+    dialog.value = false
+    queryDnsProvider()
   } catch (err) {
     console.log(err)
   }
@@ -71,6 +82,15 @@ const deleteItem = async (item) => {
   } catch (err) {
     console.log(err)
   }
+}
+
+const modifyGroupFuc = (group) => {
+  modifyGroup.id = group.id;
+  modifyGroup.groupName = group.groupName;
+  modifyGroup.authId = group.authId;
+  modifyGroup.authKey = group.authKey;
+  modifyGroupDialog.value = true
+  console.log(modifyGroup)
 }
 
 // 监听DNS服务商选择变化
@@ -227,7 +247,14 @@ onMounted(() => {
     </v-card>
 
   </v-dialog>
-  <v-card class="mt-5" v-for="group in dnsGroups" :key="group.id" :title="group.groupName">
+  <v-card class="mt-5" v-for="group in dnsGroups" :key="group.id">
+    <v-toolbar>
+      <v-toolbar-title>{{ group.groupName }}</v-toolbar-title>
+      <v-btn
+        icon="mdi-pencil"
+        @click="modifyGroupFuc(group)"
+      ></v-btn>
+    </v-toolbar>
     <v-data-table-server
       :headers="headers"
       :items="group.urls"
@@ -255,8 +282,47 @@ onMounted(() => {
       </template>
 
     </v-data-table-server>
-
   </v-card>
+
+
+  <v-dialog
+    v-model="modifyGroupDialog"
+    width="auto"
+    persistent
+  >
+    <v-card width="1200px">
+      <v-toolbar>
+        <v-btn
+          icon="mdi-close"
+          @click="modifyGroupDialog = false"
+        ></v-btn>
+        <v-toolbar-title>编辑{{ modifyGroup.groupName }}解析组信息</v-toolbar-title>
+      </v-toolbar>
+      <v-text-field class="pt-4 pl-2 pr-2" v-model="modifyGroup.groupName" clearable label="分组名称"
+                    variant="outlined"/>
+      <v-text-field class="pl-2 pr-2" v-model="modifyGroup.authId" clearable label="分组ID" variant="outlined"/>
+      <v-text-field class="pl-2 pr-2" v-model="modifyGroup.authKey" clearable label="分组Key" variant="outlined"/>
+      <v-card-actions>
+        <v-btn
+          color="#5865f2"
+          text="修改分组"
+          variant="flat"
+          block
+        >
+        </v-btn>
+      </v-card-actions>
+      <v-card-actions>
+        <v-btn
+          color="red-lighten-2"
+          text="删除分组"
+          variant="outlined"
+          block
+        ></v-btn>
+      </v-card-actions>
+
+
+    </v-card>
+  </v-dialog>
 </template>
 
 <style scoped>
