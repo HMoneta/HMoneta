@@ -1,6 +1,7 @@
 package fan.summer.hmoneta.controller.dns;
 
 import fan.summer.hmoneta.controller.dns.entity.req.DnsResolveReq;
+import fan.summer.hmoneta.controller.dns.entity.req.GroupModifyReq;
 import fan.summer.hmoneta.controller.dns.entity.resp.DnsResolveResp;
 import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
 import fan.summer.hmoneta.service.dns.DnsService;
@@ -37,6 +38,11 @@ public class DnsController {
     public ResponseEntity<List<DnsProviderEntity>> insertDnsResolveGroup(@RequestBody DnsResolveReq req) {
         dnsService.insertDnsResolveGroup(req);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/modify_group")
+    public ResponseEntity<String> modifyDnsResolveGroup(@RequestBody GroupModifyReq req) {
+        return ResponseEntity.ok("success");
     }
 
     @PostMapping("/delete")
