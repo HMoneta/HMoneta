@@ -28,6 +28,7 @@ const modifyGroup = reactive({
   groupName: "",
   authId: "",
   authKey: "",
+  isDelete: false,
 })
 
 const dnsGroups = ref()
@@ -85,12 +86,15 @@ const deleteItem = async (item) => {
 }
 
 const modifyGroupFuc = (group) => {
-  modifyGroup.id = group.id;
+  modifyGroup.id = group.groupId;
   modifyGroup.groupName = group.groupName;
-  modifyGroup.authId = group.authId;
-  modifyGroup.authKey = group.authKey;
   modifyGroupDialog.value = true
   console.log(modifyGroup)
+}
+
+const submitModify = async () => {
+  modifyGroup.isDelete = false
+  const resp = await http.post('/dns/modify_group', modifyGroup)
 }
 
 // 监听DNS服务商选择变化
@@ -307,6 +311,7 @@ onMounted(() => {
           color="#5865f2"
           text="修改分组"
           variant="flat"
+          @click="submitModify"
           block
         >
         </v-btn>

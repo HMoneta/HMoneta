@@ -19,4 +19,6 @@ public class GroupModifyReq {
 
     private String authKey;
 
+    private Boolean isDelete;
+
 }
