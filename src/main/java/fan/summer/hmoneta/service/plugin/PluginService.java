@@ -49,7 +49,7 @@ public class PluginService implements InitializingBean {
     private final DnsProviderRepository dnsProviderRepository;
 
     @Autowired
-    PluginService(DnsProviderRepository dnsProviderRepository,Log4jPluginLogger logger) {
+    PluginService(DnsProviderRepository dnsProviderRepository, Log4jPluginLogger logger) {
         this.dnsProviderRepository = dnsProviderRepository;
         this.logger = logger;
     }
@@ -85,7 +85,7 @@ public class PluginService implements InitializingBean {
             dnsPlugin.init(logger);
             String name = dnsPlugin.providerName();
             DnsProviderEntity byProviderName = dnsProviderRepository.findByProviderName(name);
-            if(ObjectUtil.isEmpty(byProviderName)){
+            if (ObjectUtil.isEmpty(byProviderName)) {
                 LOG.info("开始初始化第{}个插件，插件名称为:{}", index + 1, name);
                 // 设置供应商信息
                 DnsProviderEntity provider = new DnsProviderEntity();
@@ -95,6 +95,7 @@ public class PluginService implements InitializingBean {
                 provider.setProviderCode(name + id);
                 provider.setCreatedAt(LocalDateTime.now());
                 provider.setUpdatedAt(LocalDateTime.now());
+                provider.setAuthenticateWay(dnsPlugin.authenticateWay());
                 dnsProviderRepository.save(provider);
             }
             dnsPluginMap.put(dnsPlugin.providerName(), dnsPlugin);

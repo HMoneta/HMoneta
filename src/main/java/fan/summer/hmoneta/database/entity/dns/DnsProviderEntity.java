@@ -1,17 +1,19 @@
 package fan.summer.hmoneta.database.entity.dns;
 
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * 代表DNS提供商的实体类。
@@ -37,6 +39,10 @@ public class DnsProviderEntity {
     private String providerCode;
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+    // 所需验证的键值
+    @Type(JsonBinaryType.class)
+    @Column(columnDefinition = "jsonb")
+    private Set<String> authenticateWay;
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
