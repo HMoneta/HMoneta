@@ -2,6 +2,8 @@ package fan.summer.hmoneta.controller.dns.entity.req;
 
 import lombok.Data;
 
+import java.util.Map;
+
 /**
  * 类的详细说明
  *
@@ -15,9 +17,7 @@ public class GroupModifyReq {
 
     private String groupName;
 
-    private String authId;
-
-    private String authKey;
+    private Map<String, String> authenticateWayMap;
 
     private Boolean isDelete;
 

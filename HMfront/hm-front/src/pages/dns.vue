@@ -16,8 +16,8 @@ const dialog = ref(false)
 const dnsGroup = reactive({
   providerId: null,
   groupName: null,
-  authId: null,
-  authKey: null,
+  authenticateWay: null,
+  authenticateWayMap: {},
   urls: null
 })
 
@@ -26,8 +26,8 @@ const modifyGroupDialog = ref(false)
 const modifyGroup = reactive({
   id: "",
   groupName: "",
-  authId: "",
-  authKey: "",
+  authenticateWay: [],
+  authenticateWayMap: {},
   isDelete: false,
 })
 
@@ -88,13 +88,22 @@ const deleteItem = async (item) => {
 const modifyGroupFuc = (group) => {
   modifyGroup.id = group.groupId;
   modifyGroup.groupName = group.groupName;
+  modifyGroup.authenticateWayMap = group.authenticateWayMap;
+  modifyGroup.authenticateWay = Object.keys(group.authenticateWayMap);
   modifyGroupDialog.value = true
-  console.log(modifyGroup)
+  console.log(group)
 }
 
 const submitModify = async () => {
-  modifyGroup.isDelete = false
-  const resp = await http.post('/dns/modify_group', modifyGroup)
+  try {
+    modifyGroup.isDelete = false
+    await http.post('/dns/modify_group', modifyGroup)
+    notificationStore.showSuccess("修改成功")
+    modifyGroupDialog.value = false
+    await queryAllDnsResolveInfo()
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 // 监听DNS服务商选择变化
@@ -103,6 +112,7 @@ watch(selected, (newVal) => {
     let _provider = dnsProviderDic.value[newVal]
     providerDesc.value.push({text: "服务商ID：" + _provider.id, icon: "mdi-account"})
     dnsGroup.providerId = _provider.id
+    dnsGroup.authenticateWay = _provider.authenticateWay
     providerDesc.value.push({text: "服务商插件更新时间：" + _provider.updatedAt, icon: "mdi-clock"})
   }
 
@@ -195,8 +205,10 @@ onMounted(() => {
         <template v-slot:item.2>
           <v-card title="分组及服务商基本信息" flat>
             <v-text-field v-model="dnsGroup.groupName" clearable label="分组名称" variant="outlined"/>
-            <v-text-field v-model="dnsGroup.authId" clearable label="服务商授权ID" variant="outlined"></v-text-field>
-            <v-text-field v-model="dnsGroup.authKey" clearable label="服务商授权Key" variant="outlined"></v-text-field>
+            <template v-for="(item, i) in dnsGroup.authenticateWay">
+              <v-text-field v-model="dnsGroup.authenticateWayMap[item]" clearable :label="item"
+                            variant="outlined"></v-text-field>
+            </template>
           </v-card>
         </template>
 
@@ -304,8 +316,10 @@ onMounted(() => {
       </v-toolbar>
       <v-text-field class="pt-4 pl-2 pr-2" v-model="modifyGroup.groupName" clearable label="分组名称"
                     variant="outlined"/>
-      <v-text-field class="pl-2 pr-2" v-model="modifyGroup.authId" clearable label="分组ID" variant="outlined"/>
-      <v-text-field class="pl-2 pr-2" v-model="modifyGroup.authKey" clearable label="分组Key" variant="outlined"/>
+      <template v-for="(item, i) in modifyGroup.authenticateWay">
+        <v-text-field class="pl-2 pr-2" v-model="modifyGroup.authenticateWayMap[item]" clearable :label="item"
+                      variant="outlined"/>
+      </template>
       <v-card-actions>
         <v-btn
           color="#5865f2"

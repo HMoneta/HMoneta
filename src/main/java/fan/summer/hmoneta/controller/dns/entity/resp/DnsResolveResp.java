@@ -4,6 +4,7 @@ import fan.summer.hmoneta.database.entity.dns.DnsResolveUrlEntity;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 类的详细说明
@@ -16,5 +17,6 @@ import java.util.List;
 public class DnsResolveResp {
     private String groupId;
     private String groupName;
+    private Map<String,String> authenticateWayMap;
     private List<DnsResolveUrlEntity> urls;
 }

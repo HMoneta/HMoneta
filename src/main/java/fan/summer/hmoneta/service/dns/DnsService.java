@@ -3,6 +3,7 @@ package fan.summer.hmoneta.service.dns;
 import fan.summer.hmoneta.common.enums.exception.dns.DnsExceptionEnum;
 import fan.summer.hmoneta.common.exception.HMException;
 import fan.summer.hmoneta.controller.dns.entity.req.DnsResolveReq;
+import fan.summer.hmoneta.controller.dns.entity.req.GroupModifyReq;
 import fan.summer.hmoneta.controller.dns.entity.resp.DnsResolveResp;
 import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
 import fan.summer.hmoneta.database.entity.dns.DnsResolveGroupEntity;
@@ -10,9 +11,10 @@ import fan.summer.hmoneta.database.entity.dns.DnsResolveUrlEntity;
 import fan.summer.hmoneta.database.repository.dns.DnsProviderRepository;
 import fan.summer.hmoneta.database.repository.dns.DnsResolveGroupRepository;
 import fan.summer.hmoneta.database.repository.dns.DnsResolveUrlRepository;
+import fan.summer.hmoneta.service.plugin.PluginService;
 import fan.summer.hmoneta.util.ObjectUtil;
+import lombok.AllArgsConstructor;
 import org.apache.commons.validator.routines.UrlValidator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,19 +31,12 @@ import java.util.UUID;
  * @Date 2025/10/7
  */
 @Service
+@AllArgsConstructor
 public class DnsService {
     private final DnsProviderRepository dnsProviderRepository;
     private final DnsResolveGroupRepository dnsResolveGroupRepository;
     private final DnsResolveUrlRepository dnsResolveUrlRepository;
-
-    @Autowired
-    public DnsService(DnsProviderRepository dnsProviderRepository,
-                      DnsResolveGroupRepository dnsResolveGroupRepository,
-                      DnsResolveUrlRepository dnsResolveUrlRepository) {
-        this.dnsProviderRepository = dnsProviderRepository;
-        this.dnsResolveGroupRepository = dnsResolveGroupRepository;
-        this.dnsResolveUrlRepository = dnsResolveUrlRepository;
-    }
+    private final PluginService pluginService;
 
     public List<DnsProviderEntity> queryAllDnsProvider() {
         return dnsProviderRepository.findAll();
@@ -53,10 +48,7 @@ public class DnsService {
             throw new HMException(DnsExceptionEnum.DNS_GROUP_EMPTY_ERROR);
         }
         // 验证Req必要信息
-        if (ObjectUtil.isEmpty(req.getAuthId())) {
-            throw new HMException(DnsExceptionEnum.DNS_GROUP_AUTH_EMPTY_ERROR);
-        }
-        if (ObjectUtil.isEmpty(req.getAuthKey())) {
+        if (ObjectUtil.isEmpty(req.getAuthenticateWayMap())) {
             throw new HMException(DnsExceptionEnum.DNS_GROUP_AUTH_EMPTY_ERROR);
         }
         if (ObjectUtil.isEmpty(req.getGroupName())) {
@@ -67,9 +59,8 @@ public class DnsService {
         // 创建DNS解析组数据库实体
         entity.setId(UUID.randomUUID().toString());
         entity.setGroupName(req.getGroupName());
-        entity.setAuthId(req.getAuthId());
-        entity.setAuthKey(req.getAuthKey());
         entity.setProviderId(req.getProviderId());
+        entity.setCredentials(req.getAuthenticateWayMap());
         // 创建该分组下需解析的urls
         List<DnsResolveUrlEntity> urls = new ArrayList<>();
         if (ObjectUtil.isNotEmpty(req.getUrls())) {
@@ -97,6 +88,23 @@ public class DnsService {
         }
     }
 
+    public void modifyDnsResolveGroup(GroupModifyReq req) {
+        if (ObjectUtil.isEmpty(req.getId()) || ObjectUtil.isEmpty(req.getAuthenticateWayMap()) || ObjectUtil.isEmpty(req.getGroupName()) || ObjectUtil.isEmpty(req.getIsDelete())) {
+            throw new HMException(DnsExceptionEnum.DNS_GROUP_MODIFY_INFO_EMPTY);
+        }
+        String id = req.getId();
+        dnsResolveGroupRepository.findById(id).ifPresent(dnsResolveGroupEntity -> {
+            if (req.getIsDelete()) {
+                dnsResolveGroupRepository.deleteById(dnsResolveGroupEntity.getId());
+            } else {
+                dnsResolveGroupEntity.setGroupName(req.getGroupName());
+                dnsResolveGroupEntity.setCredentials(req.getAuthenticateWayMap());
+                dnsResolveGroupRepository.save(dnsResolveGroupEntity);
+            }
+        });
+
+    }
+
 
     public List<DnsResolveResp> queryAllDnsResolve() {
         List<DnsResolveResp> resolveResps = new ArrayList<>();
@@ -108,6 +116,7 @@ public class DnsService {
                 resp.setGroupId(group.getId());
                 resp.setUrls(allUrl);
                 resp.setGroupName(group.getGroupName());
+                resp.setAuthenticateWayMap(group.getCredentials());
                 resolveResps.add(resp);
             });
         }

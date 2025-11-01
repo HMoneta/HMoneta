@@ -42,6 +42,7 @@ public class DnsController {
 
     @PostMapping("/modify_group")
     public ResponseEntity<String> modifyDnsResolveGroup(@RequestBody GroupModifyReq req) {
+        dnsService.modifyDnsResolveGroup(req);
         return ResponseEntity.ok("success");
     }
 
