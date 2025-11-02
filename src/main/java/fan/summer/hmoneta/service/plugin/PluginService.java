@@ -4,7 +4,7 @@ package fan.summer.hmoneta.service.plugin;
 import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
 import fan.summer.hmoneta.database.repository.dns.DnsProviderRepository;
 import fan.summer.hmoneta.util.ObjectUtil;
-import fan.summer.plugins.core.dns.DNSProviderPlugin;
+import fan.summer.plugin.api.dns.DNSProviderPlugin;
 import lombok.Getter;
 import org.pf4j.PluginDescriptorFinder;
 import org.pf4j.PropertiesPluginDescriptorFinder;
@@ -44,14 +44,12 @@ public class PluginService implements InitializingBean {
     @Getter
     private Map<String, DNSProviderPlugin> dnsPluginMap;
 
-    private final Log4jPluginLogger logger;
 
     private final DnsProviderRepository dnsProviderRepository;
 
     @Autowired
-    PluginService(DnsProviderRepository dnsProviderRepository, Log4jPluginLogger logger) {
+    PluginService(DnsProviderRepository dnsProviderRepository) {
         this.dnsProviderRepository = dnsProviderRepository;
-        this.logger = logger;
     }
 
     @PostConstruct
@@ -82,7 +80,6 @@ public class PluginService implements InitializingBean {
         dnsPluginMap = new HashMap<>();
         int index = 0;
         extensions.forEach(dnsPlugin -> {
-            dnsPlugin.init(logger);
             String name = dnsPlugin.providerName();
             DnsProviderEntity byProviderName = dnsProviderRepository.findByProviderName(name);
             if (ObjectUtil.isEmpty(byProviderName)) {
@@ -100,7 +97,7 @@ public class PluginService implements InitializingBean {
             }
             dnsPluginMap.put(dnsPlugin.providerName(), dnsPlugin);
         });
-        logger.info("-------完成系统初始化---------");
+        LOG.info("-------完成系统初始化---------");
     }
 
     /**

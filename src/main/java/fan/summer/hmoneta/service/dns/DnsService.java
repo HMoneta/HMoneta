@@ -13,6 +13,8 @@ import fan.summer.hmoneta.database.repository.dns.DnsResolveGroupRepository;
 import fan.summer.hmoneta.database.repository.dns.DnsResolveUrlRepository;
 import fan.summer.hmoneta.service.plugin.PluginService;
 import fan.summer.hmoneta.util.ObjectUtil;
+import fan.summer.hmoneta.util.WebUtil;
+import fan.summer.plugin.api.dns.DNSProviderPlugin;
 import lombok.AllArgsConstructor;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -126,5 +129,29 @@ public class DnsService {
 
     public void deleteDnsResolveUrl(String urlId) {
         dnsResolveUrlRepository.deleteById(urlId);
+    }
+
+    public void updateDnsResolveUrl(DnsResolveUrlEntity entity, String ip) {
+        String groupId = entity.getGroupId();
+        dnsResolveGroupRepository.findById(groupId).ifPresent(group -> {
+            String providerId = group.getProviderId();
+            dnsProviderRepository.findById(providerId).ifPresent(provider -> {
+                DNSProviderPlugin dnsProviderPlugin = pluginService.getDnsPluginMap().get(provider.getProviderName());
+                dnsProviderPlugin.authenticate(group.getCredentials());
+                Map<String, String> urlMap = WebUtil.extractParts(entity.getUrl());
+                boolean result = dnsProviderPlugin.modifyDns(urlMap.get("host"), urlMap.get("sub"), "A", ip);
+                if (result) {
+                    entity.setResolveStatus(1);
+                    entity.setUpdateTime(LocalDateTime.now());
+                    entity.setIpAddress(ip);
+                    dnsResolveUrlRepository.save(entity);
+                } else {
+                    entity.setResolveStatus(0);
+                    entity.setUpdateTime(LocalDateTime.now());
+                    entity.setIpAddress("");
+                    dnsResolveUrlRepository.save(entity);
+                }
+            });
+        });
     }
 }
