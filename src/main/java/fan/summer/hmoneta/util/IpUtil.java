@@ -7,6 +7,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -179,15 +180,14 @@ public class IpUtil {
      *
      * @return 当前设备的公网IP地址字符串，如果无法获取则返回null。
      */
-    //TODO:存在受代理影响问题
     public static String getPublicIp() {
         String ip = null;
         try (HttpClient client = HttpClient.newHttpClient()) {
             log.info("-------------开始获取公网IP地址-------------");
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://ipinfo.io/ip"))
+                    .timeout(Duration.ofSeconds(60))
                     .build();
-
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
