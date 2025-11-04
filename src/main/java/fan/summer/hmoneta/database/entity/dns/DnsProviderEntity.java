@@ -23,9 +23,8 @@ import java.util.Set;
  * 实现了equals和hashCode方法，确保在处理Hibernate代理对象时也能正确比较对象。
  */
 @Entity
-@Table(name = "dns_providers", indexes = {
-        @Index(name = "idx_provider_code", columnList = "provider_code"),
-        @Index(name = "idx_status", columnList = "status")
+@Table(name = "dns_providers",indexes = {
+        @Index(name = "idx_provider_name", columnList = "provider_name")
 })
 @Getter
 @Setter
