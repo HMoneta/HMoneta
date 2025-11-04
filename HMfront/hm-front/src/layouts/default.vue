@@ -36,7 +36,7 @@ import {useUserStore} from "@/stores/app.js";
 // 定义菜单项
 const menuItems = ref([
   { title: '关于', route: '/about' },
-  { title: '测试', route: '/HelloWorld' },
+  { title: '日志', route: '/logPage' },
   { title: 'DNS', route: '/dns' },
 ]);
 const isLoggedIn = ref(false);
