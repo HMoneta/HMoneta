@@ -3,168 +3,183 @@ package fan.summer.hmoneta.service.plugin;
 
 import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
 import fan.summer.hmoneta.database.repository.dns.DnsProviderRepository;
-import fan.summer.hmoneta.util.ObjectUtil;
-import fan.summer.plugin.api.dns.DNSProviderPlugin;
-import lombok.Getter;
-import org.pf4j.PluginDescriptorFinder;
-import org.pf4j.PropertiesPluginDescriptorFinder;
+import fan.summer.hmoneta.plugin.api.dns.HmDnsProviderPlugin;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import org.pf4j.PluginState;
+import org.pf4j.PluginWrapper;
 import org.pf4j.spring.SpringPluginManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * PluginService类是用于管理和操作系统插件的核心服务。它负责加载、启动、初始化和停止插件，并提供方法来获取关于已加载插件的信息。
- * 该服务依赖于Spring框架提供的功能，以确保插件的生命周期与应用程序的生命周期保持一致。
+ * 插件管理服务
  */
 @Service
-public class PluginService implements InitializingBean {
+public class PluginService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PluginService.class);
+    private static final Logger logger = LoggerFactory.getLogger(PluginService.class);
 
-    @Getter
-    SpringPluginManager pluginManager = new SpringPluginManager(Paths.get("plugins")) {
-        @Override
-        protected PluginDescriptorFinder createPluginDescriptorFinder() {
-            // 使用 plugin.properties 描述文件
-            return new PropertiesPluginDescriptorFinder();
-        }
-    };
-
-    @Getter
-    private Map<String, DNSProviderPlugin> dnsPluginMap;
-
-
+    private final SpringPluginManager pluginManager;
+    private final Map<String, HmDnsProviderPlugin> dnsProviders = new ConcurrentHashMap<>();
     private final DnsProviderRepository dnsProviderRepository;
 
     @Autowired
-    PluginService(DnsProviderRepository dnsProviderRepository) {
+    public PluginService(SpringPluginManager pluginManager, DnsProviderRepository dnsProviderRepository) {
+        this.pluginManager = pluginManager;
         this.dnsProviderRepository = dnsProviderRepository;
     }
 
     @PostConstruct
     public void initPlugins() {
-        LOG.info("-------主程序已启动，开始初始化系统插件---------");
+        long startTime = System.currentTimeMillis();
+        logger.info("========== 主程序已启动，开始初始化系统插件 ==========");
 
         try {
-            // 1. 加载并启动插件
-            pluginManager.loadPlugins();
-            pluginManager.startPlugins();
+            // 步骤1: 加载插件
+            loadPlugins();
 
-            // 2. 初始化所有类型的Plugin
-            loadPluginsByType();
+            // 步骤2: 启动插件
+            startPlugins();
 
-            LOG.info("-------系统插件初始化完成，共加载{}个插件---------", dnsPluginMap.size());
+            // 步骤3: 初始化 DNS 插件
+            initDnsProviders();
+
+            long duration = System.currentTimeMillis() - startTime;
+            logger.info("========== 系统插件初始化完成 ==========");
+            logger.info("总耗时: {}ms", duration);
+            logger.info("成功加载插件数: {}", getStartedPlugins().size());
+            logger.info("==========================================");
 
         } catch (Exception e) {
-            LOG.error("插件初始化失败", e);
-            throw new RuntimeException("插件初始化失败", e);
+            logger.error("插件初始化失败", e);
         }
     }
 
     /**
-     * 根据插件类型加载插件实例
+     * 加载插件
      */
-    private void loadPluginsByType() {
-        List<DNSProviderPlugin> extensions = pluginManager.getExtensions(DNSProviderPlugin.class);
-        dnsPluginMap = new HashMap<>();
-        int index = 0;
-        extensions.forEach(dnsPlugin -> {
-            String name = dnsPlugin.providerName();
-            DnsProviderEntity byProviderName = dnsProviderRepository.findByProviderName(name);
-            if (ObjectUtil.isEmpty(byProviderName)) {
-                LOG.info("开始初始化第{}个插件，插件名称为:{}", index + 1, name);
-                // 设置供应商信息
-                DnsProviderEntity provider = new DnsProviderEntity();
-                String id = UUID.randomUUID().toString();
-                provider.setId(id);
-                provider.setProviderName(name);
-                provider.setProviderCode(name + id);
-                provider.setCreatedAt(LocalDateTime.now());
-                provider.setUpdatedAt(LocalDateTime.now());
-                provider.setAuthenticateWay(dnsPlugin.authenticateWay());
-                dnsProviderRepository.save(provider);
+    private void loadPlugins() {
+        logger.info("步骤1: 开始加载插件文件...");
+        long startTime = System.currentTimeMillis();
+        List<PluginWrapper> plugins = pluginManager.getPlugins();
+        long duration = System.currentTimeMillis() - startTime;
+
+        logger.info("插件文件加载完成，耗时: {}ms，发现 {} 个插件", duration, plugins.size());
+        logger.info("已加载的插件列表:");
+
+        int index = 1;
+        for (PluginWrapper plugin : plugins) {
+            logger.info("  {}. {} (版本: {}, 状态: {})",
+                    index++, plugin.getPluginId(),
+                    plugin.getDescriptor().getVersion(),
+                    plugin.getPluginState());
+        }
+    }
+
+    /**
+     * 启动插件
+     */
+    private void startPlugins() {
+        logger.info("步骤2: 开始启动插件...");
+
+        pluginManager.startPlugins();
+
+        List<PluginWrapper> startedPlugins = getStartedPlugins();
+        List<PluginWrapper> failedPlugins = getFailedPlugins();
+
+        logger.info("插件启动完成: 成功 {} 个, 失败 {} 个",
+                startedPlugins.size(), failedPlugins.size());
+
+        if (!failedPlugins.isEmpty()) {
+            logger.warn("以下插件加载失败:");
+            for (PluginWrapper plugin : failedPlugins) {
+                logger.warn("  - {}: {} - {}",
+                        plugin.getPluginId(),
+                        plugin.getPluginState(),
+                        plugin.getFailedException() != null ?
+                                plugin.getFailedException().getMessage() : "未知错误");
             }
-            dnsPluginMap.put(dnsPlugin.providerName(), dnsPlugin);
-        });
-        LOG.info("-------完成系统初始化---------");
-    }
-
-    /**
-     * 获取指定类型的插件
-     */
-//    public <T extends HMPlugin> T getPlugin(PluginType pluginType, Class<T> pluginClass) {
-//        HMPlugin plugin = pluginMap.get(pluginType);
-//        if (plugin != null && pluginClass.isInstance(plugin)) {
-//            return pluginClass.cast(plugin);
-//        }
-//        return null;
-//    }
-
-//    /**
-//     * 获取DNS插件的便捷方法
-//     */
-//    public DNSProviderPlugin getDNSPlugin() {
-//        return getPlugin(PluginType.DNS_PLUGIN, DNSProviderPlugin.class);
-//    }
-//
-//    /**
-//     * 检查指定类型的插件是否已加载
-//     */
-//    public boolean isPluginLoaded(PluginType pluginType) {
-//        return pluginMap.containsKey(pluginType);
-//    }
-//
-//    /**
-//     * 获取所有已加载的插件信息
-//     */
-//    public Map<PluginType, String> getLoadedPluginsInfo() {
-//        Map<PluginType, String> info = new HashMap<>();
-//        pluginMap.forEach((type, plugin) -> {
-//            info.put(type, plugin.getClass().getName());
-//        });
-//        return info;
-//    }
-
-    /**
-     * 停止并卸载所有插件
-     */
-    public void shutdown() {
-        LOG.info("开始停止所有插件...");
-        try {
-            // 清理插件映射
-            dnsPluginMap.clear();
-
-            // 停止并卸载插件
-            pluginManager.stopPlugins();
-            pluginManager.unloadPlugins();
-
-            LOG.info("所有插件已停止");
-        } catch (Exception e) {
-            LOG.error("停止插件时发生错误", e);
         }
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        LOG.debug("PluginService初始化完成");
+    /**
+     * 初始化 DNS 提供者
+     */
+    private void initDnsProviders() {
+        logger.info("步骤3: 开始初始化 DNS 插件...");
+
+        // 获取所有 HmDnsProviderPlugin 扩展
+        List<HmDnsProviderPlugin> providers = pluginManager.getExtensions(HmDnsProviderPlugin.class);
+
+        logger.info("发现 {} 个 DNS Provider 插件", providers.size());
+
+        int successCount = 0;
+        if(!providers.isEmpty()) {
+            // 记录DDNS供应商
+            for (HmDnsProviderPlugin provider : providers) {
+                logger.info("开始持久化{}插件", provider.providerName());
+                DnsProviderEntity byProviderName = dnsProviderRepository.findByProviderName(provider.providerName());
+                if (byProviderName == null) {
+                    DnsProviderEntity dnsProviderEntity = new DnsProviderEntity();
+                    dnsProviderEntity.setProviderName(provider.providerName());
+                    dnsProviderEntity.setId(UUID.randomUUID().toString());
+                    dnsProviderEntity.setProviderCode(provider.providerName() + UUID.randomUUID());
+                    dnsProviderEntity.setCreatedAt(LocalDateTime.now());
+                    dnsProviderEntity.setAuthenticateWay(provider.authenticateWay());
+                    dnsProviderRepository.save(dnsProviderEntity);
+                    logger.info("完成持久化{}插件", provider.providerName());
+                }else {
+                    logger.info("数据库已记录{}插件", provider.providerName());
+                }
+                dnsProviders.put(provider.providerName(), provider);
+            }
+        }
+        logger.info("DNS 插件初始化完成，成功: {} 个", successCount);
     }
-//
-//    /**
-//     * 可选：插件初始化接口
-//     * 插件可以实现这个接口来定义自己的初始化逻辑
-//     */
-//    public interface InitializablePlugin {
-//        void initialize() throws Exception;
-//    }
+
+    /**
+     * 获取已启动的插件
+     */
+    private List<PluginWrapper> getStartedPlugins() {
+        return pluginManager.getPlugins(PluginState.STARTED);
+    }
+
+    /**
+     * 获取启动失败的插件
+     */
+    private List<PluginWrapper> getFailedPlugins() {
+        return pluginManager.getPlugins().stream()
+                .filter(p -> p.getPluginState() != PluginState.STARTED)
+                .toList();
+    }
+
+    /**
+     * 获取 DNS 提供者
+     */
+    public HmDnsProviderPlugin getDnsProvider(String providerName) {
+        return dnsProviders.get(providerName);
+    }
+
+    /**
+     * 获取所有 DNS 提供者
+     */
+    public Map<String, HmDnsProviderPlugin> getAllDnsProviders() {
+        return dnsProviders;
+    }
+
+    @PreDestroy
+    public void cleanup() {
+        logger.info("停止所有插件...");
+        pluginManager.stopPlugins();
+        logger.info("插件系统已关闭");
+    }
 }

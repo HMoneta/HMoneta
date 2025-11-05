@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.5</version>
+        <version>3.5.7</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>fan.summer</groupId>
@@ -46,6 +46,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>me.paulschwarz</groupId>
@@ -74,13 +78,13 @@
         <dependency>
             <groupId>fan.summer</groupId>
             <artifactId>HMoneta-Official-Plugin-Api</artifactId>
-            <version>0.0.1</version>
+            <version>0.1.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.pf4j</groupId>
             <artifactId>pf4j-spring</artifactId>
-            <version>0.8.0</version>
+            <version>0.10.0</version>
         </dependency>
 
         <dependency>

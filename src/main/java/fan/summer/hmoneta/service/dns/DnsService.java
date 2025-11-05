@@ -11,11 +11,12 @@ import fan.summer.hmoneta.database.entity.dns.DnsResolveUrlEntity;
 import fan.summer.hmoneta.database.repository.dns.DnsProviderRepository;
 import fan.summer.hmoneta.database.repository.dns.DnsResolveGroupRepository;
 import fan.summer.hmoneta.database.repository.dns.DnsResolveUrlRepository;
+import fan.summer.hmoneta.plugin.api.dns.HmDnsProviderPlugin;
 import fan.summer.hmoneta.service.plugin.PluginService;
 import fan.summer.hmoneta.util.ObjectUtil;
 import fan.summer.hmoneta.util.WebUtil;
-import fan.summer.plugin.api.dns.DNSProviderPlugin;
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,7 @@ import java.util.UUID;
  */
 @Service
 @AllArgsConstructor
+@Log4j2
 public class DnsService {
     private final DnsProviderRepository dnsProviderRepository;
     private final DnsResolveGroupRepository dnsResolveGroupRepository;
@@ -47,6 +49,7 @@ public class DnsService {
 
     @Transactional(rollbackFor = Exception.class)
     public void insertDnsResolveGroup(DnsResolveReq req) {
+        log.info("===============开始插入定时任务===============");
         if (ObjectUtil.isEmpty(req)) {
             throw new HMException(DnsExceptionEnum.DNS_GROUP_EMPTY_ERROR);
         }
@@ -136,7 +139,7 @@ public class DnsService {
         dnsResolveGroupRepository.findById(groupId).ifPresent(group -> {
             String providerId = group.getProviderId();
             dnsProviderRepository.findById(providerId).ifPresent(provider -> {
-                DNSProviderPlugin dnsProviderPlugin = pluginService.getDnsPluginMap().get(provider.getProviderName());
+                HmDnsProviderPlugin dnsProviderPlugin = pluginService.getDnsProvider(provider.getProviderName());
                 dnsProviderPlugin.authenticate(group.getCredentials());
                 Map<String, String> urlMap = WebUtil.extractParts(entity.getUrl());
                 boolean result = dnsProviderPlugin.modifyDns(urlMap.get("host"), urlMap.get("sub"), "A", ip);
