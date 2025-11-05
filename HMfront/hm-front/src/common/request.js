@@ -15,8 +15,12 @@ async function request(url, options = {}) {
     headers: {...defaultHeaders, ...(options.headers || {})},
     ...options,
   };
+  // 如果 body 是 FormData，删除 'Content-Type'，让浏览器自动设置 multipart/form-data
+  if (config.body instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
 
-  // 自动把对象类型 body 转成 JSON
+  // 自动把对象类型 body 转成 JSON（但跳过 FormData）
   if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
     config.body = JSON.stringify(config.body);
   }

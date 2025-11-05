@@ -14,6 +14,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -167,6 +173,11 @@ public class PluginService {
      */
     public HmDnsProviderPlugin getDnsProvider(String providerName) {
         return dnsProviders.get(providerName);
+    }
+
+    public void upLoadPlugin(InputStream plugin, Path filePath) throws IOException {
+        Files.copy(plugin, filePath);
+
     }
 
     /**
