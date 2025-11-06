@@ -64,9 +64,9 @@ const handleSubmit = async () => {
     await http.post('/dns/insert_group', dnsGroup)
     notificationStore.showSuccess("分组添加成功")
     dialog.value = false
-    queryDnsProvider()
+    queryAllDnsResolveInfo()
   } catch (err) {
-    console.log(err)
+
   }
 }
 
@@ -81,7 +81,7 @@ const deleteItem = async (item) => {
     notificationStore.showSuccess("删除" + item.url + "DNS解析成功")
     queryAllDnsResolveInfo()
   } catch (err) {
-    console.log(err)
+
   }
 }
 
@@ -91,7 +91,6 @@ const modifyGroupFuc = (group) => {
   modifyGroup.authenticateWayMap = group.authenticateWayMap;
   modifyGroup.authenticateWay = Object.keys(group.authenticateWayMap);
   modifyGroupDialog.value = true
-  console.log(group)
 }
 
 const submitModify = async () => {
@@ -102,7 +101,7 @@ const submitModify = async () => {
     modifyGroupDialog.value = false
     await queryAllDnsResolveInfo()
   } catch (err) {
-    console.log(err)
+
   }
 }
 
