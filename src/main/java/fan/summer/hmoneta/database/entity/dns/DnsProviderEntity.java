@@ -36,6 +36,7 @@ public class DnsProviderEntity {
     private String id;
     private String providerName;
     private String providerCode;
+    private String pluginVersion;
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
     // 所需验证的键值

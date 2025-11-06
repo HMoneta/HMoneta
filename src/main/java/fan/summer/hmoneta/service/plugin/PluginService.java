@@ -4,6 +4,7 @@ package fan.summer.hmoneta.service.plugin;
 import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
 import fan.summer.hmoneta.database.repository.dns.DnsProviderRepository;
 import fan.summer.hmoneta.plugin.api.dns.HmDnsProviderPlugin;
+import fan.summer.hmoneta.util.ObjectUtil;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.pf4j.PluginState;
@@ -14,12 +15,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -133,10 +132,13 @@ public class PluginService {
             // 记录DDNS供应商
             for (HmDnsProviderPlugin provider : providers) {
                 logger.info("开始持久化{}插件", provider.providerName());
+                String pluginVersion = getPluginVersion(provider);
+                logger.info(pluginVersion);
                 DnsProviderEntity byProviderName = dnsProviderRepository.findByProviderName(provider.providerName());
                 if (byProviderName == null) {
                     DnsProviderEntity dnsProviderEntity = new DnsProviderEntity();
                     dnsProviderEntity.setProviderName(provider.providerName());
+                    dnsProviderEntity.setPluginVersion(pluginVersion);
                     dnsProviderEntity.setId(UUID.randomUUID().toString());
                     dnsProviderEntity.setProviderCode(provider.providerName() + UUID.randomUUID());
                     dnsProviderEntity.setCreatedAt(LocalDateTime.now());
@@ -144,9 +146,19 @@ public class PluginService {
                     dnsProviderRepository.save(dnsProviderEntity);
                     logger.info("完成持久化{}插件", provider.providerName());
                 }else {
-                    logger.info("数据库已记录{}插件", provider.providerName());
+                    logger.info("数据库已记录{}插件,验证插件是否更新", provider.providerName());
+                    if(ObjectUtil.isNotEmpty(byProviderName.getPluginVersion()) && byProviderName.getPluginVersion().equals(pluginVersion)) {
+                        logger.info("{}插件,未更新，无需更新数据库记录", provider.providerName());
+                    }else {
+                        logger.info("{}插件,已更新，开始更新数据库记录", provider.providerName());
+                        byProviderName.setPluginVersion(pluginVersion);
+                        byProviderName.setUpdatedAt(LocalDateTime.now());
+                        dnsProviderRepository.save(byProviderName);
+                        logger.info("{}插件,完成更新数据库记录", provider.providerName());
+                    }
                 }
                 dnsProviders.put(provider.providerName(), provider);
+                successCount++;
             }
         }
         logger.info("DNS 插件初始化完成，成功: {} 个", successCount);
@@ -192,5 +204,10 @@ public class PluginService {
         logger.info("停止所有插件...");
         pluginManager.stopPlugins();
         logger.info("插件系统已关闭");
+    }
+
+    private String getPluginVersion(Object extension) {
+        PluginWrapper plugin = pluginManager.whichPlugin(extension.getClass());
+        return plugin != null ? plugin.getDescriptor().getVersion() : "unknown";
     }
 }
