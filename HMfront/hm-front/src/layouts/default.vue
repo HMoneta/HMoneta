@@ -24,20 +24,21 @@
       </v-container>
     </v-main>
 
-    <AppFooter />
+    <AppFooter/>
   </v-app>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import {ref} from 'vue';
 import AppFooter from "@/components/AppFooter.vue";
 import {useUserStore} from "@/stores/app.js";
 
 // 定义菜单项
 const menuItems = ref([
-  { title: '插件管理', route: '/pluginManager' },
-  { title: '日志', route: '/logPage' },
-  { title: 'DNS', route: '/dns' },
+  {title: 'DNS', route: '/dns'},
+  {title: '插件管理', route: '/pluginManager'},
+  {title: '日志', route: '/logPage'},
+
 ]);
 const isLoggedIn = ref(false);
 const userStore = useUserStore()
@@ -45,7 +46,7 @@ watch(() => userStore.token, () => {
   isLoggedIn.value = userStore.checkAuth();
 });
 
-onMounted(()=> {
+onMounted(() => {
   isLoggedIn.value = userStore.checkAuth();
 })
 </script>
