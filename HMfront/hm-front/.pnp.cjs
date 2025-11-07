@@ -33,6 +33,7 @@ const RAW_RUNTIME_STATE =
           ["@vitejs/plugin-vue", "virtual:d1bab1a4b3db98c5e574cb13c81b20dbc6e428326d55acae419be2405006225ec722d522e64944787fad99609039ad819603b6fa9c72fcc72b9636bda97103a3#npm:6.0.1"],\
           ["@vue/compiler-sfc", "npm:3.5.23"],\
           ["@vueuse/core", "virtual:d1bab1a4b3db98c5e574cb13c81b20dbc6e428326d55acae419be2405006225ec722d522e64944787fad99609039ad819603b6fa9c72fcc72b9636bda97103a3#npm:14.0.0"],\
+          ["dotenv", "npm:17.2.3"],\
           ["eslint", "virtual:d1bab1a4b3db98c5e574cb13c81b20dbc6e428326d55acae419be2405006225ec722d522e64944787fad99609039ad819603b6fa9c72fcc72b9636bda97103a3#npm:9.39.1"],\
           ["eslint-config-vuetify", "virtual:d1bab1a4b3db98c5e574cb13c81b20dbc6e428326d55acae419be2405006225ec722d522e64944787fad99609039ad819603b6fa9c72fcc72b9636bda97103a3#npm:4.2.0"],\
           ["hm-front", "workspace:."],\
@@ -2284,6 +2285,15 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["dotenv", [\
+      ["npm:17.2.3", {\
+        "packageLocation": "../../../../../.yarn/berry/cache/dotenv-npm-17.2.3-2f9ab93ea1-10c0.zip/node_modules/dotenv/",\
+        "packageDependencies": [\
+          ["dotenv", "npm:17.2.3"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["eastasianwidth", [\
       ["npm:0.2.0", {\
         "packageLocation": "../../../../../.yarn/berry/cache/eastasianwidth-npm-0.2.0-c37eb16bd1-10c0.zip/node_modules/eastasianwidth/",\
@@ -3277,6 +3287,7 @@ const RAW_RUNTIME_STATE =
           ["@vitejs/plugin-vue", "virtual:d1bab1a4b3db98c5e574cb13c81b20dbc6e428326d55acae419be2405006225ec722d522e64944787fad99609039ad819603b6fa9c72fcc72b9636bda97103a3#npm:6.0.1"],\
           ["@vue/compiler-sfc", "npm:3.5.23"],\
           ["@vueuse/core", "virtual:d1bab1a4b3db98c5e574cb13c81b20dbc6e428326d55acae419be2405006225ec722d522e64944787fad99609039ad819603b6fa9c72fcc72b9636bda97103a3#npm:14.0.0"],\
+          ["dotenv", "npm:17.2.3"],\
           ["eslint", "virtual:d1bab1a4b3db98c5e574cb13c81b20dbc6e428326d55acae419be2405006225ec722d522e64944787fad99609039ad819603b6fa9c72fcc72b9636bda97103a3#npm:9.39.1"],\
           ["eslint-config-vuetify", "virtual:d1bab1a4b3db98c5e574cb13c81b20dbc6e428326d55acae419be2405006225ec722d522e64944787fad99609039ad819603b6fa9c72fcc72b9636bda97103a3#npm:4.2.0"],\
           ["hm-front", "workspace:."],\

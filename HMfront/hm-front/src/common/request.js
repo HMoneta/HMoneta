@@ -1,7 +1,6 @@
 import {userNotificationStore} from '@/stores/app.js';
 
-
-const BASE_URL = 'http://localhost:8080/hm';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const NO_AUTH_URLS = ['/login', '/register'];
 
 // 封装 request

@@ -5,19 +5,18 @@
  */
 
 // Plugins
-import { registerPlugins } from '@/plugins'
+import {registerPlugins} from '@/plugins'
 
 // Components
 import App from './App.vue'
 
 // Composables
-import { createApp } from 'vue'
+import {createApp} from 'vue'
 
-import { createPinia } from 'pinia';
+import {createPinia} from 'pinia';
 
 // Styles
 import 'unfonts.css'
-import router from "@/router/index.js";
 import {useUserStore} from "@/stores/app.js";
 
 const app = createApp(App)
