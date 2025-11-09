@@ -1,19 +1,19 @@
 <script setup>
-import { ref, watch } from 'vue';
-import { useWebSocket } from '@vueuse/core';
+import {ref, watch} from 'vue';
+import {useWebSocket} from '@vueuse/core';
 
-const wsUrl = 'ws://localhost:8080/ws/logs';
+const wsUrl = import.meta.env.VITE_WS_BASE_URL;
 const logs = ref([]);
 const virtualScrollerRef = ref(null);
 const autoScroll = ref(true);
 
-const { status, open, close, send, data } = useWebSocket(wsUrl, {
+const {status, open, close, send, data} = useWebSocket(wsUrl, {
   autoReconnect: {
     retries: 3,
     delay: 1000
   },
   heartbeat: {
-    message: JSON.stringify({ action: 'ping' }),
+    message: JSON.stringify({action: 'ping'}),
     interval: 30000
   },
   immediate: false, // 不立即连接，等待手动调用 open
@@ -43,7 +43,7 @@ watch(data, (newData) => {
   if (newData) {
     try {
       const logMessage = JSON.parse(newData);
-      if(logMessage.type !== 'pong'){
+      if (logMessage.type !== 'pong') {
         logs.value.push(JSON.stringify(logMessage));
       }
       if (logs.value.length > 100) {
