@@ -1,4 +1,4 @@
-package fan.summer.hmoneta.controller;
+package fan.summer.hmoneta.controller.plugin;
 
 import fan.summer.hmoneta.common.enums.exception.plugin.PluginExceptionEnum;
 import fan.summer.hmoneta.common.exception.HMException;
@@ -33,10 +33,10 @@ public class PluginController {
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadPlugin(@RequestParam("plugin") MultipartFile plugin) throws IOException {
-        if(ObjectUtil.isEmpty(plugin)) {
+        if (ObjectUtil.isEmpty(plugin)) {
             throw new HMException(PluginExceptionEnum.PLUGIN_FILE_EMPTY_ERROR);
         }
-        if(!isZipFile(plugin)){
+        if (!isZipFile(plugin)) {
             throw new HMException(PluginExceptionEnum.PLUGIN_FILE_TYPE_ERROR);
         }
         createUploadDirectory();
@@ -57,7 +57,7 @@ public class PluginController {
     }
 
     private void createUploadDirectory() throws IOException {
-        Path uploadPath = Paths.get("plugin");
+        Path uploadPath = Paths.get("plugins");
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
