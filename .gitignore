@@ -34,3 +34,5 @@ build/
 /.env
 /.mvn/
 /plugins/
+/src/main/resources/application-prod.yml
+/HMfront/hm-front/.env.production
