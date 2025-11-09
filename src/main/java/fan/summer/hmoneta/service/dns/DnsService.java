@@ -134,6 +134,17 @@ public class DnsService {
         dnsResolveUrlRepository.deleteById(urlId);
     }
 
+    public void modifyDnsResolveUrl(DnsResolveUrlEntity entity) {
+        dnsResolveUrlRepository.findById(entity.getId()).ifPresent(dataBaseEntity -> {
+            if (!entity.getUrl().equals(dataBaseEntity.getUrl())) {
+                dataBaseEntity.setUrl(entity.getUrl());
+                dataBaseEntity.setUpdateTime(LocalDateTime.now());
+                dnsResolveUrlRepository.save(dataBaseEntity);
+            }
+        });
+
+    }
+
     public void updateDnsResolveUrl(DnsResolveUrlEntity entity, String ip) {
         String groupId = entity.getGroupId();
         dnsResolveGroupRepository.findById(groupId).ifPresent(group -> {

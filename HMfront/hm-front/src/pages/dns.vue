@@ -75,9 +75,34 @@ const queryAllDnsResolveInfo = async () => {
   dnsGroups.value = resp
 }
 
+// 解析地址操作方法
+const modifyUrlDialog = ref(false)
+const modifyUrl = reactive({
+  id: '',
+  group_id: '',
+  url: '',
+})
+const editItem = async (item) => {
+  modifyUrlDialog.value = true
+  modifyUrl.id = item.id
+  modifyUrl.group_id = item.groupId
+  modifyUrl.url = item.url
+}
+
+const submitUrlModify = async () => {
+  try {
+    await http.post('/dns/url/modify', modifyUrl)
+    modifyUrlDialog.value = false
+    queryAllDnsResolveInfo()
+    notificationStore.showSuccess("修改成功")
+  } catch (err) {
+
+  }
+
+}
 const deleteItem = async (item) => {
   try {
-    await http.post('/dns/delete', item.id)
+    await http.post('/dns/url/delete', item.id)
     notificationStore.showSuccess("删除" + item.url + "DNS解析成功")
     queryAllDnsResolveInfo()
   } catch (err) {
@@ -299,7 +324,6 @@ onMounted(() => {
     </v-data-table-server>
   </v-card>
 
-
   <v-dialog
     v-model="modifyGroupDialog"
     width="auto"
@@ -341,6 +365,37 @@ onMounted(() => {
 
     </v-card>
   </v-dialog>
+
+  <!-- 网址修改dialog-->
+
+  <v-dialog
+    v-model="modifyUrlDialog"
+    width="auto"
+    persistent
+  >
+    <v-card width="1200px">
+      <v-toolbar>
+        <v-btn
+          icon="mdi-close"
+          @click="modifyUrlDialog = false"
+        ></v-btn>
+        <v-toolbar-title>编辑网址</v-toolbar-title>
+      </v-toolbar>
+      <v-text-field class="pt-4 pl-2 pr-2" v-model="modifyUrl.url" clearable label="分组名称"
+                    variant="outlined"/>
+      <v-card-actions>
+        <v-btn
+          color="#5865f2"
+          text="修改网址"
+          variant="flat"
+          @click="submitUrlModify"
+          block
+        >
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
 </template>
 
 <style scoped>

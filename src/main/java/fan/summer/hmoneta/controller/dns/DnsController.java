@@ -1,10 +1,15 @@
 package fan.summer.hmoneta.controller.dns;
 
+import fan.summer.hmoneta.common.enums.exception.dns.DnsExceptionEnum;
+import fan.summer.hmoneta.common.exception.HMException;
 import fan.summer.hmoneta.controller.dns.entity.req.DnsResolveReq;
+import fan.summer.hmoneta.controller.dns.entity.req.DnsResolveUrlReq;
 import fan.summer.hmoneta.controller.dns.entity.req.GroupModifyReq;
 import fan.summer.hmoneta.controller.dns.entity.resp.DnsResolveResp;
 import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
+import fan.summer.hmoneta.database.entity.dns.DnsResolveUrlEntity;
 import fan.summer.hmoneta.service.dns.DnsService;
+import fan.summer.hmoneta.util.ObjectUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,7 +51,20 @@ public class DnsController {
         return ResponseEntity.ok("success");
     }
 
-    @PostMapping("/delete")
+    @PostMapping("/url/modify")
+    public ResponseEntity<String> deleteDnsResolveUrl(@RequestBody DnsResolveUrlReq req) {
+        if (ObjectUtil.isEmpty(req)) {
+            throw new HMException(DnsExceptionEnum.DNS_URL_MODIFY_INFO_EMPTY);
+        }
+        DnsResolveUrlEntity dnsResolveUrlEntity = new DnsResolveUrlEntity();
+        dnsResolveUrlEntity.setId(req.getId());
+        dnsResolveUrlEntity.setUrl(req.getUrl());
+        dnsResolveUrlEntity.setGroupId(req.getGroupId());
+        dnsService.modifyDnsResolveUrl(dnsResolveUrlEntity);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/url/delete")
     public ResponseEntity<String> deleteDnsResolveUrl(@RequestBody String urlId) {
         dnsService.deleteDnsResolveUrl(urlId);
         return ResponseEntity.ok().build();
