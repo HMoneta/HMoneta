@@ -1,7 +1,10 @@
 package fan.summer.hmoneta.database.entity.dns;
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -23,9 +26,7 @@ import java.util.Set;
  * 实现了equals和hashCode方法，确保在处理Hibernate代理对象时也能正确比较对象。
  */
 @Entity
-@Table(name = "dns_providers",indexes = {
-        @Index(name = "idx_provider_name", columnList = "provider_name")
-})
+@Table(name = "dns_providers")
 @Getter
 @Setter
 @ToString
