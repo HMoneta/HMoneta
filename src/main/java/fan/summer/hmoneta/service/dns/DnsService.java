@@ -147,9 +147,9 @@ public class DnsService {
 
     public void updateDnsResolveUrl(DnsResolveUrlEntity entity, String ip) {
         String groupId = entity.getGroupId();
-        dnsResolveGroupRepository.findById(groupId).ifPresent(group -> {
+        dnsResolveGroupRepository.findById(groupId).ifPresentOrElse(group -> {
             String providerId = group.getProviderId();
-            dnsProviderRepository.findById(providerId).ifPresent(provider -> {
+            dnsProviderRepository.findById(providerId).ifPresentOrElse(provider -> {
                 HmDnsProviderPlugin dnsProviderPlugin = pluginService.getDnsProvider(provider.getProviderName());
                 dnsProviderPlugin.authenticate(group.getCredentials());
                 Map<String, String> urlMap = WebUtil.extractParts(entity.getUrl());
@@ -165,7 +165,11 @@ public class DnsService {
                     entity.setIpAddress("");
                     dnsResolveUrlRepository.save(entity);
                 }
+            }, () -> {
+                throw new HMException(DnsExceptionEnum.DNS_PROVIDER_NOT_FOUND_EMPTY);
             });
+        }, () -> {
+            throw new HMException(DnsExceptionEnum.DNS_GROUP_NOT_FOUND_EMPTY);
         });
     }
 }
