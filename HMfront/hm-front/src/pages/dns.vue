@@ -79,13 +79,13 @@ const queryAllDnsResolveInfo = async () => {
 const modifyUrlDialog = ref(false)
 const modifyUrl = reactive({
   id: '',
-  group_id: '',
+  groupId: '',
   url: '',
 })
 const editItem = async (item) => {
   modifyUrlDialog.value = true
   modifyUrl.id = item.id
-  modifyUrl.group_id = item.groupId
+  modifyUrl.groupId = item.groupId
   modifyUrl.url = item.url
 }
 
@@ -109,7 +109,14 @@ const deleteItem = async (item) => {
 
   }
 }
-
+// 分组操作
+const addurl = async (group) => {
+  modifyUrl.id = ''
+  modifyUrl.groupId = group.groupId
+  modifyUrl.url = ''
+  modifyUrlDialog.value = true
+  console.log(modifyUrl)
+}
 const modifyGroupFuc = (group) => {
   modifyGroup.id = group.groupId;
   modifyGroup.groupName = group.groupName;
@@ -290,6 +297,10 @@ onMounted(() => {
   <v-card class="mt-5" v-for="group in dnsGroups" :key="group.id">
     <v-toolbar>
       <v-toolbar-title>{{ group.groupName }}</v-toolbar-title>
+      <v-btn
+        icon="mdi-plus-circle"
+        @click="addurl(group)"
+      ></v-btn>
       <v-btn
         icon="mdi-pencil"
         @click="modifyGroupFuc(group)"

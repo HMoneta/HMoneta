@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface DnsResolveUrlRepository extends JpaRepository<DnsResolveUrlEntity, String> {
     List<DnsResolveUrlEntity> findAllByGroupId(String id);
+
+    DnsResolveUrlEntity findOneByUrl(String url);
 }

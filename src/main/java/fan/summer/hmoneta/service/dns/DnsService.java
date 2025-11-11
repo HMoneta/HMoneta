@@ -135,13 +135,28 @@ public class DnsService {
     }
 
     public void modifyDnsResolveUrl(DnsResolveUrlEntity entity) {
-        dnsResolveUrlRepository.findById(entity.getId()).ifPresent(dataBaseEntity -> {
-            if (!entity.getUrl().equals(dataBaseEntity.getUrl())) {
-                dataBaseEntity.setUrl(entity.getUrl());
-                dataBaseEntity.setUpdateTime(LocalDateTime.now());
-                dnsResolveUrlRepository.save(dataBaseEntity);
+        if (ObjectUtil.isEmpty(entity.getId())) {
+            // 新增url
+            DnsResolveUrlEntity oneByUrl = dnsResolveUrlRepository.findOneByUrl(entity.getUrl());
+            if (ObjectUtil.isEmpty(oneByUrl)) {
+                entity.setId(UUID.randomUUID().toString());
+                entity.setCreateTime(LocalDateTime.now());
+                entity.setResolveStatus(0);
+                dnsResolveUrlRepository.save(entity);
+            } else {
+                throw new HMException(DnsExceptionEnum.DNS_URL_EXISTS_ERROR);
             }
-        });
+        } else {
+            dnsResolveUrlRepository.findById(entity.getId()).ifPresentOrElse(dataBaseEntity -> {
+                if (!entity.getUrl().equals(dataBaseEntity.getUrl())) {
+                    dataBaseEntity.setUrl(entity.getUrl());
+                    dataBaseEntity.setUpdateTime(LocalDateTime.now());
+                    dnsResolveUrlRepository.save(dataBaseEntity);
+                }
+            }, () -> {
+                throw new HMException(DnsExceptionEnum.DNS_URL_NOT_EXISTS_ERROR);
+            });
+        }
 
     }
 

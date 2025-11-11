@@ -57,7 +57,9 @@ public class DnsController {
             throw new HMException(DnsExceptionEnum.DNS_URL_MODIFY_INFO_EMPTY);
         }
         DnsResolveUrlEntity dnsResolveUrlEntity = new DnsResolveUrlEntity();
-        dnsResolveUrlEntity.setId(req.getId());
+        if (ObjectUtil.isNotEmpty(req.getUrl())) {
+            dnsResolveUrlEntity.setId(req.getId());
+        }
         dnsResolveUrlEntity.setUrl(req.getUrl());
         dnsResolveUrlEntity.setGroupId(req.getGroupId());
         dnsService.modifyDnsResolveUrl(dnsResolveUrlEntity);

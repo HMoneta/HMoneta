@@ -10,7 +10,9 @@ public enum DnsExceptionEnum implements HMExceptionEnum {
     DNS_GROUP_MODIFY_INFO_EMPTY("005", "所修改的分组缺少关键信息"),
     DNS_URL_MODIFY_INFO_EMPTY("006", "所修改的网址缺少关键信息"),
     DNS_PROVIDER_NOT_FOUND_EMPTY("007", "未找到分组指定的供应商"),
-    DNS_GROUP_NOT_FOUND_EMPTY("008", "未找到分组");
+    DNS_GROUP_NOT_FOUND_EMPTY("008", "未找到分组"),
+    DNS_URL_EXISTS_ERROR("009", "分组内已存在相同网址"),
+    DNS_URL_NOT_EXISTS_ERROR("010", "分组内不存在该网址");
     private final String code;
     private final String message;
 
