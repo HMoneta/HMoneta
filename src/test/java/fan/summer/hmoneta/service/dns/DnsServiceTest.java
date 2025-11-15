@@ -59,8 +59,8 @@ class DnsServiceTest {
     @Test
     void should_raise_exception_when_dns_auth_id_empty() {
         DnsResolveReq entity = new DnsResolveReq();
-        entity.setAuthId(null);
-        entity.setAuthKey(UUID.randomUUID().toString());
+//        entity.setAuthId(null);
+//        entity.setAuthKey(UUID.randomUUID().toString());
         entity.setProviderId(UUID.randomUUID().toString());
         HMException ex = assertThrows(HMException.class,
                 () -> dnsService.insertDnsResolveGroup(entity));
@@ -71,8 +71,8 @@ class DnsServiceTest {
     @Test
     void should_raise_exception_when_dns_auth_key_empty() {
         DnsResolveReq entity = new DnsResolveReq();
-        entity.setAuthId(UUID.randomUUID().toString());
-        entity.setAuthKey(null);
+//        entity.setAuthId(UUID.randomUUID().toString());
+//        entity.setAuthKey(null);
         entity.setProviderId(UUID.randomUUID().toString());
         HMException ex = assertThrows(HMException.class,
                 () -> dnsService.insertDnsResolveGroup(entity));
@@ -83,8 +83,8 @@ class DnsServiceTest {
     @Test
     void should_raise_exception_when_dns_url_format_error() {
         DnsResolveReq entity = new DnsResolveReq();
-        entity.setAuthId(UUID.randomUUID().toString());
-        entity.setAuthKey(UUID.randomUUID().toString());
+//        entity.setAuthId(UUID.randomUUID().toString());
+//        entity.setAuthKey(UUID.randomUUID().toString());
         entity.setProviderId(UUID.randomUUID().toString());
         entity.setUrls(Arrays.asList("dfkafafefa_dfaefef.sfafae"));
         HMException ex = assertThrows(HMException.class,

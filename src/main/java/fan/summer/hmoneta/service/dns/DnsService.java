@@ -12,6 +12,7 @@ import fan.summer.hmoneta.database.repository.dns.DnsProviderRepository;
 import fan.summer.hmoneta.database.repository.dns.DnsResolveGroupRepository;
 import fan.summer.hmoneta.database.repository.dns.DnsResolveUrlRepository;
 import fan.summer.hmoneta.plugin.api.dns.HmDnsProviderPlugin;
+import fan.summer.hmoneta.plugin.api.dns.dto.DNSRecordInfo;
 import fan.summer.hmoneta.service.plugin.PluginService;
 import fan.summer.hmoneta.util.ObjectUtil;
 import fan.summer.hmoneta.util.WebUtil;
@@ -161,20 +162,41 @@ public class DnsService {
     }
 
     public void updateDnsResolveUrl(DnsResolveUrlEntity entity, String ip) {
+        log.info(">>>>>>>>>>>>>开始为:{}更新DNS，更新地址为:{}", entity.getUrl(), ip);
         String groupId = entity.getGroupId();
         dnsResolveGroupRepository.findById(groupId).ifPresentOrElse(group -> {
             String providerId = group.getProviderId();
             dnsProviderRepository.findById(providerId).ifPresentOrElse(provider -> {
+                boolean dnsResult = false;
+                log.info(">>>>>>>>>>>>>开始使用:{}DNS供应商进行变更", provider.getProviderName());
                 HmDnsProviderPlugin dnsProviderPlugin = pluginService.getDnsProvider(provider.getProviderName());
                 dnsProviderPlugin.authenticate(group.getCredentials());
                 Map<String, String> urlMap = WebUtil.extractParts(entity.getUrl());
-                boolean result = dnsProviderPlugin.modifyDns(urlMap.get("host"), urlMap.get("sub"), "A", ip);
-                if (result) {
+                log.info(">>>>>>>>>>>>>检查是否存在DNS解析");
+                List<DNSRecordInfo> dnsRecordInfos = dnsProviderPlugin.dnsCheck(urlMap.get("host"), urlMap.get("sub"));
+                if (ObjectUtil.isNotEmpty(dnsRecordInfos)) {
+                    log.info(">>>>>>>>>>>>>存在DNS解析，开始检测DNS解析是否一致");
+                    for (DNSRecordInfo dnsRecordInfo : dnsRecordInfos) {
+                        if (!dnsRecordInfo.getvalue().equals(ip)) {
+                            log.info(">>>>>>>>>>>>>解析不一致需更新");
+                            dnsResult = dnsProviderPlugin.modifyDns(urlMap.get("host"), urlMap.get("sub"), "A", ip);
+                        } else {
+                            log.info(">>>>>>>>>>>>>解析一致无需更新");
+                            dnsResult = true;
+                        }
+                    }
+                } else {
+                    log.info(">>>>>>>>>>>>>不存在DNS解析，直接创建DNS解析");
+                    dnsResult = dnsProviderPlugin.modifyDns(urlMap.get("host"), urlMap.get("sub"), "A", ip);
+                }
+                if (dnsResult) {
+                    log.info(">>>>>>>>>>>>>DNS解析成功");
                     entity.setResolveStatus(1);
                     entity.setUpdateTime(LocalDateTime.now());
                     entity.setIpAddress(ip);
                     dnsResolveUrlRepository.save(entity);
                 } else {
+                    log.error(">>>>>>>>>>>>>DNS解析失败");
                     entity.setResolveStatus(0);
                     entity.setUpdateTime(LocalDateTime.now());
                     entity.setIpAddress("");
