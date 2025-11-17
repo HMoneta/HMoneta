@@ -5,9 +5,9 @@
  */
 
 // Composables
-import { createRouter, createWebHistory } from 'vue-router'
-import { setupLayouts } from 'virtual:generated-layouts'
-import { routes } from 'vue-router/auto-routes'
+import {createRouter, createWebHistory} from 'vue-router'
+import {setupLayouts} from 'virtual:generated-layouts'
+import {routes} from 'vue-router/auto-routes'
 import {useUserStore} from "@/stores/app.js";
 
 const router = createRouter({
@@ -20,7 +20,7 @@ router.beforeEach(async (to, from, next) => {
   // 不需要认证的路由列表
   const publicRoutes = ['/login', '/register', '/forgot-password']
   // 检查用户是否已登录
-  if(userStore == null) {
+  if (userStore == null) {
     userStore = useUserStore();
   }
 
@@ -30,9 +30,9 @@ router.beforeEach(async (to, from, next) => {
     return
   }
   let isAuthenticated
-  if(!userStore.isValidToken) {
+  if (!userStore.isValidToken) {
     isAuthenticated = await userStore.checkAuth()
-  }else {
+  } else {
     isAuthenticated = true
   }
   if (!isAuthenticated) {
@@ -40,9 +40,9 @@ router.beforeEach(async (to, from, next) => {
     next('/login')
   } else {
     // 强制推送至About界面
-    if(to.path === '/'){
-      next('about')
-    }else{
+    if (to.path === '/') {
+      next('dns')
+    } else {
       next()
     }
 
