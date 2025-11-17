@@ -136,6 +136,17 @@ const submitModify = async () => {
 
   }
 }
+const submitDelete = async () => {
+  try {
+    modifyGroup.isDelete = true
+    await http.post('/dns/modify_group', modifyGroup)
+    notificationStore.showSuccess("修改成功")
+    modifyGroupDialog.value = false
+    await queryAllDnsResolveInfo()
+  } catch (err) {
+
+  }
+}
 
 // 监听DNS服务商选择变化
 watch(selected, (newVal) => {
@@ -369,6 +380,7 @@ onMounted(() => {
           color="red-lighten-2"
           text="删除分组"
           variant="outlined"
+          @click="submitDelete"
           block
         ></v-btn>
       </v-card-actions>

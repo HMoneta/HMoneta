@@ -100,15 +100,31 @@ public class DnsService {
             throw new HMException(DnsExceptionEnum.DNS_GROUP_MODIFY_INFO_EMPTY);
         }
         String id = req.getId();
-        dnsResolveGroupRepository.findById(id).ifPresent(dnsResolveGroupEntity -> {
-            if (req.getIsDelete()) {
+        if (req.getIsDelete()) {
+            dnsResolveGroupRepository.findById(req.getId()).ifPresentOrElse(dnsResolveGroupEntity -> {
+                // 先删除分组下所有解析
+                List<DnsResolveUrlEntity> allByGroupId = dnsResolveUrlRepository.findAllByGroupId(dnsResolveGroupEntity.getId());
+                if (ObjectUtil.isNotEmpty(allByGroupId)) {
+                    dnsResolveUrlRepository.deleteAll(allByGroupId);
+                }
                 dnsResolveGroupRepository.deleteById(dnsResolveGroupEntity.getId());
-            } else {
+            }, () -> {
+                throw new HMException(DnsExceptionEnum.DNS_GROUP_NOT_FOUND_EMPTY);
+            });
+        } else {
+            dnsResolveGroupRepository.findById(id).ifPresent(dnsResolveGroupEntity -> {
                 dnsResolveGroupEntity.setGroupName(req.getGroupName());
                 dnsResolveGroupEntity.setCredentials(req.getAuthenticateWayMap());
                 dnsResolveGroupRepository.save(dnsResolveGroupEntity);
-            }
-        });
+            });
+        }
+
+    }
+
+    public void deleteDnsResolveGroup(GroupModifyReq req) {
+        if (ObjectUtil.isEmpty(req) || ObjectUtil.isEmpty(req.getId())) {
+            throw new HMException(DnsExceptionEnum.DNS_GROUP_MODIFY_INFO_EMPTY);
+        }
 
     }
 
