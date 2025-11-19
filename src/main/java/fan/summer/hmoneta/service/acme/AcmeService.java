@@ -1,12 +1,18 @@
 package fan.summer.hmoneta.service.acme;
 
-import ch.qos.logback.core.testUtil.RandomUtil;
-import fan.summer.hmoneta.common.enums.exception.HMExceptionEnum;
+import fan.summer.hmoneta.common.enums.exception.acme.AcmeExceptionEnum;
 import fan.summer.hmoneta.common.exception.HMException;
 import fan.summer.hmoneta.database.entity.acme.AcmeChallengeInfoEntity;
 import fan.summer.hmoneta.database.entity.acme.AcmeUserInfoEntity;
+import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
+import fan.summer.hmoneta.database.entity.dns.DnsResolveGroupEntity;
+import fan.summer.hmoneta.database.entity.dns.DnsResolveUrlEntity;
 import fan.summer.hmoneta.database.repository.acme.AcmeChallengeInfoRepository;
 import fan.summer.hmoneta.database.repository.acme.AcmeUserInfoRepository;
+import fan.summer.hmoneta.database.repository.dns.DnsProviderRepository;
+import fan.summer.hmoneta.database.repository.dns.DnsResolveGroupRepository;
+import fan.summer.hmoneta.database.repository.dns.DnsResolveUrlRepository;
+import fan.summer.hmoneta.plugin.api.dns.HmDnsProviderPlugin;
 import fan.summer.hmoneta.service.plugin.PluginService;
 import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
@@ -15,7 +21,6 @@ import org.shredzone.acme4j.*;
 import org.shredzone.acme4j.challenge.Dns01Challenge;
 import org.shredzone.acme4j.exception.AcmeException;
 import org.shredzone.acme4j.util.KeyPairUtils;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -35,6 +40,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
@@ -62,12 +68,23 @@ public class AcmeService {
 
     private final AcmeChallengeInfoRepository acmeChallengeInfoRepository;
     private final AcmeUserInfoRepository acmeUserInfoRepository;
+    private final DnsProviderRepository dnsProviderRepository;
+    private final DnsResolveGroupRepository dnsResolveGroupRepository;
+    private final DnsResolveUrlRepository dnsResolveUrlRepository;
 
     @Autowired
-    public AcmeService(PluginService pluginService, AcmeChallengeInfoRepository acmeChallengeInfoRepository, AcmeUserInfoRepository acmeUserInfoRepository) {
+    public AcmeService(PluginService pluginService,
+                       AcmeChallengeInfoRepository acmeChallengeInfoRepository,
+                       AcmeUserInfoRepository acmeUserInfoRepository,
+                       DnsProviderRepository dnsProviderRepository,
+                       DnsResolveGroupRepository dnsResolveGroupRepository,
+                       DnsResolveUrlRepository dnsResolveUrlRepository) {
         this.pluginService = pluginService;
         this.acmeChallengeInfoRepository = acmeChallengeInfoRepository;
         this.acmeUserInfoRepository = acmeUserInfoRepository;
+        this.dnsProviderRepository = dnsProviderRepository;
+        this.dnsResolveGroupRepository = dnsResolveGroupRepository;
+        this.dnsResolveUrlRepository = dnsResolveUrlRepository;
     }
 
     protected LinkedList<String> getLogList() {
@@ -78,15 +95,21 @@ public class AcmeService {
         if (this.logMap.containsKey(taskId)) {
             return logMap.get(taskId);
         } else {
-            throw new HMException(HMExceptionEnum.CER_ERROR_LOG_NOT_FIND);
+            throw new HMException(AcmeExceptionEnum.CER_ERROR_LOG_NOT_FIND);
         }
     }
 
     protected byte[] packCertifications(String domain) throws IOException {
         String dirPath = "certs/" + domain;
         Path basePath = Paths.get(dirPath);
-        if (!Files.exists(basePath) || !Files.isDirectory(basePath)) {
-            throw new HMException(HMExceptionEnum.CER_ERROR_FOLDER_NOT_EXIST);
+        if (!Files.exists(basePath)) {
+            try {
+                Files.createDirectories(basePath);
+            } catch (IOException e) {
+                throw new HMException(AcmeExceptionEnum.CER_CREATE_FOLDER_ERROR);
+            }
+        } else if (!Files.isDirectory(basePath)) {
+            throw new HMException(AcmeExceptionEnum.CER_ERROR_FOLDER_NOT_EXIST);
         }
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try (ZipOutputStream zipOut = new ZipOutputStream(byteArrayOutputStream)) {
@@ -111,50 +134,50 @@ public class AcmeService {
     @Async
     @Transactional(rollbackOn = Exception.class)
     protected void useDnsChallengeGetCertification(String domain, AcmeChallengeInfoEntity info) {
-        MDC.put("LOG_ID", System.currentTimeMillis() + RandomUtil.randomString(3));
-        String email = LoginUserContext.getMember().getEmail();
         if (ObjectUtils.isNotEmpty(acmeChallengeInfoRepository.findByDomain(domain))) {
             acmeChallengeInfoRepository.deleteByDomain(domain);
         }
-        DNSProviderPlugin ddnsProvider = providerFactory.getProvider(domain);
+        DnsResolveUrlEntity oneByUrl = dnsResolveUrlRepository.findOneByUrl(domain);
+        DnsResolveGroupEntity dnsResolveGroupEntity = dnsResolveGroupRepository.findById(oneByUrl.getGroupId()).get();
+        DnsProviderEntity dnsProviderEntity = dnsProviderRepository.findById(dnsResolveGroupEntity.getProviderId()).get();
+        HmDnsProviderPlugin dnsProvider = pluginService.getDnsProvider(dnsProviderEntity.getProviderName());
         AcmeChallengeInfoEntity dataBaseInfo = new AcmeChallengeInfoEntity();
-        if (ObjectUtils.isNotEmpty(ddnsProvider)) {
-            dataBaseInfo.setUserId(LoginUserContext.getId());
+        if (ObjectUtils.isNotEmpty(dnsProvider)) {
             dataBaseInfo.setDomain(domain);
             dataBaseInfo.setTaskId(info.getTaskId());
-            dataBaseInfo.setProviderName(ddnsProvider.providerName());
+            dataBaseInfo.setProviderName(dnsProvider.providerName());
             dataBaseInfo.setStatusInfo("0");
             saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]开始为%s申请证书", info.getTaskId(), domain), "info");
             acmeChallengeInfoRepository.save(dataBaseInfo);
         } else {
-            throw new HMException(HMExceptionEnum.DNS_SERVICE_NOT_FOUND_PROVIDER_ERROR);
+            throw new HMException(AcmeExceptionEnum.DNS_SERVICE_NOT_FOUND_PROVIDER_ERROR);
         }
         try {
             KeyPair keyPair;
             Session session = new Session(acmeUri);
-            List<AcmeUserInfoEntity> byUserEmail = acmeUserInfoRepository.findByUserEmail(email);
+            List<AcmeUserInfoEntity> byUserEmail = acmeUserInfoRepository.findByUserEmail("email");
             if (ObjectUtils.isNotEmpty(byUserEmail)) {
                 saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]>>>>>>>>无需创建ACME账号", info.getTaskId()), "info");
                 keyPair = byUserEmail.getFirst().generateKeyPair();
             } else {
-                String accountEmail = "mailto:" + email;
+//                String accountEmail = "mailto:" + email;
                 saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]>>>>>>>>创建ACME账号", info.getTaskId()), "info");
                 keyPair = KeyPairUtils.createKeyPair(2048);
-                Account account = new AccountBuilder()
-                        .addContact(accountEmail)
-                        .agreeToTermsOfService()
-                        .useKeyPair(keyPair)
-                        .create(session);
-                if (ObjectUtils.isNotEmpty(account)) {
-                    saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]>>>>>>>>成功创建ACME账号", info.getTaskId()), "info");
-                    AcmeUserInfoEntity acmeUserInfoEntity = new AcmeUserInfoEntity();
-                    acmeUserInfoEntity.setUserId(SnowFlakeUtil.getSnowFlakeNextId());
-                    acmeUserInfoEntity.setUserEmail(email);
-                    acmeUserInfoEntity.saveKeyPair(keyPair);
-                    acmeUserInfoRepository.save(acmeUserInfoEntity);
-                } else {
-                    throw new RuntimeException("[ACME-Task:" + info.getTaskId() + "]创建账户失败");
-                }
+//                Account account = new AccountBuilder()
+//                        .addContact(accountEmail)
+//                        .agreeToTermsOfService()
+//                        .useKeyPair(keyPair)
+//                        .create(session);
+//                if (ObjectUtils.isNotEmpty(account)) {
+//                    saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]>>>>>>>>成功创建ACME账号", info.getTaskId()), "info");
+//                    AcmeUserInfoEntity acmeUserInfoEntity = new AcmeUserInfoEntity();
+//                    acmeUserInfoEntity.setUserId(SnowFlakeUtil.getSnowFlakeNextId());
+//                    acmeUserInfoEntity.setUserEmail(email);
+//                    acmeUserInfoEntity.saveKeyPair(keyPair);
+//                    acmeUserInfoRepository.save(acmeUserInfoEntity);
+//                } else {
+//                    throw new RuntimeException("[ACME-Task:" + info.getTaskId() + "]创建账户失败");
+//                }
             }
             saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]1.登录ACME提供商", info.getTaskId()), "info");
             // Login
@@ -172,7 +195,7 @@ public class AcmeService {
                 saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]修改DNS", info.getTaskId()), "info");
                 String subDomain = domain.substring(0, domain.indexOf('.'));
                 String mainDomain = domain.substring(domain.indexOf('.') + 1);
-                boolean status = ddnsProvider.modifyDns(mainDomain, "_acme-challenge." + subDomain, "TXT", digest);
+                boolean status = dnsProvider.modifyDns(mainDomain, "_acme-challenge." + subDomain, "TXT", digest);
                 saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]DNS修改状态:%s", info.getTaskId(), status), "info");
                 if (status & waitForDnsPropagation("_acme-challenge." + domain, digest)) {
                     try {
@@ -194,7 +217,7 @@ public class AcmeService {
                         saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]挑战结果:%s", info.getTaskId(), authorization.getStatus()), "info");
                         if (authorization.getStatus() == Status.VALID) {
                             saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]验证通过", info.getTaskId()), "info");
-                            removeTxtDnsInfo(ddnsProvider, mainDomain, subDomain);
+                            removeTxtDnsInfo(dnsProvider, mainDomain, subDomain);
                             // 获取证书
                             try {
                                 saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]获取证书", info.getTaskId()), "info");
@@ -212,7 +235,7 @@ public class AcmeService {
                                     List<X509Certificate> chain = cert.getCertificateChain();
                                     saveCertificateFiles(cerKeyPair, cert, domain, info.getTaskId());
                                     dataBaseInfo.saveKeyPair(keyPair);
-                                    dataBaseInfo.setCertApplyTime(DateTime.now());
+                                    dataBaseInfo.setCertApplyTime(LocalDateTime.now());
                                     dataBaseInfo.setStatusInfo("1");
                                 } else {
                                     saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]订单确认失败", info.getTaskId()), "error");
@@ -224,12 +247,12 @@ public class AcmeService {
                                 throw new RuntimeException(e);
                             }
                         } else {
-                            removeTxtDnsInfo(ddnsProvider, mainDomain, subDomain);
+                            removeTxtDnsInfo(dnsProvider, mainDomain, subDomain);
                             saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]验证未通过", info.getTaskId()), "error");
                             dataBaseInfo.setStatusInfo("-1");
                         }
                     } catch (AcmeException e) {
-                        removeTxtDnsInfo(ddnsProvider, mainDomain, subDomain);
+                        removeTxtDnsInfo(dnsProvider, mainDomain, subDomain);
                         dataBaseInfo.setStatusInfo("-1");
                         throw new RuntimeException(e);
                     }
@@ -237,7 +260,7 @@ public class AcmeService {
                     saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]未通过DNS记录验证", info.getTaskId()), "error");
                     dataBaseInfo.setStatusInfo("-1");
                     if (status) {
-                        removeTxtDnsInfo(ddnsProvider, mainDomain, subDomain);
+                        removeTxtDnsInfo(dnsProvider, mainDomain, subDomain);
                     }
                 }
             }, () -> {
@@ -294,7 +317,7 @@ public class AcmeService {
         return false;
     }
 
-    private void removeTxtDnsInfo(DNSProviderPlugin ddnsProvider, String domain, String subDomain) {
+    private void removeTxtDnsInfo(HmDnsProviderPlugin ddnsProvider, String domain, String subDomain) {
         log.info("开始清理用于验证的DNS记录");
         try {
             ddnsProvider.deleteDns(domain, "_acme-challenge." + subDomain, "TXT");
