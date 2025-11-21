@@ -308,14 +308,27 @@ onMounted(() => {
   <v-card class="mt-5" v-for="group in dnsGroups" :key="group.id">
     <v-toolbar>
       <v-toolbar-title>{{ group.groupName }}</v-toolbar-title>
-      <v-btn
-        icon="mdi-plus-circle"
-        @click="addurl(group)"
-      ></v-btn>
-      <v-btn
-        icon="mdi-pencil"
-        @click="modifyGroupFuc(group)"
-      ></v-btn>
+      <v-tooltip text="增加解析网址">
+        <template v-slot:activator="{ props }">
+          <v-btn
+            v-bind="props"
+            icon="mdi-plus-circle"
+            @click="addurl(group)"
+          ></v-btn>
+        </template>
+      </v-tooltip>
+
+      <v-tooltip text="修改解析组">
+        <template v-slot:activator="{ props }">
+          <v-btn
+            v-bind="props"
+            icon="mdi-pencil"
+            @click="modifyGroupFuc(group)"
+          ></v-btn>
+        </template>
+      </v-tooltip>
+
+
     </v-toolbar>
     <v-data-table-server
       :headers="headers"
@@ -328,19 +341,31 @@ onMounted(() => {
         <span v-else><v-badge inline location="top right" color="success" content="解析成功"/></span>
       </template>
       <template v-slot:item.action="{ item }">
-        <v-btn
-          icon="mdi-pencil"
-          size="small"
-          variant="text"
-          @click="editItem(item)"
-        ></v-btn>
-        <v-btn
-          icon="mdi-delete"
-          size="small"
-          variant="text"
-          color="error"
-          @click="deleteItem(item)"
-        ></v-btn>
+        <v-tooltip text="修改网址">
+          <template v-slot:activator="{ props }">
+            <v-btn
+              v-bind="props"
+              icon="mdi-pencil"
+              size="small"
+              variant="text"
+              @click="editItem(item)"
+            ></v-btn>
+          </template>
+        </v-tooltip>
+        <v-tooltip text="删除解析">
+          <template v-slot:activator="{ props }">
+            <v-btn
+              v-bind="props"
+              icon="mdi-delete"
+              size="small"
+              variant="text"
+              color="error"
+              @click="deleteItem(item)"
+            ></v-btn>
+          </template>
+        </v-tooltip>
+
+
       </template>
 
     </v-data-table-server>
