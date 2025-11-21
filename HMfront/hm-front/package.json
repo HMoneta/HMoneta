@@ -22,6 +22,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",
     "dotenv": "^17.2.3",
+    "esbuild": "0.25.12",
     "eslint": "^9.35.0",
     "eslint-config-vuetify": "^4.2.0",
     "sass-embedded": "^1.92.1",

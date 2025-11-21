@@ -1816,7 +1816,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild@npm:^0.25.0":
+"esbuild@npm:0.25.12, esbuild@npm:^0.25.0":
   version: 0.25.12
   resolution: "esbuild@npm:0.25.12"
   dependencies:
@@ -2566,6 +2566,7 @@ __metadata:
     "@vue/compiler-sfc": "npm:^3.5.22"
     "@vueuse/core": "npm:^14.0.0"
     dotenv: "npm:^17.2.3"
+    esbuild: "npm:0.25.12"
     eslint: "npm:^9.35.0"
     eslint-config-vuetify: "npm:^4.2.0"
     pinia: "npm:^3.0.3"
