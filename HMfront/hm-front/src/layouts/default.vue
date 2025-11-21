@@ -38,6 +38,7 @@ const menuItems = ref([
   {title: 'DNS', route: '/dns'},
   {title: '插件管理', route: '/pluginManager'},
   {title: '日志', route: '/logPage'},
+  {title: '设置', route: '/setting'},
 
 ]);
 const isLoggedIn = ref(false);
