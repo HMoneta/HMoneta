@@ -24,7 +24,6 @@ import org.shredzone.acme4j.util.KeyPairUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.TextParseException;
@@ -54,7 +53,7 @@ import java.util.zip.ZipOutputStream;
  * @Date 2025/11/18
  */
 @Log4j2
-@Service
+
 public class AcmeService {
     private final LinkedList<String> logList = new LinkedList<>();
     private final LinkedHashMap<Long, LinkedList<String>> logMap = new LinkedHashMap<>();
@@ -85,6 +84,10 @@ public class AcmeService {
         this.dnsProviderRepository = dnsProviderRepository;
         this.dnsResolveGroupRepository = dnsResolveGroupRepository;
         this.dnsResolveUrlRepository = dnsResolveUrlRepository;
+    }
+
+    public void insertAcmeUserInfo(AcmeUserInfoEntity acmeUserInfoEntity) {
+        acmeUserInfoRepository.save(acmeUserInfoEntity);
     }
 
     protected LinkedList<String> getLogList() {

@@ -17,8 +17,9 @@ import fan.summer.hmoneta.service.plugin.PluginService;
 import fan.summer.hmoneta.util.ObjectUtil;
 import fan.summer.hmoneta.util.WebUtil;
 import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.apache.commons.validator.routines.UrlValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,8 +38,8 @@ import java.util.UUID;
  */
 @Service
 @AllArgsConstructor
-@Log4j2
 public class DnsService {
+    private final static Logger log = LoggerFactory.getLogger(DnsService.class);
     private final DnsProviderRepository dnsProviderRepository;
     private final DnsResolveGroupRepository dnsResolveGroupRepository;
     private final DnsResolveUrlRepository dnsResolveUrlRepository;
