@@ -24,16 +24,16 @@ import java.security.spec.X509EncodedKeySpec;
 @Table(name = "acme_user_Info")
 public class AcmeUserInfoEntity {
     @Id
-    private Long userId;
+    private String id;
     private String userEmail;
 
     @Lob
-    @Column(columnDefinition = "bytea", nullable = false)
+    @Column(columnDefinition = "bytea", nullable = true)
     @JdbcTypeCode(SqlTypes.BINARY) // 强制 Hibernate 使用二进制类型
     private byte[] publicKey;
 
     @Lob
-    @Column(columnDefinition = "bytea", nullable = false)
+    @Column(columnDefinition = "bytea", nullable = true)
     @JdbcTypeCode(SqlTypes.BINARY) // 强制 Hibernate 使用二进制类型
     private byte[] privateKey;
 

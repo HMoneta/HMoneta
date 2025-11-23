@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface AcmeUserInfoRepository extends JpaRepository<AcmeUserInfoEntity, Long> {
+public interface AcmeUserInfoRepository extends JpaRepository<AcmeUserInfoEntity, String> {
     List<AcmeUserInfoEntity> findByUserEmail(String userEmail);
 }

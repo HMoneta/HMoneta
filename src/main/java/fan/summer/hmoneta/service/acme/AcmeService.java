@@ -21,9 +21,8 @@ import org.shredzone.acme4j.*;
 import org.shredzone.acme4j.challenge.Dns01Challenge;
 import org.shredzone.acme4j.exception.AcmeException;
 import org.shredzone.acme4j.util.KeyPairUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.TextParseException;
@@ -53,14 +52,13 @@ import java.util.zip.ZipOutputStream;
  * @Date 2025/11/18
  */
 @Log4j2
-
+@Service
 public class AcmeService {
     private final LinkedList<String> logList = new LinkedList<>();
     private final LinkedHashMap<Long, LinkedList<String>> logMap = new LinkedHashMap<>();
 
     final int maxAttempts = 10;  // 最大尝试次数
 
-    @Value("${hmoneta.acme.uri}")
     private String acmeUri;
 
     private final PluginService pluginService;
@@ -71,7 +69,6 @@ public class AcmeService {
     private final DnsResolveGroupRepository dnsResolveGroupRepository;
     private final DnsResolveUrlRepository dnsResolveUrlRepository;
 
-    @Autowired
     public AcmeService(PluginService pluginService,
                        AcmeChallengeInfoRepository acmeChallengeInfoRepository,
                        AcmeUserInfoRepository acmeUserInfoRepository,
@@ -87,7 +84,22 @@ public class AcmeService {
     }
 
     public void insertAcmeUserInfo(AcmeUserInfoEntity acmeUserInfoEntity) {
-        acmeUserInfoRepository.save(acmeUserInfoEntity);
+        if (ObjectUtils.isEmpty(acmeUserInfoEntity.getId())) {
+            // 新增
+            acmeUserInfoEntity.setId(UUID.randomUUID().toString());
+            acmeUserInfoRepository.save(acmeUserInfoEntity);
+        } else {
+            // 更新
+            acmeUserInfoRepository.findById(acmeUserInfoEntity.getId()).ifPresentOrElse(item -> {
+                item.setUserEmail(acmeUserInfoEntity.getUserEmail());
+                acmeUserInfoRepository.save(item);
+            }, () -> {
+                throw new HMException(AcmeExceptionEnum.ACME_ACCOUNT_UPDATE_ERROR);
+
+            });
+
+        }
+
     }
 
     protected LinkedList<String> getLogList() {
