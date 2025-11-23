@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
     <link rel="icon" href="./images/ico/icon.png" type="image/png">
-    <link rel="shortcut icon" href="./images/ico/icon.png" type="image/png">
+    <link rel="shortcut icon" href="./images/ico/logo.png" type="image/png">
     <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-java.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-yaml.min.js"></script>
@@ -25,20 +25,20 @@
         coverpage: true,
         auto2top: true,
         alias: {
-          '/.*/_sidebar.md': '/_sidebar.md'
+            '/.*/_sidebar.md': '/_sidebar.md'
         },
         search: {
-          maxAge: 86400000, // 1 day
-          paths: 'auto',
-          placeholder: '搜索',
-          noData: '找不到结果',
+            maxAge: 86400000, // 1 day
+            paths: 'auto',
+            placeholder: '搜索',
+            noData: '找不到结果',
         },
         plugins: [
-          function(hook, vm) {
-            hook.ready(function() {
-              // 在这里可以添加自定义插件逻辑
-            });
-          }
+            function (hook, vm) {
+                hook.ready(function () {
+                    // 在这里可以添加自定义插件逻辑
+                });
+            }
         ]
     }
 </script>
