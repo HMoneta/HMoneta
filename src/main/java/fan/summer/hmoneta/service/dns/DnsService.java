@@ -16,7 +16,6 @@ import fan.summer.hmoneta.plugin.api.dns.dto.DNSRecordInfo;
 import fan.summer.hmoneta.service.plugin.PluginService;
 import fan.summer.hmoneta.util.ObjectUtil;
 import fan.summer.hmoneta.util.WebUtil;
-import lombok.AllArgsConstructor;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,13 +36,19 @@ import java.util.UUID;
  * @Date 2025/10/7
  */
 @Service
-@AllArgsConstructor
 public class DnsService {
     private final static Logger log = LoggerFactory.getLogger(DnsService.class);
     private final DnsProviderRepository dnsProviderRepository;
     private final DnsResolveGroupRepository dnsResolveGroupRepository;
     private final DnsResolveUrlRepository dnsResolveUrlRepository;
     private final PluginService pluginService;
+    
+    public DnsService(DnsProviderRepository dnsProviderRepository, DnsResolveGroupRepository dnsResolveGroupRepository, DnsResolveUrlRepository dnsResolveUrlRepository, PluginService pluginService) {
+        this.dnsProviderRepository = dnsProviderRepository;
+        this.dnsResolveGroupRepository = dnsResolveGroupRepository;
+        this.dnsResolveUrlRepository = dnsResolveUrlRepository;
+        this.pluginService = pluginService;
+    }
 
     public List<DnsProviderEntity> queryAllDnsProvider() {
         return dnsProviderRepository.findAll();
