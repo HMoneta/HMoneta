@@ -1,7 +1,6 @@
 package fan.summer.hmoneta.common.aspect;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Api
@@ -105,7 +105,7 @@ public class ApiAspect {
             LOG.info("响应参数: {}", resultJson);
 
 
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             LOG.error("响应参数 JSON 序列化失败", e);
         } finally {
             LOG.info("执行耗时: {} ms", duration);
@@ -149,7 +149,7 @@ public class ApiAspect {
 
         try {
             return objectMapper.writeValueAsString(arguments);
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             LOG.warn("参数 JSON 序列化失败: {}", e.getMessage());
             return "[JSON 序列化失败]";
         }

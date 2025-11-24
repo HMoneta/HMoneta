@@ -38,3 +38,4 @@ build/
 /HMfront/hm-front/.env.production
 /IFLOW.md
 /HMfront/hm-front/.yarn/install-state.gz
+/src/main/resources/application-dev.properties

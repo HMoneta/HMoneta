@@ -1,6 +1,7 @@
 package fan.summer.hmoneta.util;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -15,8 +16,10 @@ import java.util.Map;
 /**
  * Ip地址相关工具
  */
-@Slf4j
+
 public class IpUtil {
+    private static final Logger log = LoggerFactory.getLogger(IpUtil.class);
+
     public static boolean isIpMatchMask(String ip, String maskCidr) {
         int ipInt = ipToInt(ip);
         int maskInt = maskToInt(maskCidr);

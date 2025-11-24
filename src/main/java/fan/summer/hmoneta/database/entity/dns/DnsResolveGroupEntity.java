@@ -1,12 +1,13 @@
 package fan.summer.hmoneta.database.entity.dns;
 
-import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.Map;
 
@@ -24,7 +25,7 @@ public class DnsResolveGroupEntity {
 
     private String providerId;
 
-    @Type(JsonBinaryType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private Map<String, String> credentials;
 

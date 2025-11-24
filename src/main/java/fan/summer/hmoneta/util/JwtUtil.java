@@ -1,12 +1,14 @@
 package fan.summer.hmoneta.util;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.crypto.SecretKey;
 import java.lang.annotation.ElementType;
@@ -20,10 +22,9 @@ import java.util.*;
  * 增强版JWT工具类 - 支持注解排除敏感字段
  * 提供JWT（JSON Web Token）的生成、解析和验证功能
  */
-@Slf4j
 @Component
 public class JwtUtil {
-
+    private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Value("${jwt.secret:povTvh!U7e9aJCwLUmp^qIVRCrgOAa=a}")
@@ -63,9 +64,9 @@ public class JwtUtil {
     /**
      * 生成token - 支持自定义排除字段
      *
-     * @param data 待需要生成token的对象
+     * @param data          待需要生成token的对象
      * @param excludeFields 额外需要排除的字段
-     * @param <T>  待需要生成token的对象的类型
+     * @param <T>           待需要生成token的对象的类型
      * @return token
      */
     public <T> String createTokenForObject(T data, String... excludeFields) {
@@ -204,7 +205,7 @@ public class JwtUtil {
         } catch (MalformedJwtException e) {
             log.warn("[JwtUtil] 格式错误的JWT Token");
             throw new JwtValidationException("格式错误的JWT Token", e);
-        } catch (SecurityException | SignatureException e) {
+        } catch (SecurityException e) {
             log.warn("[JwtUtil] JWT Token签名验证失败");
             throw new JwtValidationException("JWT Token签名验证失败", e);
         } catch (IllegalArgumentException e) {

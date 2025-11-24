@@ -1,6 +1,6 @@
 package fan.summer.hmoneta.common.interceptor;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import fan.summer.hmoneta.database.entity.user.UserEntity;
 import fan.summer.hmoneta.util.JwtUtil;
 import fan.summer.hmoneta.util.ObjectUtil;
@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.HashMap;

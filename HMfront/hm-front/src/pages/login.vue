@@ -63,14 +63,13 @@ const snackbar = ref(false);
 const text = ref('');
 
 const login = async () => {
-  try{
+  try {
     const json = await http.post("/user/login", loginInfo);
     const userStore = useUserStore();
     userStore.login(json);
     await router.push('/');
-  }catch (e) {
-    snackbar.value =true;
-    text.value = e.message;
+  } catch (e) {
+
   }
 }
 </script>
