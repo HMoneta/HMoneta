@@ -21,7 +21,8 @@ import org.shredzone.acme4j.*;
 import org.shredzone.acme4j.challenge.Dns01Challenge;
 import org.shredzone.acme4j.exception.AcmeException;
 import org.shredzone.acme4j.util.KeyPairUtils;
-import org.springframework.scheduling.annotation.Async;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.TXTRecord;
@@ -44,6 +45,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static java.awt.SystemColor.info;
+
 /**
  * Acme证书申请类
  *
@@ -54,8 +57,7 @@ import java.util.zip.ZipOutputStream;
 @Log4j2
 @Service
 public class AcmeService {
-    private final LinkedList<String> logList = new LinkedList<>();
-    private final LinkedHashMap<Long, LinkedList<String>> logMap = new LinkedHashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(AcmeService.class);
 
     final int maxAttempts = 10;  // 最大尝试次数
 
@@ -102,17 +104,6 @@ public class AcmeService {
 
     }
 
-    protected LinkedList<String> getLogList() {
-        return this.logList;
-    }
-
-    protected LinkedList<String> getLogList(Long taskId) {
-        if (this.logMap.containsKey(taskId)) {
-            return logMap.get(taskId);
-        } else {
-            throw new HMException(AcmeExceptionEnum.CER_ERROR_LOG_NOT_FIND);
-        }
-    }
 
     protected byte[] packCertifications(String domain) throws IOException {
         String dirPath = "certs/" + domain;
@@ -146,9 +137,46 @@ public class AcmeService {
     }
 
 
-    @Async
     @Transactional(rollbackOn = Exception.class)
-    protected void useDnsChallengeGetCertification(String domain, AcmeChallengeInfoEntity info) {
+    protected void useDnsChallengeGetCertification(String domain) {
+        logger.info("=============开始申请证书=============");
+        // 查找ACME用户信息
+        AcmeUserInfoEntity acmeUserInfo = null;
+        boolean needCreateAcmeUser = false;
+        List<AcmeUserInfoEntity> allAcmeUserInfo = acmeUserInfoRepository.findAll();
+        if (ObjectUtils.isNotEmpty(allAcmeUserInfo)) {
+            acmeUserInfo = allAcmeUserInfo.getFirst();
+            if (ObjectUtils.isEmpty(acmeUserInfo.getPrivateKey()) && ObjectUtils.isEmpty(acmeUserInfo.getPublicKey())) {
+                needCreateAcmeUser = true;
+            }
+        } else {
+            throw new HMException();
+        }
+        Session session = new Session(acmeUri);
+        if (needCreateAcmeUser) {
+            // 创建用户
+            KeyPair keyPair;
+            String accountEmail = "mailto:" + acmeUserInfo.getUserEmail();
+            keyPair = KeyPairUtils.createKeyPair(2048);
+            try {
+                Account account = new AccountBuilder()
+                        .addContact(accountEmail)
+                        .agreeToTermsOfService()
+                        .useKeyPair(keyPair)
+                        .create(session);
+                if (ObjectUtils.isNotEmpty(account)) {
+                    acmeUserInfo.setId(UUID.randomUUID().toString());
+                    acmeUserInfo.setUserEmail(acmeUserInfo.getUserEmail());
+                    acmeUserInfo.saveKeyPair(keyPair);
+                    acmeUserInfoRepository.save(acmeUserInfo);
+                } else {
+                    throw new RuntimeException("[ACME-Task]创建账户失败");
+                }
+            } catch (AcmeException e) {
+                throw new RuntimeException(e.getMessage(), e);
+            }
+        }
+        // 获取证书
         if (ObjectUtils.isNotEmpty(acmeChallengeInfoRepository.findByDomain(domain))) {
             acmeChallengeInfoRepository.deleteByDomain(domain);
         }
@@ -159,44 +187,15 @@ public class AcmeService {
         AcmeChallengeInfoEntity dataBaseInfo = new AcmeChallengeInfoEntity();
         if (ObjectUtils.isNotEmpty(dnsProvider)) {
             dataBaseInfo.setDomain(domain);
-            dataBaseInfo.setTaskId(info.getTaskId());
+            dataBaseInfo.setTaskId(UUID.randomUUID().timestamp());
             dataBaseInfo.setProviderName(dnsProvider.providerName());
             dataBaseInfo.setStatusInfo("0");
-            saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]开始为%s申请证书", info.getTaskId(), domain), "info");
             acmeChallengeInfoRepository.save(dataBaseInfo);
         } else {
             throw new HMException(AcmeExceptionEnum.DNS_SERVICE_NOT_FOUND_PROVIDER_ERROR);
         }
         try {
-            KeyPair keyPair;
-            Session session = new Session(acmeUri);
-            List<AcmeUserInfoEntity> byUserEmail = acmeUserInfoRepository.findByUserEmail("email");
-            if (ObjectUtils.isNotEmpty(byUserEmail)) {
-                saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]>>>>>>>>无需创建ACME账号", info.getTaskId()), "info");
-                keyPair = byUserEmail.getFirst().generateKeyPair();
-            } else {
-//                String accountEmail = "mailto:" + email;
-                saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]>>>>>>>>创建ACME账号", info.getTaskId()), "info");
-                keyPair = KeyPairUtils.createKeyPair(2048);
-//                Account account = new AccountBuilder()
-//                        .addContact(accountEmail)
-//                        .agreeToTermsOfService()
-//                        .useKeyPair(keyPair)
-//                        .create(session);
-//                if (ObjectUtils.isNotEmpty(account)) {
-//                    saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]>>>>>>>>成功创建ACME账号", info.getTaskId()), "info");
-//                    AcmeUserInfoEntity acmeUserInfoEntity = new AcmeUserInfoEntity();
-//                    acmeUserInfoEntity.setUserId(SnowFlakeUtil.getSnowFlakeNextId());
-//                    acmeUserInfoEntity.setUserEmail(email);
-//                    acmeUserInfoEntity.saveKeyPair(keyPair);
-//                    acmeUserInfoRepository.save(acmeUserInfoEntity);
-//                } else {
-//                    throw new RuntimeException("[ACME-Task:" + info.getTaskId() + "]创建账户失败");
-//                }
-            }
-            saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]1.登录ACME提供商", info.getTaskId()), "info");
-            // Login
-            saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]开始登录", info.getTaskId()), "info");
+            KeyPair keyPair = acmeUserInfo.generateKeyPair();
             Login login = new AccountBuilder().onlyExisting().agreeToTermsOfService().useKeyPair(keyPair).createLogin(session);
             // 发起订单
             saveRunningLog(info.getTaskId(), String.format("[ACME-Task:%s]创建订单", info.getTaskId()), "info");
@@ -439,37 +438,6 @@ public class AcmeService {
         // 注意：这里不关闭writer，因为我们使用的是外部传入的OutputStream
     }
 
-    private void saveRunningLog(String logInfo, String logLeve) {
-        if (this.logList.size() == 50) {
-            this.logList.poll();
-        }
-        this.logList.add(logInfo);
-        switch (logLeve) {
-            case "warn" -> log.warn(logInfo);
-            case "error" -> log.error(logInfo);
-            default -> log.info(logInfo);
-        }
-
-    }
-
-    private void saveRunningLog(Long taskId, String logInfo, String logLeve) {
-        if (this.logMap.size() == 5) {
-            this.logMap.remove(this.logMap.keySet().iterator().next());
-        }
-        if (this.logMap.containsKey(taskId)) {
-            logMap.get(taskId).add(logInfo);
-        } else {
-            LinkedList<String> logList = new LinkedList<>();
-            logList.add(logInfo);
-            this.logMap.put(taskId, logList);
-        }
-        switch (logLeve) {
-            case "warn" -> log.warn(logInfo);
-            case "error" -> log.error(logInfo);
-            default -> log.info(logInfo);
-        }
-
-    }
 
     private static boolean deleteRecursively(File file) {
         // 如果是文件或空文件夹，直接删除
