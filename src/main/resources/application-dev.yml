@@ -49,3 +49,5 @@ logging:
 jwt:
   secret: povTvh!U7e9aJCwLUmp^qIVRCrgOAa=a
   expiration: 86400
+acme:
+  url: https://acme-staging-v02.api.letsencrypt.org/directory

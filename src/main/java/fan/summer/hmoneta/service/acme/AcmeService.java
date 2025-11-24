@@ -23,6 +23,7 @@ import org.shredzone.acme4j.exception.AcmeException;
 import org.shredzone.acme4j.util.KeyPairUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.TXTRecord;
@@ -59,6 +60,7 @@ public class AcmeService {
 
     final int maxAttempts = 10;  // 最大尝试次数
 
+    @Value("${acme.url}")
     private String acmeUri;
 
     private final PluginService pluginService;
