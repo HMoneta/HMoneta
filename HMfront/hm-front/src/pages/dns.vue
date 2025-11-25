@@ -109,6 +109,7 @@ const deleteItem = async (item) => {
 
   }
 }
+
 // 分组操作
 const addurl = async (group) => {
   modifyUrl.id = ''
@@ -146,6 +147,12 @@ const submitDelete = async () => {
   } catch (err) {
 
   }
+}
+// 证书申请
+const applyCertificate = (item) => {
+  http.get('/acme/apply', {"domain": item.url})
+
+
 }
 
 // 监听DNS服务商选择变化
@@ -361,6 +368,17 @@ onMounted(() => {
               variant="text"
               color="error"
               @click="deleteItem(item)"
+            ></v-btn>
+          </template>
+        </v-tooltip>
+        <v-tooltip text="申请证书">
+          <template v-slot:activator="{ props }">
+            <v-btn
+              v-bind="props"
+              icon="mdi-certificate"
+              size="small"
+              variant="text"
+              @click="applyCertificate(item)"
             ></v-btn>
           </template>
         </v-tooltip>

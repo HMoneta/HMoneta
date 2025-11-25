@@ -5,10 +5,7 @@ import fan.summer.hmoneta.database.entity.acme.AcmeUserInfoEntity;
 import fan.summer.hmoneta.service.acme.AcmeService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 类的详细说明
@@ -31,6 +28,12 @@ public class AcmeController {
         AcmeUserInfoEntity acmeUserInfo = new AcmeUserInfoEntity();
         BeanUtils.copyProperties(req, acmeUserInfo);
         acmeService.insertAcmeUserInfo(acmeUserInfo);
+        return ResponseEntity.ok("success");
+    }
+
+    @GetMapping("/apply")
+    public ResponseEntity<String> modifyAcmeUserInfo(@RequestParam String domain) {
+        acmeService.useDnsChallengeGetCertification(domain);
         return ResponseEntity.ok("success");
     }
 }

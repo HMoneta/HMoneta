@@ -138,7 +138,7 @@ public class AcmeService {
 
 
     @Transactional(rollbackOn = Exception.class)
-    protected void useDnsChallengeGetCertification(String domain) {
+    public void useDnsChallengeGetCertification(String domain) {
         logger.info("=============开始申请证书=============");
         // 查找ACME用户信息
         AcmeUserInfoEntity acmeUserInfo = null;
