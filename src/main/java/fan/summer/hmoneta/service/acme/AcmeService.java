@@ -20,6 +20,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.shredzone.acme4j.*;
 import org.shredzone.acme4j.challenge.Dns01Challenge;
 import org.shredzone.acme4j.exception.AcmeException;
+import org.shredzone.acme4j.exception.AcmeNetworkException;
 import org.shredzone.acme4j.util.KeyPairUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -152,7 +153,9 @@ public class AcmeService {
         } else {
             throw new HMException(AcmeExceptionEnum.ACME_ACCOUNT_NOT_EXIST_ERROR);
         }
+        // 创建Session并设置超时时间
         Session session = new Session(acmeUri);
+        session.networkSettings().setTimeout(java.time.Duration.ofSeconds(120)); // 设置网络超时120秒
         if (needCreateAcmeUser) {
             // 创建用户
             KeyPair keyPair;
@@ -165,7 +168,6 @@ public class AcmeService {
                         .useKeyPair(keyPair)
                         .create(session);
                 if (ObjectUtils.isNotEmpty(account)) {
-                    acmeUserInfo.setId(UUID.randomUUID().toString());
                     acmeUserInfo.setUserEmail(acmeUserInfo.getUserEmail());
                     acmeUserInfo.saveKeyPair(keyPair);
                     acmeUserInfoRepository.save(acmeUserInfo);
@@ -196,7 +198,28 @@ public class AcmeService {
         }
         try {
             KeyPair keyPair = acmeUserInfo.generateKeyPair();
-            Login login = new AccountBuilder().onlyExisting().agreeToTermsOfService().useKeyPair(keyPair).createLogin(session);
+            Login login = null;
+            int loginAttempts = 0;
+            final int maxLoginAttempts = 3;
+
+            // 登录重试机制
+            while (login == null && loginAttempts < maxLoginAttempts) {
+                try {
+                    login = new AccountBuilder().onlyExisting().agreeToTermsOfService().useKeyPair(keyPair).createLogin(session);
+                } catch (AcmeNetworkException e) {
+                    loginAttempts++;
+                    logger.warn("ACME登录尝试第{}次失败: {}, 5秒后重试", loginAttempts, e.getMessage());
+                    if (loginAttempts >= maxLoginAttempts) {
+                        throw e;
+                    }
+                    try {
+                        TimeUnit.SECONDS.sleep(5);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException("登录重试过程被中断", ie);
+                    }
+                }
+            }
             // 发起订单
             logger.info("[ACME-Task:{}]创建订单", dataBaseInfo.getTaskId());
             Order order = login.newOrder().domain(domain).create();
