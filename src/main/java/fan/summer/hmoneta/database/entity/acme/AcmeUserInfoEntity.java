@@ -28,12 +28,12 @@ public class AcmeUserInfoEntity {
     private String userEmail;
 
     @Lob
-    @Column(columnDefinition = "bytea", nullable = true)
+    @Column(columnDefinition = "bytea")
     @JdbcTypeCode(SqlTypes.BINARY) // 强制 Hibernate 使用二进制类型
     private byte[] publicKey;
 
     @Lob
-    @Column(columnDefinition = "bytea", nullable = true)
+    @Column(columnDefinition = "bytea")
     @JdbcTypeCode(SqlTypes.BINARY) // 强制 Hibernate 使用二进制类型
     private byte[] privateKey;
 
