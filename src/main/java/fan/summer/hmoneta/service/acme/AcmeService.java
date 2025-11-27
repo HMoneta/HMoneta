@@ -25,6 +25,7 @@ import org.shredzone.acme4j.util.KeyPairUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.TXTRecord;
@@ -135,6 +136,71 @@ public class AcmeService {
                     });
         }
         return byteArrayOutputStream.toByteArray();
+    }
+
+    @Transactional
+    protected AcmeTaskContext getAcmeTaskContext(String domain) {
+        final AcmeTaskContext acmeTaskContext = new AcmeTaskContext();
+        AcmeUserInfoEntity orCreateAcmeUser = findOrCreateAcmeUser(domain);
+        acmeTaskContext.setAcmeUserInfoEntity(orCreateAcmeUser);
+        HmDnsProviderPlugin dnsProvider = getDnsProvider(domain);
+        acmeTaskContext.setHmDnsProviderPlugin(dnsProvider);
+        acmeTaskContext.setAcmeChallengeInfoEntity(new AcmeChallengeInfoEntity());
+        return acmeTaskContext;
+    }
+
+    @Transactional(rollbackOn = Exception.class)
+    protected AcmeUserInfoEntity findOrCreateAcmeUser(String domain) {
+        AcmeUserInfoEntity acmeUserInfo = null;
+        boolean needCreateAcmeUser = false;
+        List<AcmeUserInfoEntity> allAcmeUserInfo = acmeUserInfoRepository.findAll();
+        if (ObjectUtils.isNotEmpty(allAcmeUserInfo)) {
+            acmeUserInfo = allAcmeUserInfo.getFirst();
+            if (ObjectUtils.isEmpty(acmeUserInfo.getPrivateKey()) && ObjectUtils.isEmpty(acmeUserInfo.getPublicKey())) {
+                needCreateAcmeUser = true;
+            }
+        } else {
+            throw new HMException(AcmeExceptionEnum.ACME_ACCOUNT_NOT_EXIST_ERROR);
+        }
+        // 创建Session并设置超时时间
+        Session session = new Session(acmeUri);
+        session.networkSettings().setTimeout(java.time.Duration.ofSeconds(120)); // 设置网络超时120秒
+        if (needCreateAcmeUser) {
+            // 创建用户
+            KeyPair keyPair;
+            String accountEmail = "mailto:" + acmeUserInfo.getUserEmail();
+            keyPair = KeyPairUtils.createKeyPair(2048);
+            try {
+                Account account = new AccountBuilder()
+                        .addContact(accountEmail)
+                        .agreeToTermsOfService()
+                        .useKeyPair(keyPair)
+                        .create(session);
+                if (ObjectUtils.isNotEmpty(account)) {
+                    acmeUserInfo.setUserEmail(acmeUserInfo.getUserEmail());
+                    acmeUserInfo.saveKeyPair(keyPair);
+                    acmeUserInfoRepository.save(acmeUserInfo);
+                } else {
+                    throw new RuntimeException("[ACME-Task]创建账户失败");
+                }
+            } catch (AcmeException e) {
+                throw new RuntimeException(e.getMessage(), e);
+
+            }
+        }
+        return acmeUserInfo;
+    }
+
+    protected HmDnsProviderPlugin getDnsProvider(String domain) {
+        DnsResolveUrlEntity oneByUrl = dnsResolveUrlRepository.findOneByUrl(domain);
+        DnsResolveGroupEntity dnsResolveGroupEntity = dnsResolveGroupRepository.findById(oneByUrl.getGroupId()).get();
+        DnsProviderEntity dnsProviderEntity = dnsProviderRepository.findById(dnsResolveGroupEntity.getProviderId()).get();
+        return pluginService.getDnsProvider(dnsProviderEntity.getProviderName());
+    }
+
+    @Async
+    protected void useDnsChallengeGetCertification(AcmeTaskContext acmeTaskContext) {
+
     }
 
 
