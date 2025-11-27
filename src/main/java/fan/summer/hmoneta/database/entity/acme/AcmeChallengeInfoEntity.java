@@ -1,8 +1,6 @@
 package fan.summer.hmoneta.database.entity.acme;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -33,6 +31,7 @@ import java.util.Objects;
 @Table(name = "acme_challenge_Info")
 public class AcmeChallengeInfoEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long taskId;
     private Long userId;
     private String domain;

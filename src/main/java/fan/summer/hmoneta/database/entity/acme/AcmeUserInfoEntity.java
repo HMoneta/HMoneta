@@ -29,12 +29,12 @@ public class AcmeUserInfoEntity {
 
     @Lob
     @Column(columnDefinition = "bytea")
-    @JdbcTypeCode(SqlTypes.BINARY) // 强制 Hibernate 使用二进制类型
+    @JdbcTypeCode(SqlTypes.VARBINARY) // 强制 Hibernate 使用二进制类型
     private byte[] publicKey;
 
     @Lob
     @Column(columnDefinition = "bytea")
-    @JdbcTypeCode(SqlTypes.BINARY) // 强制 Hibernate 使用二进制类型
+    @JdbcTypeCode(SqlTypes.VARBINARY) // 强制 Hibernate 使用二进制类型
     private byte[] privateKey;
 
     /**
