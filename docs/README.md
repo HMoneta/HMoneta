@@ -33,6 +33,7 @@ HMoneta 是一个基于 Spring Boot 的 DNS 动态更新服务（DDNS），主�
 9. **实时日志监控**: 支持按服务订阅日志，支持订阅所有日志
 10. **证书申请与打包**: 支持证书申请、生成完整证书链和打包功能
 11. **异步任务日志**: 支持异步任务日志记录和查询，通过AcmeAsyncLogEntity实体管理异步任务日志
+12. **ACME 证书申请重试机制**: 包含登录重试和网络异常处理机制
 
 ## 快速开始
 
@@ -120,7 +121,7 @@ hmoneta.acme.uri: ACME 服务提供商 URI (如 Let's Encrypt)
     - `user/`: 用户认证和管理服务
   - `database/`: JPA 实体和存储库
     - `entity/`: JPA 实体类
-      - `acme/`: ACME 相关实体 (AcmeAsyncLogEntity, AcmeCertificationEntity, AcmeUserInfoEntity)
+      - `acme/`: ACME 相关实体 (AcmeAsyncLogEntity, AcmeCertificationEntity, AcmeUserInfoEntity, AcmeTaskContext)
       - `dns/`: DNS 相关实体 (DnsProviderEntity, DnsResolveGroupEntity, DnsResolveUrlEntity)
       - `user/`: 用户相关实体 (UserEntity)
     - `repository/`: JPA 存储库接口
@@ -227,3 +228,18 @@ HMoneta支持自定义插件，插件均需实现*HMoneta-Official-Plugin-Api*
 - 优化了异步任务中的数据库操作异常处理
 - 增强了ACME证书申请过程中的网络异常处理
 - 添加了ACME挑战获取的异常处理机制
+- 优化了证书文件保存流程，确保私钥和证书链的正确生成和保存
+- 实现了WebSocket日志系统的ping/pong心跳机制，确保连接稳定性
+- 增强了插件系统的错误处理和日志记录功能
+- 优化了定时任务的执行逻辑，确保IP更新的准确性
+- 强化了异步任务的异常捕获和处理机制
+- 增加了对证书申请过程的详细日志记录
+- 优化了数据库连接池配置以提高性能
+- 强化了前端和后端的错误处理机制
+- 增加了对插件版本的管理和更新功能
+- 优化了WebSocket连接管理，防止连接泄漏
+- 增强了ACME证书申请过程中的网络超时设置
+- 优化了证书文件的打包和存储逻辑
+- 增加了对DNS更新失败情况的处理机制
+- 强化了插件加载失败的错误日志记录
+- 修复了腾讯云DNS插件中客户端未正确初始化的问题
