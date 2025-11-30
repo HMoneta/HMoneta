@@ -31,10 +31,11 @@ HMoneta 项目遵循前后端分离架构设计，由后端API服务和前端Web
 - **前端**: Vue 3, Vuetify 3, Vite 7, Pinia
 - **数据库**: PostgreSQL, JPA/Hibernate
 - **插件系统**: PF4J (Plugin Framework for Java) + Spring Boot Integration
-- **安全**: JWT 认证
+- **安全**: JWT 认证, MD5 密码加密 (通过MD5 + salt实现)
 - **定时任务**: Spring Scheduling
 - **实时通信**: WebSocket
 - **证书管理**: ACME4J
+- **工具库**: Apache Commons Text, Commons Validator, Bouncy Castle, Hypersistence Utils for Hibernate
 
 ## 2. 后端架构
 
@@ -64,6 +65,8 @@ src/main/java/fan/summer/hmoneta/
 │   └── interceptor/                # 拦截器
 │       └── ApiInterceptor.java     # API拦截器
 ├── controller/                     # 控制器层
+│   ├── acme/                       # ACME相关控制器
+│   │   └── AcmeController.java     # ACME证书管理控制器
 │   ├── dns/                        # DNS相关控制器
 │   │   └── DnsController.java      # DNS管理控制器
 │   ├── plugin/                     # 插件相关控制器
@@ -73,12 +76,13 @@ src/main/java/fan/summer/hmoneta/
 ├── database/                       # 数据库相关
 │   ├── entity/                     # 实体类
 │   │   ├── acme/                   # ACME相关实体
-│   │   │   ├── AcmeChallengeInfoEntity.java # ACME挑战信息实体
-│   │   │   └── AcmeUserInfoEntity.java     # ACME用户信息实体
+│   │   │   ├── AcmeAsyncLogEntity.java        # ACME异步任务日志实体
+│   │   │   ├── AcmeCertificationEntity.java   # ACME证书认证实体
+│   │   │   └── AcmeUserInfoEntity.java        # ACME用户信息实体
 │   │   ├── dns/                    # DNS相关实体
-│   │   │   ├── DnsProviderEntity.java      # DNS提供商实体
-│   │   │   ├── DnsResolveGroupEntity.java  # DNS解析分组实体
-│   │   │   └── DnsResolveUrlEntity.java    # DNS解析URL实体
+│   │   │   ├── DnsProviderEntity.java         # DNS提供商实体
+│   │   │   ├── DnsResolveGroupEntity.java     # DNS解析分组实体
+│   │   │   └── DnsResolveUrlEntity.java       # DNS解析URL实体
 │   │   └── user/                   # 用户相关实体
 │   │       └── UserEntity.java     # 用户实体
 │   └── repository/                 # JPA仓库接口
@@ -87,7 +91,9 @@ src/main/java/fan/summer/hmoneta/
 │       └── user/                   # 用户相关仓库
 ├── service/                        # 业务逻辑层
 │   ├── acme/                       # ACME服务
-│   │   └── AcmeService.java        # ACME证书申请服务
+│   │   ├── AcmeService.java        # ACME证书申请服务
+│   │   ├── AcmeServiceComponent.java # ACME证书申请核心组件
+│   │   └── AcmeTaskContext.java    # ACME任务上下文
 │   ├── dns/                        # DNS服务
 │   │   └── DnsService.java         # DNS解析管理服务
 │   ├── plugin/                     # 插件服务
@@ -146,6 +152,7 @@ src/main/java/fan/summer/hmoneta/
 - `UserController`: 用户管理API入口
 - `UserService`: 用户业务逻辑处理
 - `JwtUtil`: JWT工具类
+- `Md5Util`: MD5加盐加密工具类
 
 #### 2.2.4 ACME证书管理模块 (`/acme`)
 
@@ -154,11 +161,16 @@ src/main/java/fan/summer/hmoneta/
 - DNS-01挑战验证
 - 证书自动续期
 - 证书打包下载
+- 异步任务日志管理
 
 **核心组件**：
+- `AcmeController`: ACME相关API控制器
 - `AcmeService`: ACME证书申请服务
-- `AcmeChallengeInfoEntity`: ACME挑战信息实体
+- `AcmeServiceComponent`: ACME证书申请核心组件，包含异步证书申请实现
+- `AcmeTaskContext`: ACME任务上下文，用于跟踪异步申请过程
+- `AcmeCertificationEntity`: ACME证书认证实体
 - `AcmeUserInfoEntity`: ACME用户信息实体
+- `AcmeAsyncLogEntity`: ACME异步任务日志实体，用于跟踪异步证书申请任务的状态和日志信息
 
 #### 2.2.5 WebSocket日志模块 (`/websocket`)
 
@@ -182,7 +194,7 @@ UserEntity (1) -- (n) DnsProviderEntity (1) -- (n) DnsResolveGroupEntity (1) -- 
     │                  └──────────────────────────┼──────────────────────────────┘
     │                                             │
     └─────────────────────────────────────────────┘
-AcmeUserInfoEntity (1) -- (n) AcmeChallengeInfoEntity
+AcmeUserInfoEntity (1) -- (n) AcmeCertificationEntity -- (n) AcmeAsyncLogEntity
 ```
 
 #### 2.3.2 主要实体说明
@@ -192,7 +204,8 @@ AcmeUserInfoEntity (1) -- (n) AcmeChallengeInfoEntity
 - **DnsResolveGroupEntity**: DNS解析分组表，将DNS解析记录进行分组管理
 - **DnsResolveUrlEntity**: DNS解析URL表，存储具体的DNS解析记录
 - **AcmeUserInfoEntity**: ACME用户信息表，存储ACME账户信息
-- **AcmeChallengeInfoEntity**: ACME挑战信息表，存储证书申请过程信息
+- **AcmeCertificationEntity**: ACME证书认证信息表，存储证书申请过程信息
+- **AcmeAsyncLogEntity**: ACME异步任务日志表，用于跟踪异步证书申请任务的状态和日志信息
 
 ## 3. 前端架构
 
@@ -268,6 +281,7 @@ HMfront/hm-front/src/
   - JWT配置
   - 任务调度配置
   - 文件上传配置
+  - ACME服务配置
 
 ### 4.2 前端环境配置
 
@@ -286,7 +300,7 @@ HMfront/hm-front/src/
 ### 5.2 数据库安全
 
 - 敏感信息通过环境变量配置
-- 密码使用BCrypt加密存储
+- 密码使用MD5加盐加密存储
 
 ### 5.3 API安全
 
@@ -320,3 +334,28 @@ HMfront/hm-front/src/
 ### 7.3 配置化
 
 通过配置文件和环境变量实现灵活配置，支持不同环境的部署需求。
+
+## 8. 异步任务处理
+
+### 8.1 ACME证书申请异步处理
+
+项目中ACME证书申请采用了异步处理机制，使用@Async注解实现。为了解决异步处理中的日志查询问题，项目采用了以下方案：
+
+1. **异步任务日志实体**: 通过`AcmeAsyncLogEntity`实体存储异步任务日志信息，包含任务ID、域名、日志信息和执行状态
+2. **任务状态跟踪**: 在异步方法中通过TaskID跟踪任务状态，更新日志信息到数据库
+3. **日志查询API**: 提供API端点查询特定任务的日志信息
+4. **实时推送**: 通过WebSocket将异步任务的执行状态实时推送到前端
+
+### 8.2 异步处理优化
+
+- 证书申请过程包含登录重试机制，最多重试3次
+- DNS传播验证使用最多10次尝试验证，每次间隔10秒
+- 证书申请过程包含自动清理验证用DNS记录功能
+- 增强了异步任务中的网络异常处理机制
+
+## 9. 定时任务配置
+
+项目使用Spring Scheduling框架进行定时任务执行。
+- `DnsUpdateTask`: DNS更新定时任务，每10分钟（600000毫秒）执行一次，仅在非开发环境（!dev profile）下运行
+- 任务线程池使用HMScheduling-前缀命名
+- 支持任务执行日志记录和异常处理

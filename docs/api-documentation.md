@@ -144,6 +144,28 @@
 }
 ```
 
+## ACME 证书管理 API
+
+### 1. 修改 ACME 用户信息
+
+- **接口路径**: `POST /hm/acme/modify`
+- **功能描述**: 修改 ACME 用户信息
+- **请求参数**:
+```json
+{
+  "userEmail": "user@example.com"
+}
+```
+- **响应示例**: HTTP 200 OK
+
+### 2. 申请 SSL 证书
+
+- **接口路径**: `GET /hm/acme/apply`
+- **功能描述**: 申请 SSL 证书
+- **请求参数**: 
+  - `domain` (query参数): 域名
+- **响应示例**: 任务ID字符串
+
 ## WebSocket 实时日志 API
 
 ### 1. 日志推送连接
@@ -170,6 +192,7 @@ ACME证书管理功能通过`AcmeService`实现，主要功能包括：
    - 自动创建_acme-challenge记录
    - 验证DNS记录生效
    - 完成证书申请流程
+   - 证书异步申请处理
 
 2. **证书自动续期**
    - 定期检查证书有效期
@@ -182,6 +205,7 @@ ACME证书管理功能通过`AcmeService`实现，主要功能包括：
 4. **ACME挑战信息管理**
    - 管理证书申请过程信息
    - 记录申请状态和日志
+   - 通过AcmeAsyncLogEntity实体跟踪异步任务日志
 
 ## 认证与授权
 
@@ -229,6 +253,10 @@ curl -X POST http://localhost:8080/hm/user/login \
 # 上传插件
 curl -X POST http://localhost:8080/hm/plugin/upload \
   -F "plugin=@plugin.zip"
+
+# 申请SSL证书
+curl -X GET "http://localhost:8080/hm/acme/apply?domain=example.com" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
 ```
 
 ### JavaScript/Fetch 示例
@@ -257,4 +285,14 @@ fetch('http://localhost:8080/hm/user/login', {
 })
 .then(response => response.text())
 .then(token => console.log(token));
+
+// 申请SSL证书
+fetch('http://localhost:8080/hm/acme/apply?domain=example.com', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer ' + token
+  }
+})
+.then(response => response.text())
+.then(taskId => console.log('证书申请任务ID:', taskId));
 ```
