@@ -184,6 +184,7 @@ public class AcmeServiceComponent {
             // 登录重试机制
             while (login == null && loginAttempts < maxLoginAttempts) {
                 try {
+                    logger.info("[ACME-Task:{}]开始登录", acmeTaskContext.getTaskId());
                     login = new AccountBuilder().onlyExisting().agreeToTermsOfService().useKeyPair(keyPair).createLogin(session);
                 } catch (AcmeNetworkException e) {
                     loginAttempts++;
@@ -213,6 +214,7 @@ public class AcmeServiceComponent {
                 logger.info("[ACME-Task:{}]修改DNS", acmeTaskContext.getTaskId());
                 String subDomain = acmeTaskContext.getDomain().substring(0, acmeTaskContext.getDomain().indexOf('.'));
                 String mainDomain = acmeTaskContext.getDomain().substring(acmeTaskContext.getDomain().indexOf('.') + 1);
+                // 创建DNS解析记录
                 boolean status = acmeTaskContext.getHmDnsProviderPlugin().modifyDns(mainDomain, "_acme-challenge." + subDomain, "TXT", digest);
                 logger.info("[ACME-Task:{}]DNS修改状态:{}", acmeTaskContext.getTaskId(), status);
                 if (status & waitForDnsPropagation("_acme-challenge." + acmeTaskContext.getDomain(), digest)) {
