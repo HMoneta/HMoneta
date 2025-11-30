@@ -256,6 +256,8 @@ public class AcmeServiceComponent {
                                     AcmeCertificationEntity acmeCertificationEntity = new AcmeCertificationEntity();
                                     acmeCertificationEntity.saveKeyPair(keyPair);
                                     acmeCertificationEntity.setCertApplyTime(LocalDateTime.now());
+                                    acmeCertificationEntity.setDomain(acmeTaskContext.getDomain());
+                                    acmeCertificationEntity.setProviderName(acmeTaskContext.getHmDnsProviderPlugin().providerName());
                                     try {
                                         acmeAcmeCertificationRepository.save(acmeCertificationEntity);
                                     } catch (Exception e) {
