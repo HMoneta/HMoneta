@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/hm/acme")
 public class AcmeController {
-    private AcmeService acmeService;
+    private final AcmeService acmeService;
 
     public AcmeController(AcmeService acmeService) {
         this.acmeService = acmeService;
@@ -32,8 +32,8 @@ public class AcmeController {
     }
 
     @GetMapping("/apply")
-    public ResponseEntity<String> modifyAcmeUserInfo(@RequestParam String domain) {
-        acmeService.useDnsChallengeGetCertification(domain);
-        return ResponseEntity.ok("success");
+    public ResponseEntity<String> applyCertification(@RequestParam String domain) {
+        String s = acmeService.applyCertification(domain);
+        return ResponseEntity.ok(s);
     }
 }

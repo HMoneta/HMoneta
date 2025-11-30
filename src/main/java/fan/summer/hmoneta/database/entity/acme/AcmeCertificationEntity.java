@@ -1,6 +1,9 @@
 package fan.summer.hmoneta.database.entity.acme;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -28,17 +31,14 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Table(name = "acme_challenge_Info")
-public class AcmeChallengeInfoEntity {
+public class AcmeCertificationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long taskId;
-    private Long userId;
+    private Long id;
     private String domain;
     private String providerName;
     private byte[] certPublicKey;
     private byte[] certPrivateKey;
-    private String statusInfo;
     private LocalDateTime certApplyTime;
 
     /**
@@ -69,8 +69,8 @@ public class AcmeChallengeInfoEntity {
         if (thisEffectiveClass != oEffectiveClass) {
             return false;
         }
-        AcmeChallengeInfoEntity that = (AcmeChallengeInfoEntity) o;
-        return getTaskId() != null && Objects.equals(getTaskId(), that.getTaskId());
+        AcmeCertificationEntity that = (AcmeCertificationEntity) o;
+        return getId() != null && Objects.equals(getId(), that.getId());
     }
 
     @Override

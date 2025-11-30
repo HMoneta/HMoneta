@@ -10,11 +10,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.core.env.Environment;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EntityScan("fan.summer.hmoneta.database.entity")
 @EnableScheduling
+@EnableAsync
 public class HMonetaApplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(HMonetaApplication.class);

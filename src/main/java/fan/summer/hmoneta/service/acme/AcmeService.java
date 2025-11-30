@@ -2,91 +2,75 @@ package fan.summer.hmoneta.service.acme;
 
 import fan.summer.hmoneta.common.enums.exception.acme.AcmeExceptionEnum;
 import fan.summer.hmoneta.common.exception.HMException;
-import fan.summer.hmoneta.database.entity.acme.AcmeChallengeInfoEntity;
 import fan.summer.hmoneta.database.entity.acme.AcmeUserInfoEntity;
 import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
 import fan.summer.hmoneta.database.entity.dns.DnsResolveGroupEntity;
 import fan.summer.hmoneta.database.entity.dns.DnsResolveUrlEntity;
-import fan.summer.hmoneta.database.repository.acme.AcmeChallengeInfoRepository;
 import fan.summer.hmoneta.database.repository.acme.AcmeUserInfoRepository;
 import fan.summer.hmoneta.database.repository.dns.DnsProviderRepository;
 import fan.summer.hmoneta.database.repository.dns.DnsResolveGroupRepository;
 import fan.summer.hmoneta.database.repository.dns.DnsResolveUrlRepository;
 import fan.summer.hmoneta.plugin.api.dns.HmDnsProviderPlugin;
 import fan.summer.hmoneta.service.plugin.PluginService;
-import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
-import org.shredzone.acme4j.*;
-import org.shredzone.acme4j.challenge.Dns01Challenge;
-import org.shredzone.acme4j.exception.AcmeException;
-import org.shredzone.acme4j.exception.AcmeNetworkException;
-import org.shredzone.acme4j.util.KeyPairUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.xbill.DNS.Lookup;
-import org.xbill.DNS.TXTRecord;
-import org.xbill.DNS.TextParseException;
-import org.xbill.DNS.Type;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
-import java.security.spec.InvalidKeySpecException;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import java.util.UUID;
 
 /**
- * Acme证书申请类
+ * Acme证书申请服务
  *
  * @author phoebej
  * @version 1.00
- * @Date 2025/11/18
+ * @Date 2025/11/28
  */
-@Log4j2
 @Service
+@Log4j2
 public class AcmeService {
-    private static final Logger logger = LoggerFactory.getLogger(AcmeService.class);
 
-    final int maxAttempts = 10;  // 最大尝试次数
-
-    @Value("${acme.url}")
-    private String acmeUri;
 
     private final PluginService pluginService;
 
-    private final AcmeChallengeInfoRepository acmeChallengeInfoRepository;
+
     private final AcmeUserInfoRepository acmeUserInfoRepository;
+
+    private final AcmeServiceComponent acmeServiceComponent;
+
     private final DnsProviderRepository dnsProviderRepository;
+
     private final DnsResolveGroupRepository dnsResolveGroupRepository;
+
     private final DnsResolveUrlRepository dnsResolveUrlRepository;
 
-    public AcmeService(PluginService pluginService,
-                       AcmeChallengeInfoRepository acmeChallengeInfoRepository,
-                       AcmeUserInfoRepository acmeUserInfoRepository,
-                       DnsProviderRepository dnsProviderRepository,
+    /**
+     * 构造函数，初始化AcmeService所需的各种依赖
+     *
+     * @param pluginService               插件服务
+     * @param acmeChallengeInfoRepository ACME用户信息仓库
+     * @param acmeServiceComponent        ACME服务组件
+     * @param dnsProviderRepository       DNS提供商仓库
+     * @param dnsResolveGroupRepository   DNS解析分组仓库
+     * @param dnsResolveUrlRepository     DNS解析URL仓库
+     */
+    public AcmeService(PluginService pluginService, AcmeUserInfoRepository acmeChallengeInfoRepository, AcmeServiceComponent acmeServiceComponent, DnsProviderRepository dnsProviderRepository,
                        DnsResolveGroupRepository dnsResolveGroupRepository,
                        DnsResolveUrlRepository dnsResolveUrlRepository) {
         this.pluginService = pluginService;
-        this.acmeChallengeInfoRepository = acmeChallengeInfoRepository;
-        this.acmeUserInfoRepository = acmeUserInfoRepository;
+        this.acmeUserInfoRepository = acmeChallengeInfoRepository;
+        this.acmeServiceComponent = acmeServiceComponent;
         this.dnsProviderRepository = dnsProviderRepository;
         this.dnsResolveGroupRepository = dnsResolveGroupRepository;
         this.dnsResolveUrlRepository = dnsResolveUrlRepository;
     }
 
+    /**
+     * 保存或更新ACME用户信息
+     * 如果实体没有ID，则创建新实体；如果存在ID，则更新现有实体
+     *
+     * @param acmeUserInfoEntity ACME用户信息实体
+     * @throws HMException 如果更新时找不到对应的实体，则抛出异常
+     */
     public void insertAcmeUserInfo(AcmeUserInfoEntity acmeUserInfoEntity) {
         if (ObjectUtils.isEmpty(acmeUserInfoEntity.getId())) {
             // 新增
@@ -99,454 +83,52 @@ public class AcmeService {
                 acmeUserInfoRepository.save(item);
             }, () -> {
                 throw new HMException(AcmeExceptionEnum.ACME_ACCOUNT_UPDATE_ERROR);
-
             });
-
         }
-
     }
 
-
-    protected byte[] packCertifications(String domain) throws IOException {
-        String dirPath = "certs/" + domain;
-        Path basePath = Paths.get(dirPath);
-        if (!Files.exists(basePath)) {
-            try {
-                Files.createDirectories(basePath);
-            } catch (IOException e) {
-                throw new HMException(AcmeExceptionEnum.CER_CREATE_FOLDER_ERROR);
-            }
-        } else if (!Files.isDirectory(basePath)) {
-            throw new HMException(AcmeExceptionEnum.CER_ERROR_FOLDER_NOT_EXIST);
-        }
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        try (ZipOutputStream zipOut = new ZipOutputStream(byteArrayOutputStream)) {
-            Files.walk(basePath)
-                    .filter(Files::isRegularFile) // 只处理普通文件
-                    .forEach(file -> {
-                        try {
-                            // 添加文件到 ZIP 中
-                            ZipEntry zipEntry = new ZipEntry(basePath.relativize(file).toString());
-                            zipOut.putNextEntry(zipEntry);
-                            Files.copy(file, zipOut);
-                            zipOut.closeEntry();
-                        } catch (IOException e) {
-                            throw new RuntimeException("文件打包失败", e);
-                        }
-                    });
-        }
-        return byteArrayOutputStream.toByteArray();
+    /**
+     * 为指定域名申请SSL证书
+     * 通过DNS挑战方式验证域名所有权并获取证书
+     *
+     * @param domain 需要申请证书的域名
+     */
+    public String applyCertification(String domain) {
+        AcmeTaskContext acmeTaskContext = getAcmeTaskContext(domain);
+        acmeServiceComponent.useDnsChallengeGetCertification(acmeTaskContext);
+        return acmeTaskContext.getTaskId();
     }
 
-    @Transactional
-    protected AcmeTaskContext getAcmeTaskContext(String domain) {
+    /**
+     * 根据域名获取ACME任务上下文
+     * 构建包含域名、用户信息和DNS提供商的任务上下文
+     *
+     * @param domain 需要申请证书的域名
+     * @return ACME任务上下文对象
+     */
+    private AcmeTaskContext getAcmeTaskContext(String domain) {
         final AcmeTaskContext acmeTaskContext = new AcmeTaskContext();
-        AcmeUserInfoEntity orCreateAcmeUser = findOrCreateAcmeUser(domain);
+        acmeTaskContext.setTaskId(UUID.randomUUID().toString());
+        acmeTaskContext.setDomain(domain);
+        AcmeUserInfoEntity orCreateAcmeUser = acmeServiceComponent.findOrCreateAcmeUser(domain);
         acmeTaskContext.setAcmeUserInfoEntity(orCreateAcmeUser);
         HmDnsProviderPlugin dnsProvider = getDnsProvider(domain);
         acmeTaskContext.setHmDnsProviderPlugin(dnsProvider);
-        acmeTaskContext.setAcmeChallengeInfoEntity(new AcmeChallengeInfoEntity());
         return acmeTaskContext;
     }
 
-    @Transactional(rollbackOn = Exception.class)
-    protected AcmeUserInfoEntity findOrCreateAcmeUser(String domain) {
-        AcmeUserInfoEntity acmeUserInfo = null;
-        boolean needCreateAcmeUser = false;
-        List<AcmeUserInfoEntity> allAcmeUserInfo = acmeUserInfoRepository.findAll();
-        if (ObjectUtils.isNotEmpty(allAcmeUserInfo)) {
-            acmeUserInfo = allAcmeUserInfo.getFirst();
-            if (ObjectUtils.isEmpty(acmeUserInfo.getPrivateKey()) && ObjectUtils.isEmpty(acmeUserInfo.getPublicKey())) {
-                needCreateAcmeUser = true;
-            }
-        } else {
-            throw new HMException(AcmeExceptionEnum.ACME_ACCOUNT_NOT_EXIST_ERROR);
-        }
-        // 创建Session并设置超时时间
-        Session session = new Session(acmeUri);
-        session.networkSettings().setTimeout(java.time.Duration.ofSeconds(120)); // 设置网络超时120秒
-        if (needCreateAcmeUser) {
-            // 创建用户
-            KeyPair keyPair;
-            String accountEmail = "mailto:" + acmeUserInfo.getUserEmail();
-            keyPair = KeyPairUtils.createKeyPair(2048);
-            try {
-                Account account = new AccountBuilder()
-                        .addContact(accountEmail)
-                        .agreeToTermsOfService()
-                        .useKeyPair(keyPair)
-                        .create(session);
-                if (ObjectUtils.isNotEmpty(account)) {
-                    acmeUserInfo.setUserEmail(acmeUserInfo.getUserEmail());
-                    acmeUserInfo.saveKeyPair(keyPair);
-                    acmeUserInfoRepository.save(acmeUserInfo);
-                } else {
-                    throw new RuntimeException("[ACME-Task]创建账户失败");
-                }
-            } catch (AcmeException e) {
-                throw new RuntimeException(e.getMessage(), e);
-
-            }
-        }
-        return acmeUserInfo;
-    }
-
-    protected HmDnsProviderPlugin getDnsProvider(String domain) {
+    /**
+     * 根据域名获取对应的DNS提供商插件
+     * 通过域名查找DNS解析URL，再获取分组和提供商信息，最终获取插件实例
+     *
+     * @param domain 需要申请证书的域名
+     * @return DNS提供商插件实例
+     */
+    private HmDnsProviderPlugin getDnsProvider(String domain) {
         DnsResolveUrlEntity oneByUrl = dnsResolveUrlRepository.findOneByUrl(domain);
         DnsResolveGroupEntity dnsResolveGroupEntity = dnsResolveGroupRepository.findById(oneByUrl.getGroupId()).get();
         DnsProviderEntity dnsProviderEntity = dnsProviderRepository.findById(dnsResolveGroupEntity.getProviderId()).get();
         return pluginService.getDnsProvider(dnsProviderEntity.getProviderName());
-    }
-
-    @Async
-    protected void useDnsChallengeGetCertification(AcmeTaskContext acmeTaskContext) {
-
-    }
-
-
-    @Transactional(rollbackOn = Exception.class)
-    public void useDnsChallengeGetCertification(String domain) {
-        logger.info("=============开始申请证书=============");
-        // 查找ACME用户信息
-        AcmeUserInfoEntity acmeUserInfo = null;
-        boolean needCreateAcmeUser = false;
-        List<AcmeUserInfoEntity> allAcmeUserInfo = acmeUserInfoRepository.findAll();
-        if (ObjectUtils.isNotEmpty(allAcmeUserInfo)) {
-            acmeUserInfo = allAcmeUserInfo.getFirst();
-            if (ObjectUtils.isEmpty(acmeUserInfo.getPrivateKey()) && ObjectUtils.isEmpty(acmeUserInfo.getPublicKey())) {
-                needCreateAcmeUser = true;
-            }
-        } else {
-            throw new HMException(AcmeExceptionEnum.ACME_ACCOUNT_NOT_EXIST_ERROR);
-        }
-        // 创建Session并设置超时时间
-        Session session = new Session(acmeUri);
-        session.networkSettings().setTimeout(java.time.Duration.ofSeconds(120)); // 设置网络超时120秒
-        if (needCreateAcmeUser) {
-            // 创建用户
-            KeyPair keyPair;
-            String accountEmail = "mailto:" + acmeUserInfo.getUserEmail();
-            keyPair = KeyPairUtils.createKeyPair(2048);
-            try {
-                Account account = new AccountBuilder()
-                        .addContact(accountEmail)
-                        .agreeToTermsOfService()
-                        .useKeyPair(keyPair)
-                        .create(session);
-                if (ObjectUtils.isNotEmpty(account)) {
-                    acmeUserInfo.setUserEmail(acmeUserInfo.getUserEmail());
-                    acmeUserInfo.saveKeyPair(keyPair);
-                    acmeUserInfoRepository.save(acmeUserInfo);
-                } else {
-                    throw new RuntimeException("[ACME-Task]创建账户失败");
-                }
-            } catch (AcmeException e) {
-                throw new RuntimeException(e.getMessage(), e);
-            }
-        }
-        // 获取证书
-        if (ObjectUtils.isNotEmpty(acmeChallengeInfoRepository.findByDomain(domain))) {
-            acmeChallengeInfoRepository.deleteByDomain(domain);
-        }
-        DnsResolveUrlEntity oneByUrl = dnsResolveUrlRepository.findOneByUrl(domain);
-        DnsResolveGroupEntity dnsResolveGroupEntity = dnsResolveGroupRepository.findById(oneByUrl.getGroupId()).get();
-        DnsProviderEntity dnsProviderEntity = dnsProviderRepository.findById(dnsResolveGroupEntity.getProviderId()).get();
-        HmDnsProviderPlugin dnsProvider = pluginService.getDnsProvider(dnsProviderEntity.getProviderName());
-        AcmeChallengeInfoEntity dataBaseInfo = new AcmeChallengeInfoEntity();
-        if (ObjectUtils.isNotEmpty(dnsProvider)) {
-            dataBaseInfo.setDomain(domain);
-            dataBaseInfo.setTaskId(UUID.randomUUID().timestamp());
-            dataBaseInfo.setProviderName(dnsProvider.providerName());
-            dataBaseInfo.setStatusInfo("0");
-            acmeChallengeInfoRepository.save(dataBaseInfo);
-        } else {
-            throw new HMException(AcmeExceptionEnum.DNS_SERVICE_NOT_FOUND_PROVIDER_ERROR);
-        }
-        try {
-            KeyPair keyPair = acmeUserInfo.generateKeyPair();
-            Login login = null;
-            int loginAttempts = 0;
-            final int maxLoginAttempts = 3;
-
-            // 登录重试机制
-            while (login == null && loginAttempts < maxLoginAttempts) {
-                try {
-                    login = new AccountBuilder().onlyExisting().agreeToTermsOfService().useKeyPair(keyPair).createLogin(session);
-                } catch (AcmeNetworkException e) {
-                    loginAttempts++;
-                    logger.warn("ACME登录尝试第{}次失败: {}, 5秒后重试", loginAttempts, e.getMessage());
-                    if (loginAttempts >= maxLoginAttempts) {
-                        throw e;
-                    }
-                    try {
-                        TimeUnit.SECONDS.sleep(5);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        throw new RuntimeException("登录重试过程被中断", ie);
-                    }
-                }
-            }
-            // 发起订单
-            logger.info("[ACME-Task:{}]创建订单", dataBaseInfo.getTaskId());
-            Order order = login.newOrder().domain(domain).create();
-            Order bindOrder = login.bindOrder(order.getLocation());
-            Authorization authorization = bindOrder.getAuthorizations().getFirst();
-            logger.info("[ACME-Task:{}]发起DNS-01挑战", dataBaseInfo.getTaskId());
-            authorization.findChallenge(Dns01Challenge.class).ifPresentOrElse(challenge -> {
-                String digest = challenge.getDigest();
-                logger.info("[ACME-Task:{}]获取到DNS挑战内容:{}", dataBaseInfo.getTaskId(), digest);
-                logger.info("[ACME-Task:{}]修改DNS", dataBaseInfo.getTaskId());
-                String subDomain = domain.substring(0, domain.indexOf('.'));
-                String mainDomain = domain.substring(domain.indexOf('.') + 1);
-                boolean status = dnsProvider.modifyDns(mainDomain, "_acme-challenge." + subDomain, "TXT", digest);
-                logger.info("[ACME-Task:{}]DNS修改状态:{}", dataBaseInfo.getTaskId(), status);
-                if (status & waitForDnsPropagation("_acme-challenge." + domain, digest)) {
-                    try {
-                        logger.info("[ACME-Task:{}]开启挑战", dataBaseInfo.getTaskId());
-                        challenge.trigger();
-                        logger.info("[ACME-Task:{}]挑战结果验证", dataBaseInfo.getTaskId());
-                        while (!EnumSet.of(Status.VALID, Status.INVALID).contains(authorization.getStatus())) {
-                            try {
-                                TimeUnit.MILLISECONDS.sleep(5000);
-                                logger.info("[ACME-Task:{}]再次验证", dataBaseInfo.getTaskId());
-                                authorization.fetch();
-                            } catch (InterruptedException ignored) {
-                                logger.error("[ACME-Task:{}]线程意外中断:{}", dataBaseInfo.getTaskId(), ignored.getMessage());
-                                break;
-                            } catch (AcmeException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                        logger.info("[ACME-Task:{}]挑战结果:{}", dataBaseInfo.getTaskId(), authorization.getStatus());
-                        if (authorization.getStatus() == Status.VALID) {
-                            logger.info("[ACME-Task:{}]验证通过", dataBaseInfo.getTaskId());
-                            removeTxtDnsInfo(dnsProvider, mainDomain, subDomain);
-                            // 获取证书
-                            try {
-                                logger.info("[ACME-Task:{}]获取证书", dataBaseInfo.getTaskId());
-                                KeyPair cerKeyPair = KeyPairUtils.createKeyPair(2048);
-                                order.execute(cerKeyPair);
-                                while (!EnumSet.of(Status.VALID, Status.INVALID).contains(order.getStatus())) {
-                                    TimeUnit.MILLISECONDS.sleep(5000);
-                                    logger.info("[ACME-Task:{}]继续验证证书签发状态", dataBaseInfo.getTaskId());
-                                    order.fetch();
-                                }
-                                if (order.getStatus() == Status.VALID) {
-                                    logger.info("[ACME-Task:{}]订单确认完成，开始下载证书", dataBaseInfo.getTaskId());
-                                    Certificate cert = order.getCertificate();
-                                    X509Certificate certificate = cert.getCertificate();
-                                    List<X509Certificate> chain = cert.getCertificateChain();
-                                    saveCertificateFiles(cerKeyPair, cert, domain, dataBaseInfo.getTaskId());
-                                    dataBaseInfo.saveKeyPair(keyPair);
-                                    dataBaseInfo.setCertApplyTime(LocalDateTime.now());
-                                    dataBaseInfo.setStatusInfo("1");
-                                } else {
-                                    logger.error("[ACME-Task:{}]订单确认失败", dataBaseInfo.getTaskId());
-                                    dataBaseInfo.setStatusInfo("-1");
-                                }
-                            } catch (AcmeException | InterruptedException | CertificateEncodingException |
-                                     IOException e) {
-                                dataBaseInfo.setStatusInfo("-1");
-                                throw new RuntimeException(e);
-                            }
-                        } else {
-                            removeTxtDnsInfo(dnsProvider, mainDomain, subDomain);
-                            logger.error("[ACME-Task:{}]验证未通过", dataBaseInfo.getTaskId());
-                            dataBaseInfo.setStatusInfo("-1");
-                        }
-                    } catch (AcmeException e) {
-                        removeTxtDnsInfo(dnsProvider, mainDomain, subDomain);
-                        dataBaseInfo.setStatusInfo("-1");
-                        throw new RuntimeException(e);
-                    }
-                } else {
-                    logger.error("[ACME-Task:{}]未通过DNS记录验证", dataBaseInfo.getTaskId());
-                    dataBaseInfo.setStatusInfo("-1");
-                    if (status) {
-                        removeTxtDnsInfo(dnsProvider, mainDomain, subDomain);
-                    }
-                }
-            }, () -> {
-                logger.error("[ACME-Task:{}]未正常获取到Dns01Challenge对象", dataBaseInfo.getTaskId());
-                dataBaseInfo.setStatusInfo("-1");
-            });
-        } catch (AcmeException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-            dataBaseInfo.setStatusInfo("-1");
-            throw new RuntimeException(e);
-        } finally {
-            if (ObjectUtils.isNotEmpty(dataBaseInfo)) {
-                if (ObjectUtils.isEmpty(dataBaseInfo.getStatusInfo())) {
-                    dataBaseInfo.setStatusInfo("-1");
-                }
-                acmeChallengeInfoRepository.save(dataBaseInfo);
-            }
-            logger.info("[ACME-Task:{}]结束证书申请服务", dataBaseInfo.getTaskId());
-        }
-    }
-
-    private boolean waitForDnsPropagation(String domain, String expectedTxtRecord) {
-        log.info("开始验证域名{}的TXT解析是否生效", domain);
-        try {
-            Lookup lookup = new Lookup(domain, Type.TXT);
-            for (int attempt = 1; this.maxAttempts >= attempt; attempt++) {
-                lookup.run();
-                if (lookup.getResult() == Lookup.SUCCESSFUL) {
-                    log.info("DNS记录查询成功，开始验证");
-                    org.xbill.DNS.Record[] answers = lookup.getAnswers();
-                    for (org.xbill.DNS.Record record : answers) {
-                        if (record instanceof TXTRecord txtRecord) {
-                            for (String txt : txtRecord.getStrings()) {
-                                if (txt.equals(expectedTxtRecord)) {
-                                    log.info("通过解析验证，DNS记录正确，开始下一步");
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    log.info("未匹配上指定的DNS记录，10秒后重新尝试。第{}次尝试", attempt);
-                    TimeUnit.MILLISECONDS.sleep(10000);
-                } else {
-                    log.info("DNS记录查询未成功，10秒后重新尝试。第{}次尝试", attempt);
-                    TimeUnit.MILLISECONDS.sleep(10000);
-                    if (attempt == maxAttempts) {
-                        return false;
-                    }
-                }
-            }
-        } catch (TextParseException | InterruptedException e) {
-            log.error(e.toString());
-            return false;
-        }
-        return false;
-    }
-
-    private void removeTxtDnsInfo(HmDnsProviderPlugin ddnsProvider, String domain, String subDomain) {
-        log.info("开始清理用于验证的DNS记录");
-        try {
-            ddnsProvider.deleteDns(domain, "_acme-challenge." + subDomain, "TXT");
-        } catch (Exception e) {
-            log.error(e.toString());
-        } finally {
-            log.info("结束清理");
-        }
-    }
-
-    private void saveCertificateFiles(KeyPair keyPair, Certificate cert, String domain, Long taskId) throws IOException, CertificateEncodingException {
-        logger.info("开始保存证书文件，域名: {}, 任务ID: {}", domain, taskId);
-
-        // 创建证书存储目录
-        String certPath = "certs/" + domain;
-        File certDir = new File(certPath);
-        // 删除已存在目录并重新创建
-        boolean successMkDir = false;
-        if (certDir.exists()) {
-            if (deleteRecursively(certDir)) {
-                successMkDir = certDir.mkdirs();
-            }
-        } else {
-            successMkDir = certDir.mkdirs();
-        }
-        if (!successMkDir) {
-            throw new IOException("无法创建证书目录: " + certPath);
-        }
-        // 保存私钥 (KEY文件)
-        try (FileWriter fw = new FileWriter(new File(certDir, domain + ".key"))) {
-            KeyPairUtils.writeKeyPair(keyPair, fw);
-            logger.info("私钥文件已保存: {}", domain + ".key");
-        }
-
-        X509Certificate certificate = cert.getCertificate();
-        List<X509Certificate> chain = cert.getCertificateChain();
-
-        // 保存证书 (CRT文件)
-        try (FileOutputStream fos = new FileOutputStream(new File(certDir, domain + ".crt"))) {
-            writeCertificate(certificate, fos);
-            logger.info("证书文件已保存: {}", domain + ".crt");
-//            log.info("证书文件已保存: {}", domain + ".crt");
-        }
-
-        // 保存完整证书链 (PEM文件)
-        try (FileOutputStream fos = new FileOutputStream(new File(certDir, domain + ".pem"))) {
-            writeCertificate(certificate, fos);
-
-            // 添加中间证书
-            for (int i = 1; i < chain.size(); i++) {
-                fos.write('\n');
-                writeCertificate(chain.get(i), fos);
-            }
-            logger.info("完整证书链文件已保存: {}", domain + ".pem");
-//            log.info("完整证书链文件已保存: {}", domain + ".pem");
-        }
-
-        // 保存完整证书链和私钥 (FULLCHAIN文件) - 修复后的版本
-        File fullchainFile = new File(certDir, domain + ".fullchain.pem");
-
-        // 先将私钥写入字符串
-        StringWriter keyWriter = new StringWriter();
-        KeyPairUtils.writeKeyPair(keyPair, keyWriter);
-        String privateKeyPem = keyWriter.toString();
-
-        // 使用单个输出流写入所有内容
-        try (FileOutputStream fos = new FileOutputStream(fullchainFile)) {
-            // 写入私钥
-            fos.write(privateKeyPem.getBytes(StandardCharsets.UTF_8));
-            fos.write('\n');
-
-            // 写入证书
-            writeCertificate(certificate, fos);
-
-            // 写入证书链
-            for (int i = 1; i < chain.size(); i++) {
-                fos.write('\n');
-                writeCertificate(chain.get(i), fos);
-            }
-            logger.info("完整证书链和私钥文件已保存: {}", domain + ".fullchain.pem");
-//            log.info("完整证书链和私钥文件已保存: {}", domain + ".fullchain.pem");
-        }
-        logger.info("所有证书文件保存完成");
-//        log.info("所有证书文件保存完成");
-    }
-
-    private void writeCertificate(X509Certificate certificate, OutputStream out) throws IOException, CertificateEncodingException {
-        byte[] encoded = certificate.getEncoded();
-        String encoded64 = Base64.getEncoder().encodeToString(encoded);
-
-        // 按照PEM格式写入
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.US_ASCII), false);
-        writer.println("-----BEGIN CERTIFICATE-----");
-
-        // 每64个字符一行
-        for (int i = 0; i < encoded64.length(); i += 64) {
-            writer.println(encoded64.substring(i, Math.min(i + 64, encoded64.length())));
-        }
-
-        writer.println("-----END CERTIFICATE-----");
-        writer.flush();
-        // 注意：这里不关闭writer，因为我们使用的是外部传入的OutputStream
-    }
-
-
-    private static boolean deleteRecursively(File file) {
-        // 如果是文件或空文件夹，直接删除
-        if (file == null || !file.exists()) {
-            return false;
-        }
-        if (file.isFile() || Objects.requireNonNull(file.list()).length == 0) {
-            return file.delete();
-        }
-
-        // 如果是文件夹，先删除其内容
-        File[] files = file.listFiles();
-        if (files != null) {
-            for (File subFile : files) {
-                if (!deleteRecursively(subFile)) {
-                    return false; // 删除失败时停止
-                }
-            }
-        }
-
-        // 最后删除文件夹本身
-        return file.delete();
     }
 
 }

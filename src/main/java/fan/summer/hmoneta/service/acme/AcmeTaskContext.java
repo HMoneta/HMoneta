@@ -1,6 +1,5 @@
 package fan.summer.hmoneta.service.acme;
 
-import fan.summer.hmoneta.database.entity.acme.AcmeChallengeInfoEntity;
 import fan.summer.hmoneta.database.entity.acme.AcmeUserInfoEntity;
 import fan.summer.hmoneta.plugin.api.dns.HmDnsProviderPlugin;
 import lombok.Data;
@@ -14,7 +13,8 @@ import lombok.Data;
  */
 @Data
 public class AcmeTaskContext {
+    private String taskId;
+    private String domain;
     private AcmeUserInfoEntity acmeUserInfoEntity;
     private HmDnsProviderPlugin hmDnsProviderPlugin;
-    private AcmeChallengeInfoEntity acmeChallengeInfoEntity;
 }
