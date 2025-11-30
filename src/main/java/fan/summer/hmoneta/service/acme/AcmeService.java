@@ -128,7 +128,9 @@ public class AcmeService {
         DnsResolveUrlEntity oneByUrl = dnsResolveUrlRepository.findOneByUrl(domain);
         DnsResolveGroupEntity dnsResolveGroupEntity = dnsResolveGroupRepository.findById(oneByUrl.getGroupId()).get();
         DnsProviderEntity dnsProviderEntity = dnsProviderRepository.findById(dnsResolveGroupEntity.getProviderId()).get();
-        return pluginService.getDnsProvider(dnsProviderEntity.getProviderName());
+        HmDnsProviderPlugin dnsProvider = pluginService.getDnsProvider(dnsProviderEntity.getProviderName());
+        dnsProvider.authenticate(dnsResolveGroupEntity.getCredentials());
+        return dnsProvider;
     }
 
 }
