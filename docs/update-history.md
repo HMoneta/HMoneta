@@ -1,16 +1,18 @@
 # HMoneta 项目升级历史
 
-## V0.0.1 (2025年11月)
+## V0.0.2 (2025年12月)
 
 ### 新增功能
-- 基础DNS动态更新服务 (DDNS)
-- 支持多种DNS提供商（通过插件系统）
-- 前端Web管理界面 (Vue 3 + Vuetify)
-- JWT用户认证系统
-- WebSocket实时日志推送
-- ACME协议支持（SSL证书自动申请和管理）
+- 证书有效期管理功能
+  - 自动存储证书有效期信息（notBefore/notAfter）
+  - 在DNS解析信息中展示证书有效期
+  - 提供证书有效期API查询接口
 
 ### 功能优化
+- 证书有效期跟踪机制
+  - 在AcmeCertificationEntity实体中添加notBefore和notAfter字段
+  - 通过AcmeCerInfoResp响应实体传递证书有效期信息
+  - 在DNS解析信息查询结果中包含证书有效期数据
 - ACME证书申请异步处理机制
   - 使用@Async注解实现异步证书申请
   - 通过AcmeAsyncLogEntity实体跟踪异步任务日志
@@ -46,11 +48,15 @@
   - 证书文件存储在 `certs/{domain}` 目录下
   - 支持.key、.crt、.pem、.fullchain.pem等格式
   - 证书打包功能支持ZIP格式压缩
+  - 证书有效期信息存储在数据库中便于管理
 
 ### API端点更新
 - 新增 ACME 管理 API
   - `POST /hm/acme/modify`: 修改 ACME 用户信息
   - `GET /hm/acme/apply`: 申请 SSL 证书
+- DNS解析信息API增强
+  - 在DNS解析信息中包含证书有效期信息
+  - 通过DnsResolveUrlResp实体的acmeCerInfo字段传递证书有效期
 - WebSocket 实时日志 API 增强
   - 支持订阅特定服务日志
   - 支持全量日志订阅
@@ -59,3 +65,13 @@
 ### 问题修复
 - 修复腾讯云DNS插件中客户端未正确初始化的问题
 - 解决了异步任务中可能出现的空指针异常
+
+## V0.0.1 (2025年11月)
+
+### 新增功能
+- 基础DNS动态更新服务 (DDNS)
+- 支持多种DNS提供商（通过插件系统）
+- 前端Web管理界面 (Vue 3 + Vuetify)
+- JWT用户认证系统
+- WebSocket实时日志推送
+- ACME协议支持（SSL证书自动申请和管理）
