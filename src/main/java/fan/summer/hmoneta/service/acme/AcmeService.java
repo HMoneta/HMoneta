@@ -2,10 +2,12 @@ package fan.summer.hmoneta.service.acme;
 
 import fan.summer.hmoneta.common.enums.exception.acme.AcmeExceptionEnum;
 import fan.summer.hmoneta.common.exception.HMException;
+import fan.summer.hmoneta.database.entity.acme.AcmeCertificationEntity;
 import fan.summer.hmoneta.database.entity.acme.AcmeUserInfoEntity;
 import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
 import fan.summer.hmoneta.database.entity.dns.DnsResolveGroupEntity;
 import fan.summer.hmoneta.database.entity.dns.DnsResolveUrlEntity;
+import fan.summer.hmoneta.database.repository.acme.AcmeCertificationRepository;
 import fan.summer.hmoneta.database.repository.acme.AcmeUserInfoRepository;
 import fan.summer.hmoneta.database.repository.dns.DnsProviderRepository;
 import fan.summer.hmoneta.database.repository.dns.DnsResolveGroupRepository;
@@ -35,6 +37,8 @@ public class AcmeService {
 
     private final AcmeUserInfoRepository acmeUserInfoRepository;
 
+    private final AcmeCertificationRepository acmeCertificationRepository;
+
     private final AcmeServiceComponent acmeServiceComponent;
 
     private final DnsProviderRepository dnsProviderRepository;
@@ -55,10 +59,12 @@ public class AcmeService {
      */
     public AcmeService(PluginService pluginService, AcmeUserInfoRepository acmeChallengeInfoRepository, AcmeServiceComponent acmeServiceComponent, DnsProviderRepository dnsProviderRepository,
                        DnsResolveGroupRepository dnsResolveGroupRepository,
-                       DnsResolveUrlRepository dnsResolveUrlRepository) {
+                       DnsResolveUrlRepository dnsResolveUrlRepository,
+                       AcmeCertificationRepository acmeCertificationRepository) {
         this.pluginService = pluginService;
         this.acmeUserInfoRepository = acmeChallengeInfoRepository;
         this.acmeServiceComponent = acmeServiceComponent;
+        this.acmeCertificationRepository = acmeCertificationRepository;
         this.dnsProviderRepository = dnsProviderRepository;
         this.dnsResolveGroupRepository = dnsResolveGroupRepository;
         this.dnsResolveUrlRepository = dnsResolveUrlRepository;
@@ -97,6 +103,10 @@ public class AcmeService {
         AcmeTaskContext acmeTaskContext = getAcmeTaskContext(domain);
         acmeServiceComponent.useDnsChallengeGetCertification(acmeTaskContext);
         return acmeTaskContext.getTaskId();
+    }
+
+    public AcmeCertificationEntity queryCertificationInfo(String domain) {
+        return acmeCertificationRepository.findOneByDomain(domain);
     }
 
     /**

@@ -1,6 +1,5 @@
 package fan.summer.hmoneta.controller.dns.entity.resp;
 
-import fan.summer.hmoneta.database.entity.dns.DnsResolveUrlEntity;
 import lombok.Data;
 
 import java.util.List;
@@ -17,6 +16,6 @@ import java.util.Map;
 public class DnsResolveResp {
     private String groupId;
     private String groupName;
-    private Map<String,String> authenticateWayMap;
-    private List<DnsResolveUrlEntity> urls;
+    private Map<String, String> authenticateWayMap;
+    private List<DnsResolveUrlResp> urls;
 }

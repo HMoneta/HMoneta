@@ -2,9 +2,12 @@ package fan.summer.hmoneta.service.dns;
 
 import fan.summer.hmoneta.common.enums.exception.dns.DnsExceptionEnum;
 import fan.summer.hmoneta.common.exception.HMException;
+import fan.summer.hmoneta.controller.acme.dto.resp.AcmeCerInfoResp;
 import fan.summer.hmoneta.controller.dns.entity.req.DnsResolveReq;
 import fan.summer.hmoneta.controller.dns.entity.req.GroupModifyReq;
 import fan.summer.hmoneta.controller.dns.entity.resp.DnsResolveResp;
+import fan.summer.hmoneta.controller.dns.entity.resp.DnsResolveUrlResp;
+import fan.summer.hmoneta.database.entity.acme.AcmeCertificationEntity;
 import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
 import fan.summer.hmoneta.database.entity.dns.DnsResolveGroupEntity;
 import fan.summer.hmoneta.database.entity.dns.DnsResolveUrlEntity;
@@ -13,12 +16,14 @@ import fan.summer.hmoneta.database.repository.dns.DnsResolveGroupRepository;
 import fan.summer.hmoneta.database.repository.dns.DnsResolveUrlRepository;
 import fan.summer.hmoneta.plugin.api.dns.HmDnsProviderPlugin;
 import fan.summer.hmoneta.plugin.api.dns.dto.DNSRecordInfo;
+import fan.summer.hmoneta.service.acme.AcmeService;
 import fan.summer.hmoneta.service.plugin.PluginService;
 import fan.summer.hmoneta.util.ObjectUtil;
 import fan.summer.hmoneta.util.WebUtil;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,12 +47,14 @@ public class DnsService {
     private final DnsResolveGroupRepository dnsResolveGroupRepository;
     private final DnsResolveUrlRepository dnsResolveUrlRepository;
     private final PluginService pluginService;
-    
-    public DnsService(DnsProviderRepository dnsProviderRepository, DnsResolveGroupRepository dnsResolveGroupRepository, DnsResolveUrlRepository dnsResolveUrlRepository, PluginService pluginService) {
+    private final AcmeService acmeService;
+
+    public DnsService(DnsProviderRepository dnsProviderRepository, DnsResolveGroupRepository dnsResolveGroupRepository, DnsResolveUrlRepository dnsResolveUrlRepository, PluginService pluginService, AcmeService acmeService) {
         this.dnsProviderRepository = dnsProviderRepository;
         this.dnsResolveGroupRepository = dnsResolveGroupRepository;
         this.dnsResolveUrlRepository = dnsResolveUrlRepository;
         this.pluginService = pluginService;
+        this.acmeService = acmeService;
     }
 
     public List<DnsProviderEntity> queryAllDnsProvider() {
@@ -141,9 +148,26 @@ public class DnsService {
         if (ObjectUtil.isNotEmpty(allGroup)) {
             allGroup.forEach(group -> {
                 List<DnsResolveUrlEntity> allUrl = dnsResolveUrlRepository.findAllByGroupId(group.getId());
+                List<DnsResolveUrlResp> urlResps = new ArrayList<>();
+                if (ObjectUtil.isNotEmpty(allUrl)) {
+                    // 查询证书信息
+                    allUrl.forEach(url -> {
+                        DnsResolveUrlResp urlResp = new DnsResolveUrlResp();
+                        BeanUtils.copyProperties(url, urlResp);
+                        AcmeCertificationEntity acmeCertificationEntity = acmeService.queryCertificationInfo(urlResp.getUrl());
+                        if (ObjectUtil.isNotEmpty(acmeCertificationEntity)) {
+                            AcmeCerInfoResp acmeResp = new AcmeCerInfoResp(true, acmeCertificationEntity.getCertApplyTime(), acmeCertificationEntity.getNotBefore(), acmeCertificationEntity.getNotAfter());
+                            urlResp.setAcmeCerInfo(acmeResp);
+                        } else {
+                            AcmeCerInfoResp acmeResp = new AcmeCerInfoResp(false, null, null, null);
+                            urlResp.setAcmeCerInfo(acmeResp);
+                        }
+                        urlResps.add(urlResp);
+                    });
+                }
                 DnsResolveResp resp = new DnsResolveResp();
                 resp.setGroupId(group.getId());
-                resp.setUrls(allUrl);
+                resp.setUrls(urlResps);
                 resp.setGroupName(group.getGroupName());
                 resp.setAuthenticateWayMap(group.getCredentials());
                 resolveResps.add(resp);
