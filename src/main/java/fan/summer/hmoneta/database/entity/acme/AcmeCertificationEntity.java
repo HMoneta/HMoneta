@@ -17,6 +17,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -40,6 +41,8 @@ public class AcmeCertificationEntity {
     private byte[] certPublicKey;
     private byte[] certPrivateKey;
     private LocalDateTime certApplyTime;
+    private Date notBefore;
+    private Date notAfter;
 
     /**
      * 根据KeyPair存入
