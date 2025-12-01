@@ -166,7 +166,7 @@ public class AcmeServiceComponent {
         logger.info("=============开始申请证书=============");
         // 获取证书
         try {
-            if (ObjectUtils.isNotEmpty(acmeAcmeCertificationRepository.findByDomain(acmeTaskContext.getDomain()))) {
+            if (ObjectUtils.isNotEmpty(acmeAcmeCertificationRepository.findOneByDomain(acmeTaskContext.getDomain()))) {
                 acmeAcmeCertificationRepository.deleteByDomain(acmeTaskContext.getDomain());
             }
         } catch (Exception e) {
@@ -254,6 +254,10 @@ public class AcmeServiceComponent {
                                     Certificate cert = order.getCertificate();
                                     saveCertificateFiles(cerKeyPair, cert, acmeTaskContext.getDomain(), acmeTaskContext.getTaskId());
                                     AcmeCertificationEntity acmeCertificationEntity = new AcmeCertificationEntity();
+                                    // 获取证书到期日
+                                    X509Certificate certificate = cert.getCertificate();
+                                    acmeCertificationEntity.setNotBefore(certificate.getNotBefore());
+                                    acmeCertificationEntity.setNotAfter(certificate.getNotAfter());
                                     acmeCertificationEntity.saveKeyPair(keyPair);
                                     acmeCertificationEntity.setCertApplyTime(LocalDateTime.now());
                                     acmeCertificationEntity.setDomain(acmeTaskContext.getDomain());
