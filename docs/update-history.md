@@ -7,6 +7,10 @@
   - 自动存储证书有效期信息（notBefore/notAfter）
   - 在DNS解析信息中展示证书有效期
   - 提供证书有效期API查询接口
+- 证书下载功能
+  - 新增证书下载API：`GET /hm/acme/download-cert/{domain}`
+  - 支持ZIP格式证书包下载
+  - 包含.key、.crt、.pem、.fullchain.pem等格式文件
 
 ### 功能优化
 - 证书有效期跟踪机制
@@ -54,6 +58,7 @@
 - 新增 ACME 管理 API
   - `POST /hm/acme/modify`: 修改 ACME 用户信息
   - `GET /hm/acme/apply`: 申请 SSL 证书
+  - `GET /hm/acme/download-cert/{domain}`: 下载指定域名的证书包（ZIP格式）
 - DNS解析信息API增强
   - 在DNS解析信息中包含证书有效期信息
   - 通过DnsResolveUrlResp实体的acmeCerInfo字段传递证书有效期

@@ -162,15 +162,21 @@ src/main/java/fan/summer/hmoneta/
 - 证书自动续期
 - 证书打包下载
 - 异步任务日志管理
+- 证书有效期管理和API查询
+- 证书下载功能
 
 **核心组件**：
 - `AcmeController`: ACME相关API控制器
+  - `POST /hm/acme/modify`: 修改ACME用户信息
+  - `GET /hm/acme/apply`: 申请SSL证书
+  - `GET /hm/acme/download-cert/{domain}`: 下载指定域名的证书包（ZIP格式）
 - `AcmeService`: ACME证书申请服务
 - `AcmeServiceComponent`: ACME证书申请核心组件，包含异步证书申请实现
 - `AcmeTaskContext`: ACME任务上下文，用于跟踪异步申请过程
-- `AcmeCertificationEntity`: ACME证书认证实体
+- `AcmeCertificationEntity`: ACME证书认证实体，包含证书有效期信息(notBefore/notAfter)
 - `AcmeUserInfoEntity`: ACME用户信息实体
 - `AcmeAsyncLogEntity`: ACME异步任务日志实体，用于跟踪异步证书申请任务的状态和日志信息
+- `AcmeCerInfoResp`: ACME证书信息响应实体，包含证书有效期信息(notBefore/notAfter)
 
 #### 2.2.5 WebSocket日志模块 (`/websocket`)
 

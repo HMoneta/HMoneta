@@ -166,6 +166,28 @@
   - `domain` (query参数): 域名
 - **响应示例**: 任务ID字符串
 
+### 3. 下载 SSL 证书
+
+- **接口路径**: `GET /hm/acme/download-cert/{domain}`
+- **功能描述**: 下载指定域名的证书包
+- **请求参数**: 
+  - `domain` (路径参数): 域名
+- **响应示例**: ZIP格式的证书包文件，包含.key、.crt、.pem、.fullchain.pem等格式文件
+- **响应头**: 
+  - `Content-Type`: application/octet-stream
+  - `Content-Disposition`: attachment; filename="{domain}_certificate.zip"
+
+### 3. 下载 SSL 证书
+
+- **接口路径**: `GET /hm/acme/download-cert/{domain}`
+- **功能描述**: 下载指定域名的证书包
+- **请求参数**: 
+  - `domain` (路径参数): 域名
+- **响应示例**: ZIP格式的证书包文件，包含.key、.crt、.pem、.fullchain.pem等格式文件
+- **响应头**: 
+  - `Content-Type`: application/octet-stream
+  - `Content-Disposition`: attachment; filename="{domain}_certificate.zip"
+
 ## WebSocket 实时日志 API
 
 ### 1. 日志推送连接
@@ -201,6 +223,7 @@ ACME证书管理功能通过`AcmeService`实现，主要功能包括：
 3. **证书打包下载功能**
    - 生成.crt、.key、.pem、.fullchain.pem等格式证书
    - 支持ZIP格式打包下载
+   - 提供下载API端点：`GET /hm/acme/download-cert/{domain}`
 
 4. **ACME挑战信息管理**
    - 管理证书申请过程信息
