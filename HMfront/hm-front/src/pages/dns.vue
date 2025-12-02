@@ -149,11 +149,44 @@ const submitDelete = async () => {
   }
 }
 // 证书申请
-const applyCertificate = (item) => {
-  http.get('/acme/apply', {"domain": item.url})
+const applyCertificate = async (item) => {
+  try {
+    if (item.acmeCerInfo) {
+      if (item.acmeCerInfo.haveCer) {
+        // 下载证书文件
+        const blob = await http.get('/acme/download-cert/' + item.url, null, {
+          responseType: 'blob'  // 或者 'arraybuffer'
+        });
 
+        // 创建一个临时的URL来下载文件
+        const downloadUrl = window.URL.createObjectURL(blob);
 
+        // 创建一个临时的下载链接
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.setAttribute('download', `${item.url}_certificate.zip`);
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+
+        notificationStore.showSuccess("证书下载成功");
+      }
+    } else {
+      const resp = await http.get('/acme/apply', {"domain": item.url})
+      notificationStore.showSuccess("修改成功，任务号" + resp)
+    }
+  } catch (err) {
+  }
 }
+
+const getCertificateClass = (certInfo) => {
+  if (!certInfo.acmeCerInfo) return 'cert-unavailable'
+  const acmeCerInfo = certInfo.acmeCerInfo
+  if (acmeCerInfo.haveCer) return 'cert-valid'
+}
+
 
 // 监听DNS服务商选择变化
 watch(selected, (newVal) => {
@@ -376,6 +409,7 @@ onMounted(() => {
             <v-btn
               v-bind="props"
               icon="mdi-certificate"
+              :class="getCertificateClass(item)"
               size="small"
               variant="text"
               @click="applyCertificate(item)"
@@ -503,5 +537,26 @@ onMounted(() => {
 .stepper-btn-submit {
   margin-left: auto; /* 确保右侧按钮靠右 */
 }
+
+.cert-unavailable {
+  color: grey;
+}
+
+.cert-expired {
+  color: red;
+}
+
+.cert-warn {
+  color: orange;
+}
+
+.cert-soon {
+  color: orange;
+}
+
+.cert-valid {
+  color: green;
+}
+
 
 </style>

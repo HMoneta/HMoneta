@@ -18,7 +18,15 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Acme证书申请服务
@@ -110,6 +118,47 @@ public class AcmeService {
     }
 
     /**
+     * 打包证书为ZIP文件
+     * 将指定域名的证书文件打包成ZIP格式返回
+     *
+     * @param domain 需要打包的证书域名
+     * @return 证书ZIP文件的字节数组，如果证书不存在则返回null
+     */
+    public byte[] packCertifications(String domain) throws IOException {
+        String dirPath = "certs/" + domain;
+        Path basePath = Paths.get(dirPath);
+        if (!Files.exists(basePath)) {
+            log.warn("证书目录不存在: {}", dirPath);
+            return new byte[0]; // 返回空字节数组表示证书不存在
+        } else if (!Files.isDirectory(basePath)) {
+            log.error("路径存在但不是目录: {}", dirPath);
+            throw new HMException(AcmeExceptionEnum.CER_ERROR_FOLDER_NOT_EXIST);
+        }
+
+        // 检查目录中是否有证书文件
+        List<Path> certFiles = Files.walk(basePath)
+                .filter(Files::isRegularFile)
+                .toList();
+
+        if (certFiles.isEmpty()) {
+            log.warn("证书目录中没有文件: {}", dirPath);
+            return new byte[0]; // 返回空字节数组表示证书文件不存在
+        }
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try (ZipOutputStream zipOut = new ZipOutputStream(byteArrayOutputStream)) {
+            for (Path file : certFiles) {
+                // 添加文件到 ZIP 中
+                ZipEntry zipEntry = new ZipEntry(basePath.relativize(file).toString());
+                zipOut.putNextEntry(zipEntry);
+                Files.copy(file, zipOut);
+                zipOut.closeEntry();
+            }
+        }
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    /**
      * 根据域名获取ACME任务上下文
      * 构建包含域名、用户信息和DNS提供商的任务上下文
      *
@@ -142,5 +191,6 @@ public class AcmeService {
         dnsProvider.authenticate(dnsResolveGroupEntity.getCredentials());
         return dnsProvider;
     }
+
 
 }

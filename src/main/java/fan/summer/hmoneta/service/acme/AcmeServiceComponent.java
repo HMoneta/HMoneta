@@ -28,9 +28,6 @@ import org.xbill.DNS.Type;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
@@ -42,8 +39,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 /**
  * Acme证书申请类
@@ -76,38 +71,6 @@ public class AcmeServiceComponent {
         this.acmeUserInfoRepository = acmeUserInfoRepository;
         this.acmeAsyncLogRepository = acmeAsyncLogRepository;
 
-    }
-
-
-    protected byte[] packCertifications(String domain) throws IOException {
-        String dirPath = "certs/" + domain;
-        Path basePath = Paths.get(dirPath);
-        if (!Files.exists(basePath)) {
-            try {
-                Files.createDirectories(basePath);
-            } catch (IOException e) {
-                throw new HMException(AcmeExceptionEnum.CER_CREATE_FOLDER_ERROR);
-            }
-        } else if (!Files.isDirectory(basePath)) {
-            throw new HMException(AcmeExceptionEnum.CER_ERROR_FOLDER_NOT_EXIST);
-        }
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        try (ZipOutputStream zipOut = new ZipOutputStream(byteArrayOutputStream)) {
-            Files.walk(basePath)
-                    .filter(Files::isRegularFile) // 只处理普通文件
-                    .forEach(file -> {
-                        try {
-                            // 添加文件到 ZIP 中
-                            ZipEntry zipEntry = new ZipEntry(basePath.relativize(file).toString());
-                            zipOut.putNextEntry(zipEntry);
-                            Files.copy(file, zipOut);
-                            zipOut.closeEntry();
-                        } catch (IOException e) {
-                            throw new RuntimeException("文件打包失败", e);
-                        }
-                    });
-        }
-        return byteArrayOutputStream.toByteArray();
     }
 
 
@@ -162,6 +125,7 @@ public class AcmeServiceComponent {
 
 
     @Async
+    @Transactional(rollbackOn = Exception.class)
     protected void useDnsChallengeGetCertification(AcmeTaskContext acmeTaskContext) {
         logger.info("=============开始申请证书=============");
         // 获取证书
