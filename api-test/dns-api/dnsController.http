@@ -21,3 +21,9 @@ HMToken: {{hmToken}}
         console.log("✅ Token 存在: " + token);
     }
 %}
+
+
+###
+// 测试携带正确Token
+GET http://localhost:8080/hm/acme/download-cert/certest.summer.fan
+HMToken: {{hmToken}}
