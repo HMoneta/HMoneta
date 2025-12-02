@@ -43,6 +43,14 @@ async function request(url, options = {}) {
       throw new Error(`HTTP ${res.status}: ${errorText}`);
     }
 
+    // 新增：支持 responseType
+    if (options.responseType === 'blob') {
+      return await res.blob();
+    }
+    if (options.responseType === 'arraybuffer') {
+      return await res.arrayBuffer();
+    }
+
     // 尝试解析 JSON，如果不是 JSON 则返回文本
     const contentType = res.headers.get('Content-Type') || '';
     if (contentType.includes('application/json')) {
