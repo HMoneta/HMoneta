@@ -18,6 +18,7 @@ import fan.summer.hmoneta.plugin.api.dns.HmDnsProviderPlugin;
 import fan.summer.hmoneta.plugin.api.dns.dto.DNSRecordInfo;
 import fan.summer.hmoneta.service.acme.AcmeService;
 import fan.summer.hmoneta.service.plugin.PluginService;
+import fan.summer.hmoneta.util.IpUtil;
 import fan.summer.hmoneta.util.ObjectUtil;
 import fan.summer.hmoneta.util.WebUtil;
 import org.apache.commons.validator.routines.UrlValidator;
@@ -179,6 +180,7 @@ public class DnsService {
 
     public void deleteDnsResolveUrl(String urlId) {
         dnsResolveUrlRepository.deleteById(urlId);
+        
     }
 
     public void modifyDnsResolveUrl(DnsResolveUrlEntity entity) {
@@ -204,7 +206,7 @@ public class DnsService {
                 throw new HMException(DnsExceptionEnum.DNS_URL_NOT_EXISTS_ERROR);
             });
         }
-
+        updateDnsResolveUrl(entity, IpUtil.getPublicIp());
     }
 
     public void updateDnsResolveUrl(DnsResolveUrlEntity entity, String ip) {
