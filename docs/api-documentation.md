@@ -44,7 +44,11 @@
         "id": 1,
         "url": "example.com",
         "currentIp": "192.168.1.1",
-        "lastUpdateTime": "2025-11-22T10:30:00"
+        "lastUpdateTime": "2025-11-22T10:30:00",
+        "acmeCerInfo": {
+          "notBefore": "2025-11-22T00:00:00Z",
+          "notAfter": "2026-02-20T23:59:59Z"
+        }
       }
     ]
   }
@@ -177,17 +181,6 @@
   - `Content-Type`: application/octet-stream
   - `Content-Disposition`: attachment; filename="{domain}_certificate.zip"
 
-### 3. 下载 SSL 证书
-
-- **接口路径**: `GET /hm/acme/download-cert/{domain}`
-- **功能描述**: 下载指定域名的证书包
-- **请求参数**: 
-  - `domain` (路径参数): 域名
-- **响应示例**: ZIP格式的证书包文件，包含.key、.crt、.pem、.fullchain.pem等格式文件
-- **响应头**: 
-  - `Content-Type`: application/octet-stream
-  - `Content-Disposition`: attachment; filename="{domain}_certificate.zip"
-
 ## WebSocket 实时日志 API
 
 ### 1. 日志推送连接
@@ -229,6 +222,11 @@ ACME证书管理功能通过`AcmeService`实现，主要功能包括：
    - 管理证书申请过程信息
    - 记录申请状态和日志
    - 通过AcmeAsyncLogEntity实体跟踪异步任务日志
+
+5. **证书有效期管理**
+   - 自动存储和管理证书有效期信息（notBefore/notAfter）
+   - 提供证书有效期API查询接口
+   - 在DNS解析信息中展示证书有效期
 
 ## 认证与授权
 
@@ -280,6 +278,11 @@ curl -X POST http://localhost:8080/hm/plugin/upload \
 # 申请SSL证书
 curl -X GET "http://localhost:8080/hm/acme/apply?domain=example.com" \
   -H "Authorization: Bearer {JWT_TOKEN}"
+
+# 下载证书
+curl -X GET "http://localhost:8080/hm/acme/download-cert/example.com" \
+  -H "Authorization: Bearer {JWT_TOKEN}" \
+  -o example.com_certificate.zip
 ```
 
 ### JavaScript/Fetch 示例
@@ -318,4 +321,24 @@ fetch('http://localhost:8080/hm/acme/apply?domain=example.com', {
 })
 .then(response => response.text())
 .then(taskId => console.log('证书申请任务ID:', taskId));
+
+// 下载证书
+function downloadCertificate(domain) {
+  fetch(`http://localhost:8080/hm/acme/download-cert/${domain}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': 'Bearer ' + token
+    }
+  })
+  .then(response => response.blob())
+  .then(blob => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${domain}_certificate.zip`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+  });
+}
 ```

@@ -2,12 +2,12 @@
 
 ## 项目概述
 
-HMoneta 是一个基于 Spring Boot 的 DNS 动态更新服务（DDNS），主要用于监控公网 IP 变化并自动更新 DNS 记录。该项目支持多种 DNS 供应商（通过插件系统），具有前端界面（HMfront）和后端 API，使用 PostgreSQL 作为数据库。项目还集成了 ACME 协议支持，可以自动申请和管理 SSL 证书。
+HMoneta 是一个基于 Spring Boot 的 DNS 动态更新服务（DDNS），主要用于监控公网 IP 变化并自动更新 DNS 记录。该项目支持多种 DNS 供应商（通过插件系统），具有前端界面（HMfront）和后端 API，使用 PostgreSQL 作为数据库。项目还集成了 ACME 协议支持，可以自动申请和管理 SSL 证书。系统提供了完整的用户认证、实时日志监控、插件管理和定时任务功能。
 
 ## 技术栈
 
 - **后端**: Spring Boot 4.0.0, Java 25
-- **前端**: Vue 3, Vuetify 3, Vite 7, Pinia
+- **前端**: Vue 3, Vuetify 3, Vite 7, Pinia, Yarn 4.10.3
 - **数据库**: PostgreSQL, JPA/Hibernate
 - **依赖管理**: Maven
 - **插件系统**: PF4J (Plugin Framework for Java) + Spring Boot Integration
@@ -18,7 +18,7 @@ HMoneta 是一个基于 Spring Boot 的 DNS 动态更新服务（DDNS），主�
 - **配置管理**: Spring Dotenv
 - **日志系统**: SLF4J + Logback
 - **API**: RESTful API
-- **工具库**: Apache Commons Text, Commons Validator, Bouncy Castle, Hypersistence Utils for Hibernate
+- **工具库**: Apache Commons Text, Commons Validator, Bouncy Castle, Hypersistence Utils for Hibernate, tools.jackson (for JSON processing)
 
 ## 核心功能
 
@@ -26,8 +26,8 @@ HMoneta 是一个基于 Spring Boot 的 DNS 动态更新服务（DDNS），主�
 2. **多 DNS 提供商支持**: 通过插件系统支持不同的 DNS 服务提供商
 3. **Web 管理界面**: 提供前端界面进行 DNS 配置和管理
 4. **WebSocket 实时日志**: 通过 WebSocket 实现实时日志推送
-5. **用户认证**: JWT 基础的用户认证系统
-6. **ACME 证书管理**: 支持通过 ACME 协议自动申请和管理 SSL 证书
+5. **用户认证**: JWT 基础的用户认证系统，自动创建默认管理员账户
+6. **ACME 证书管理**: 支持通过 ACME 协议自动申请和管理 SSL 证书，包含通过 DNS-01 挑战验证申请证书的功能
 7. **DNS 解析分组管理**: 支持将多个 DNS 解析记录分组管理
 8. **插件管理**: 支持动态插件加载、卸载、启动和停止，支持ZIP格式插件上传
 9. **实时日志监控**: 支持按服务订阅日志，支持订阅所有日志
@@ -35,7 +35,11 @@ HMoneta 是一个基于 Spring Boot 的 DNS 动态更新服务（DDNS），主�
 11. **异步任务日志**: 支持异步任务日志记录和查询，通过AcmeAsyncLogEntity实体管理异步任务日志
 12. **ACME 证书申请重试机制**: 包含登录重试和网络异常处理机制
 13. **证书有效期管理**: 自动存储和管理证书有效期信息（notBefore/notAfter）
-14. **证书下载功能**: 支持下载打包的证书文件（ZIP格式），包含.key、.crt、.pem、.fullchain.pem等格式
+14. **证书有效期API**: 提供证书有效期查询接口，在DNS解析信息中展示证书有效期
+15. **证书下载功能**: 支持下载打包的证书文件（ZIP格式），包含.key、.crt、.pem、.fullchain.pem等格式
+16. **MDC日志追踪**: 使用MDC（Mapped Diagnostic Context）实现日志ID追踪，便于调试和问题定位
+17. **环境配置控制**: 使用Spring Profiles控制功能启用（如定时任务仅在非dev环境运行）
+18. **敏感字段过滤**: 通过@JwtExclude注解标记敏感字段，防止敏感信息泄露
 
 ## 快速开始
 
@@ -111,39 +115,61 @@ hmoneta.acme.uri: ACME 服务提供商 URI (如 Let's Encrypt)
 ### 后端结构
 
 - `src/main/java/fan/summer/hmoneta/`: 主要的 Java 源代码
-  - `controller/`: API 控制器，包括 DNS、插件、用户和 ACME 管理
+  - `common/`: 通用配置、枚举、异常处理、切面和配置类
+    - `aspect/`: AOP切面 (ApiAspect.java)
+    - `config/`: Spring配置类 (CorsConfig.java, HMInterceptor.java, PluginConfiguration.java, WebSocketConfig.java)
+    - `enums/`: 枚举类
+      - `exception/`: 异常枚举
+        - `acme/`: ACME相关异常
+        - `dns/`: DNS相关异常
+        - `plugin/`: 插件相关异常
+        - `user/`: 用户相关异常
+    - `exception/`: 自定义异常类
+    - `handle/`: 异常处理器 (ControllerExceptionHandler.java)
+    - `interceptor/`: 拦截器 (ApiInterceptor.java)
+  - `controller/`: API 控制器，包括 DNS、插件、用户管理
     - `acme/`: ACME 相关 API 控制器
+      - `dto/`: ACME 请求和响应数据传输对象
     - `dns/`: DNS 相关 API 控制器
+      - `entity/`: DNS 请求和响应实体类
+        - `req/`: DNS 请求实体类
+        - `resp/`: DNS 响应实体类
     - `plugin/`: 插件管理 API 控制器
     - `user/`: 用户管理 API 控制器
-  - `service/`: 业务逻辑层
-    - `acme/`: ACME 证书申请和管理服务
-    - `dns/`: DNS 解析、分组管理服务
-    - `plugin/`: 插件管理服务
-    - `user/`: 用户认证和管理服务
+      - `entity/`: 用户相关请求实体类
   - `database/`: JPA 实体和存储库
     - `entity/`: JPA 实体类
-      - `acme/`: ACME 相关实体 (AcmeAsyncLogEntity, AcmeCertificationEntity, AcmeUserInfoEntity, AcmeTaskContext)
+      - `acme/`: ACME 相关实体 (AcmeAsyncLogEntity, AcmeCertificationEntity, AcmeUserInfoEntity)
       - `dns/`: DNS 相关实体 (DnsProviderEntity, DnsResolveGroupEntity, DnsResolveUrlEntity)
       - `user/`: 用户相关实体 (UserEntity)
     - `repository/`: JPA 存储库接口
+  - `plugin/`: 插件API接口
+    - `api/`: 插件API定义
+      - `dns/`: DNS提供商插件接口 (HmDnsProviderPlugin.java)
+  - `service/`: 业务逻辑层
+    - `acme/`: ACME 证书申请和管理服务，支持通过 DNS-01 挑战自动申请 SSL 证书，包含证书打包和存储功能
+    - `dns/`: DNS 解析、分组管理服务
+    - `plugin/`: 插件管理服务
+    - `user/`: 用户认证和管理服务
   - `task/`: 定时任务
     - `dns/`: DNS 更新任务 (DnsUpdateTask.java)
+  - `util/`: 工具类 (IpUtil, JwtUtil, Md5Util, ObjectUtil, WebUtil)
   - `websocket/`: WebSocket 处理器，用于实时日志推送
     - `log/`: 日志 WebSocket 处理器和追加器
-  - `common/`: 通用配置、枚举、异常处理、切面和配置类
-  - `util/`: 工具类 (IpUtil, JwtUtil, Md5Util, ObjectUtil, WebUtil)
   - `HMonetaApplication.java`: 应用程序入口
 
 ### 前端结构
 
 - `HMfront/hm-front/`: Vue 3 前端项目
-  - `src/pages/`: 页面组件 (dns.vue, login.vue, pluginManager.vue, logPage.vue, setting.vue)
+  - `src/pages/`: 页面组件 (about.vue, dns.vue, index.vue, login.vue, loginNew.vue, logPage.vue, pluginManager.vue, setting.vue, HelloWorld.vue)
   - `src/components/`: 通用组件
   - `src/common/request.js`: API 请求配置和封装
   - `src/stores/`: Pinia 状态管理
   - `src/router/`: Vue Router 配置
   - `src/plugins/`: Vuetify 等插件配置
+  - `src/layouts/`: 页面布局组件
+  - `src/assets/`: 静态资源文件
+  - `src/styles/`: 样式文件
 
 ## API 文档
 
@@ -169,6 +195,7 @@ hmoneta.acme.uri: ACME 服务提供商 URI (如 Let's Encrypt)
 
 - `POST /hm/acme/modify`: 修改 ACME 用户信息
 - `GET /hm/acme/apply`: 申请 SSL 证书
+- `GET /hm/acme/download-cert/{domain}`: 下载指定域名的证书包（ZIP格式）
 
 ### WebSocket 实时日志 API
 
@@ -198,7 +225,7 @@ HMoneta支持自定义插件，插件均需实现*HMoneta-Official-Plugin-Api*
 - 日志系统使用SLF4J + Logback
 - 插件存储在 `./plugins` 目录
 - 系统启动时自动初始化管理员账户（用户名: admin，密码: 自动生成）
-- 使用Jackson库处理JSON数据
+- 使用tools.jackson库处理JSON数据，替代标准的com.fasterxml.jackson
 - WebSocket日志系统支持按服务订阅和全量订阅
 - ACME证书申请使用DNS-01挑战方式
 - 插件上传支持ZIP格式文件
@@ -245,3 +272,16 @@ HMoneta支持自定义插件，插件均需实现*HMoneta-Official-Plugin-Api*
 - 增加了对DNS更新失败情况的处理机制
 - 强化了插件加载失败的错误日志记录
 - 修复了腾讯云DNS插件中客户端未正确初始化的问题
+- 增加了证书有效期信息的数据库存储功能，通过AcmeCertificationEntity的notBefore和notAfter字段管理证书有效期
+- 通过DnsResolveUrlResp实体的acmeCerInfo字段在DNS解析信息中展示证书有效期
+- 新增证书下载功能，通过GET /hm/acme/download-cert/{domain}端点提供ZIP格式证书包下载
+- 使用MDC生成LOG_ID用于日志追踪，便于调试和问题定位
+- 定时任务通过@Profile("!dev")注解限制只在非开发环境运行
+- 证书下载功能支持多种格式(.key、.crt、.pem、.fullchain.pem)打包
+- 使用tools.jackson进行JSON处理，替代标准的com.fasterxml.jackson
+- JWT工具类支持敏感字段过滤，通过@JwtExclude注解标记敏感字段
+- 提供了完整的API访问日志记录功能，通过ApiAspect实现AOP日志记录
+- 实现了完整的用户认证拦截器，验证HMToken合法性
+- 配置了完整的CORS跨域策略，支持所有来源的请求
+- 使用Spring Boot的Banner功能展示自定义启动横幅
+- 提供了完整的插件管理功能，支持插件的动态加载和管理
