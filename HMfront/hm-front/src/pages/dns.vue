@@ -172,10 +172,10 @@ const applyCertificate = async (item) => {
         window.URL.revokeObjectURL(downloadUrl);
 
         notificationStore.showSuccess("证书下载成功");
+      } else {
+        const resp = await http.get('/acme/apply', {"domain": item.url})
+        notificationStore.showSuccess("修改成功，任务号" + resp)
       }
-    } else {
-      const resp = await http.get('/acme/apply', {"domain": item.url})
-      notificationStore.showSuccess("修改成功，任务号" + resp)
     }
   } catch (err) {
   }
