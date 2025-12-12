@@ -1,28 +1,35 @@
 <template>
   <v-app class="app-container">
-    <v-app-bar app title="HMoneta"></v-app-bar>
-    <v-navigation-drawer
-      v-if="isLoggedIn"
-      app
-      expand-on-hover
-      permanent
-      rail
-    >
-      <v-list nav>
-        <!-- 添加菜单项 -->
-        <v-list-item v-for="(item, index) in menuItems" :key="index" :to="item.route" link>
-          <v-list-item-title>{{ item.title }}</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
+    <template v-if="!isLoginPage">
 
-    <v-main class="main-content">
-      <v-container>
-        <v-sheet>
-          <router-view></router-view>
-        </v-sheet>
-      </v-container>
-    </v-main>
+
+      <v-app-bar app title="HMoneta"></v-app-bar>
+      <v-navigation-drawer
+        v-if="isLoggedIn"
+        app
+        expand-on-hover
+        permanent
+        rail
+      >
+        <v-list nav>
+          <!-- 添加菜单项 -->
+          <v-list-item v-for="(item, index) in menuItems" :key="index" :to="item.route" link>
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-navigation-drawer>
+
+      <v-main class="main-content">
+        <v-container>
+          <v-sheet>
+            <router-view></router-view>
+          </v-sheet>
+        </v-container>
+      </v-main>
+    </template>
+    <template v-else>
+      <router-view/>
+    </template>
 
     <AppFooter/>
   </v-app>
@@ -32,6 +39,14 @@
 import {ref} from 'vue';
 import AppFooter from "@/components/AppFooter.vue";
 import {useUserStore} from "@/stores/app.js";
+import {useRoute, useRouter} from "vue-router";
+
+const router = useRouter()
+const route = useRoute()
+
+const isLoginPage = computed(() => {
+  return route.path === '/login' || route.path === '/register' || route.path === '/forgot-password'
+})
 
 // 定义菜单项
 const menuItems = ref([
