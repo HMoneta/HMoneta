@@ -12,7 +12,8 @@ public enum DnsExceptionEnum implements HMExceptionEnum {
     DNS_PROVIDER_NOT_FOUND_EMPTY("007", "未找到分组指定的供应商"),
     DNS_GROUP_NOT_FOUND_EMPTY("008", "未找到分组"),
     DNS_URL_EXISTS_ERROR("009", "分组内已存在相同网址"),
-    DNS_URL_NOT_EXISTS_ERROR("010", "分组内不存在该网址");
+    DNS_URL_NOT_EXISTS_ERROR("010", "分组内不存在该网址"),
+    DNS_RECORD_DELETE_ERROR("011", "DNS记录删除异常");
     private final String code;
     private final String message;
 

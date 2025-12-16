@@ -178,9 +178,27 @@ public class DnsService {
         return resolveResps;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void deleteDnsResolveUrl(String urlId) {
-        dnsResolveUrlRepository.deleteById(urlId);
-        
+        dnsResolveUrlRepository.findById(urlId).ifPresentOrElse(dnsResolveUrlEntity -> {
+            String groupId = dnsResolveUrlEntity.getGroupId();
+            DnsResolveGroupEntity dnsResolveGroupEntity = dnsResolveGroupRepository.findById(groupId).get();
+            String providerId = dnsResolveGroupEntity.getProviderId();
+            DnsProviderEntity dnsProviderEntity = dnsProviderRepository.findById(providerId).get();
+            HmDnsProviderPlugin dnsProvider = pluginService.getDnsProvider(dnsProviderEntity.getProviderName());
+            dnsProvider.authenticate(dnsResolveGroupEntity.getCredentials());
+            Map<String, String> urlMap = WebUtil.extractParts(dnsResolveUrlEntity.getUrl());
+            boolean b = dnsProvider.deleteDns(urlMap.get("host"), urlMap.get("sub"), "A");
+            if (b) {
+                dnsResolveUrlRepository.deleteById(urlId);
+            } else {
+                throw new HMException(DnsExceptionEnum.DNS_RECORD_DELETE_ERROR);
+            }
+        }, () -> {
+            throw new HMException(DnsExceptionEnum.DNS_URL_NOT_EXISTS_ERROR);
+        });
+
+
     }
 
     public void modifyDnsResolveUrl(DnsResolveUrlEntity entity) {
