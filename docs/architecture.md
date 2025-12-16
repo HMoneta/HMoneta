@@ -28,14 +28,15 @@ HMoneta 项目遵循前后端分离架构设计，由后端API服务和前端Web
 ### 1.2 技术栈
 
 - **后端**: Spring Boot 4.0.0, Java 25
-- **前端**: Vue 3, Vuetify 3, Vite 7, Pinia
+- **前端**: Vue 3 (3.5.22), Vuetify 3 (3.10.5), Vite 7 (7.1.5), Pinia (3.0.3)
 - **数据库**: PostgreSQL, JPA/Hibernate
 - **插件系统**: PF4J (Plugin Framework for Java) + Spring Boot Integration
 - **安全**: JWT 认证, MD5 密码加密 (通过MD5 + salt实现)
 - **定时任务**: Spring Scheduling
 - **实时通信**: WebSocket
-- **证书管理**: ACME4J
-- **工具库**: Apache Commons Text, Commons Validator, Bouncy Castle, Hypersistence Utils for Hibernate
+- **证书管理**: ACME4J (3.5.0)
+- **配置管理**: Spring Dotenv (4.0.0)
+- **工具库**: Apache Commons Text, Commons Validator, Bouncy Castle (bcpkix-jdk18on), Hypersistence Utils for Hibernate, tools.jackson (for JSON processing)
 
 ## 2. 后端架构
 

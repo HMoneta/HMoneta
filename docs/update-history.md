@@ -3,84 +3,111 @@
 ## V0.0.1-Alpha (2025年12月) - 从0.0.1-SNAPSHOT基础上的更新
 
 ### 新增功能
+
 - 证书有效期管理功能
-  - 自动存储证书有效期信息（notBefore/notAfter）
-  - 在DNS解析信息中展示证书有效期
-  - 提供证书有效期API查询接口
+    - 自动存储证书有效期信息（notBefore/notAfter）
+    - 在DNS解析信息中展示证书有效期
+    - 提供证书有效期API查询接口
 - 证书下载功能
-  - 新增证书下载API：`GET /hm/acme/download-cert/{domain}`
-  - 支持ZIP格式证书包下载
-  - 包含.key、.crt、.pem、.fullchain.pem等格式文件
+    - 新增证书下载API：`GET /hm/acme/download-cert/{domain}`
+    - 支持ZIP格式证书包下载
+    - 包含.key、.crt、.pem、.fullchain.pem等格式文件
 - 敏感字段过滤功能
-  - 通过@JwtExclude注解标记敏感字段，防止敏感信息泄露
+    - 通过@JwtExclude注解标记敏感字段，防止敏感信息泄露
 - MDC日志追踪功能
-  - 使用MDC（Mapped Diagnostic Context）实现日志ID追踪，便于调试和问题定位
+    - 使用MDC（Mapped Diagnostic Context）实现日志ID追踪，便于调试和问题定位
 
 ### 功能优化
+
 - 证书有效期跟踪机制
-  - 在AcmeCertificationEntity实体中添加notBefore和notAfter字段
-  - 通过AcmeCerInfoResp响应实体传递证书有效期信息
-  - 在DNS解析信息查询结果中包含证书有效期数据
+    - 在AcmeCertificationEntity实体中添加notBefore和notAfter字段
+    - 通过AcmeCerInfoResp响应实体传递证书有效期信息
+    - 在DNS解析信息查询结果中包含证书有效期数据
 - ACME证书申请异步处理机制
-  - 使用@Async注解实现异步证书申请
-  - 通过AcmeAsyncLogEntity实体跟踪异步任务日志
-  - 支持任务状态跟踪和实时推送
-  - 引入AcmeTaskContext任务上下文
+    - 使用@Async注解实现异步证书申请
+    - 通过AcmeAsyncLogEntity实体跟踪异步任务日志
+    - 支持任务状态跟踪和实时推送
+    - 引入AcmeTaskContext任务上下文
 - 插件管理功能增强
-  - 支持ZIP格式插件上传
-  - 插件版本检查和自动更新数据库记录
+    - 支持ZIP格式插件上传
+    - 插件版本检查和自动更新数据库记录
 - WebSocket日志系统增强
-  - 支持按服务订阅日志
-  - 支持订阅所有日志
-  - 实现ping/pong心跳机制
+    - 支持按服务订阅日志
+    - 支持订阅所有日志
+    - 实现ping/pong心跳机制
 
 ### 技术优化
+
 - ACME证书申请过程优化
-  - 添加登录重试机制，最多重试3次
-  - DNS传播验证使用最多10次尝试验证，每次间隔10秒
-  - 证书申请过程包含自动清理验证用DNS记录功能
+    - 添加登录重试机制，最多重试3次
+    - DNS传播验证使用最多10次尝试验证，每次间隔10秒
+    - 证书申请过程包含自动清理验证用DNS记录功能
 - 安全机制改进
-  - 从BCrypt改为MD5加盐加密存储密码
-  - JWT工具类支持敏感字段过滤，通过@JwtExclude注解标记敏感字段
+    - 从BCrypt改为MD5加盐加密存储密码
+    - JWT工具类支持敏感字段过滤，通过@JwtExclude注解标记敏感字段
 - 数据库操作优化
-  - 修复了ACME证书申请过程中的数据库连接泄漏问题
-  - 优化了异步任务中的数据库操作异常处理
+    - 修复了ACME证书申请过程中的数据库连接泄漏问题
+    - 优化了异步任务中的数据库操作异常处理
 - 异常处理增强
-  - 增强了ACME证书申请过程中的网络异常处理
-  - 添加了ACME挑战获取的异常处理机制
+    - 增强了ACME证书申请过程中的网络异常处理
+    - 添加了ACME挑战获取的异常处理机制
 - JSON处理库变更
-  - 使用tools.jackson进行JSON处理，替代标准的com.fasterxml.jackson
+    - 使用tools.jackson进行JSON处理，替代标准的com.fasterxml.jackson
 
 ### 架构改进
+
 - 定时任务配置优化
-  - DNS更新任务仅在非开发环境运行（@Profile("!dev")）
-  - 任务线程池使用HMScheduling-前缀命名
+    - DNS更新任务仅在非开发环境运行（@Profile("!dev")）
+    - 任务线程池使用HMScheduling-前缀命名
 - 证书管理功能增强
-  - 证书文件存储在 `certs/{domain}` 目录下
-  - 支持.key、.crt、.pem、.fullchain.pem等格式
-  - 证书打包功能支持ZIP格式压缩
-  - 证书有效期信息存储在数据库中便于管理
+    - 证书文件存储在 `certs/{domain}` 目录下
+    - 支持.key、.crt、.pem、.fullchain.pem等格式
+    - 证书打包功能支持ZIP格式压缩
+    - 证书有效期信息存储在数据库中便于管理
 
 ### API端点更新
+
 - 新增 ACME 管理 API
-  - `POST /hm/acme/modify`: 修改 ACME 用户信息
-  - `GET /hm/acme/apply`: 申请 SSL 证书
-  - `GET /hm/acme/download-cert/{domain}`: 下载指定域名的证书包（ZIP格式）
+    - `POST /hm/acme/modify`: 修改 ACME 用户信息
+    - `GET /hm/acme/apply`: 申请 SSL 证书
+    - `GET /hm/acme/download-cert/{domain}`: 下载指定域名的证书包（ZIP格式）
 - DNS解析信息API增强
-  - 在DNS解析信息中包含证书有效期信息
-  - 通过DnsResolveUrlResp实体的acmeCerInfo字段传递证书有效期
+    - 在DNS解析信息中包含证书有效期信息
+    - 通过DnsResolveUrlResp实体的acmeCerInfo字段传递证书有效期
 - WebSocket 实时日志 API 增强
-  - 支持订阅特定服务日志
-  - 支持全量日志订阅
-  - 增加心跳检测机制
+    - 支持订阅特定服务日志
+    - 支持全量日志订阅
+    - 增加心跳检测机制
+
+### 前端界面优化
+
+- **登录界面重写**: 完全重写了登录界面，提供更现代化和用户友好的登录体验
+- **登录页面全屏显示**: 实现了登录页面的全屏显示模式，提升视觉效果和用户体验
+- **用户体验改进**: 新增修改网址后直接触发DNS解析功能，提高用户体验
 
 ### 问题修复
+
 - 修复腾讯云DNS插件中客户端未正确初始化的问题
 - 解决了异步任务中可能出现的空指针异常
+- 修复移除网址信息后，DNS解析未被同步移除的Bug
+- 修复不能触发证书申请的Bug
+- 修复证书下载接口的测试问题
+
+### 文档更新
+
+- 更新了项目文档，包括README、API文档和架构文档
+- 完善了插件系统文档和开发指南
+- 添加了证书下载功能的详细API文档
+- 更新了技术栈版本信息和依赖说明
+
+### 重要里程碑
+
+- **2025-12-11**: 正式发布 v0.0.1-Alpha 版本，项目版本从0.0.1-SNAPSHOT升级
 
 ## V0.0.1-SNAPSHOT (2025年11月)
 
 ### 新增功能
+
 - 基础DNS动态更新服务 (DDNS)
 - 支持多种DNS提供商（通过插件系统）
 - 前端Web管理界面 (Vue 3 + Vuetify)

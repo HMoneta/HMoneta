@@ -96,7 +96,7 @@ yarn dev
 ./mvnw spring-boot:run
 
 # 或者运行打包后的 JAR
-java -jar target/HMoneta-0.0.1-SNAPSHOT.jar
+java -jar target/HMoneta-0.0.1-Alpha.jar
 ```
 
 ### 环境配置
