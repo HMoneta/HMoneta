@@ -1,21 +1,30 @@
 # HMoneta 项目升级历史
 
-## V0.0.1-Alpha (2025年12月) - 从0.0.1-SNAPSHOT基础上的更新
+## V0.0.1-Alpha (2025年12月) - 当前版本
 
-### 新增功能
+### 重大功能增强
 
-- 证书有效期管理功能
-    - 自动存储证书有效期信息（notBefore/notAfter）
-    - 在DNS解析信息中展示证书有效期
-    - 提供证书有效期API查询接口
-- 证书下载功能
-    - 新增证书下载API：`GET /hm/acme/download-cert/{domain}`
-    - 支持ZIP格式证书包下载
-    - 包含.key、.crt、.pem、.fullchain.pem等格式文件
-- 敏感字段过滤功能
-    - 通过@JwtExclude注解标记敏感字段，防止敏感信息泄露
-- MDC日志追踪功能
-    - 使用MDC（Mapped Diagnostic Context）实现日志ID追踪，便于调试和问题定位
+**证书有效期管理功能**:
+- 自动存储证书有效期信息（notBefore/notAfter）
+- 在DNS解析信息中展示证书有效期
+- 提供证书有效期API查询接口
+- 通过AcmeCertificationEntity的notBefore和notAfter字段管理证书有效期
+
+**证书下载功能**:
+- 新增证书下载API：`GET /hm/acme/download-cert/{domain}`
+- 支持ZIP格式证书包下载
+- 包含.key、.crt、.pem、.fullchain.pem等格式文件
+- 提供完整的证书链打包和下载功能
+
+**敏感字段过滤功能**:
+- 通过@JwtExclude注解标记敏感字段，防止敏感信息泄露
+- JWT工具类支持敏感字段过滤机制
+- 增强系统安全性
+
+**MDC日志追踪功能**:
+- 使用MDC（Mapped Diagnostic Context）实现日志ID追踪
+- 便于调试和问题定位
+- 生成LOG_ID用于日志追踪
 
 ### 功能优化
 

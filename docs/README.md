@@ -7,7 +7,7 @@ HMoneta 是一个基于 Spring Boot 的 DNS 动态更新服务（DDNS），主�
 ## 技术栈
 
 - **后端**: Spring Boot 4.0.0, Java 25
-- **前端**: Vue 3, Vuetify 3, Vite 7, Pinia, Yarn 4.10.3
+- **前端**: Vue 3 (3.5.22), Vuetify 3 (3.10.5), Vite 7 (7.1.5), Pinia (3.0.3), Yarn 4.10.3
 - **数据库**: PostgreSQL, JPA/Hibernate
 - **依赖管理**: Maven
 - **插件系统**: PF4J (Plugin Framework for Java) + Spring Boot Integration
@@ -22,6 +22,7 @@ HMoneta 是一个基于 Spring Boot 的 DNS 动态更新服务（DDNS），主�
 
 ## 核心功能
 
+### 基础功能
 1. **动态 DNS 更新**: 定时检测公网 IP 变化，自动更新 DNS 解析记录
 2. **多 DNS 提供商支持**: 通过插件系统支持不同的 DNS 服务提供商
 3. **Web 管理界面**: 提供前端界面进行 DNS 配置和管理
@@ -30,16 +31,18 @@ HMoneta 是一个基于 Spring Boot 的 DNS 动态更新服务（DDNS），主�
 6. **ACME 证书管理**: 支持通过 ACME 协议自动申请和管理 SSL 证书，包含通过 DNS-01 挑战验证申请证书的功能
 7. **DNS 解析分组管理**: 支持将多个 DNS 解析记录分组管理
 8. **插件管理**: 支持动态插件加载、卸载、启动和停止，支持ZIP格式插件上传
-9. **实时日志监控**: 支持按服务订阅日志，支持订阅所有日志
-10. **证书申请与打包**: 支持证书申请、生成完整证书链和打包功能
-11. **异步任务日志**: 支持异步任务日志记录和查询，通过AcmeAsyncLogEntity实体管理异步任务日志
-12. **ACME 证书申请重试机制**: 包含登录重试和网络异常处理机制
-13. **证书有效期管理**: 自动存储和管理证书有效期信息（notBefore/notAfter）
-14. **证书有效期API**: 提供证书有效期查询接口，在DNS解析信息中展示证书有效期
-15. **证书下载功能**: 支持下载打包的证书文件（ZIP格式），包含.key、.crt、.pem、.fullchain.pem等格式
-16. **MDC日志追踪**: 使用MDC（Mapped Diagnostic Context）实现日志ID追踪，便于调试和问题定位
-17. **环境配置控制**: 使用Spring Profiles控制功能启用（如定时任务仅在非dev环境运行）
-18. **敏感字段过滤**: 通过@JwtExclude注解标记敏感字段，防止敏感信息泄露
+
+### 高级功能 (V0.0.1-Alpha)
+9. **证书有效期管理功能**: 自动存储和管理证书有效期信息（notBefore/notAfter），在DNS解析信息中展示证书有效期，提供证书有效期API查询接口
+10. **证书下载功能**: 支持下载打包的证书文件（ZIP格式），包含.key、.crt、.pem、.fullchain.pem等格式文件
+11. **敏感字段过滤功能**: 通过@JwtExclude注解标记敏感字段，防止敏感信息泄露
+12. **MDC日志追踪功能**: 使用MDC（Mapped Diagnostic Context）实现日志ID追踪，便于调试和问题定位
+13. **异步任务日志**: 支持异步任务日志记录和查询，通过AcmeAsyncLogEntity实体管理异步任务日志
+14. **ACME 证书申请重试机制**: 包含登录重试和网络异常处理机制
+15. **环境配置控制**: 使用Spring Profiles控制功能启用（如定时任务仅在非dev环境运行）
+16. **实时日志监控**: 支持按服务订阅日志，支持订阅所有日志
+17. **证书申请与打包**: 支持证书申请、生成完整证书链和打包功能
+18. **证书有效期API**: 提供证书有效期查询接口，在DNS解析信息中展示证书有效期
 
 ## 快速开始
 
@@ -206,82 +209,100 @@ hmoneta.acme.uri: ACME 服务提供商 URI (如 Let's Encrypt)
 HMoneta支持自定义插件，插件均需实现*HMoneta-Official-Plugin-Api*
 > HMoneta-Official-Plugin-Api [项目地址](https://github.com/HMoneta/HMoneta-Official-Plugin-Api)
 
-## 开发约定
+## 开发约定和最佳实践
 
+### 代码规范
 - 使用 Lombok 简化代码
 - 使用 JPA 进行数据库操作
 - 使用统一的异常处理机制（HMException, HMExceptionEnum）
 - 遵循 RESTful API 设计原则
-- 使用日志记录关键操作和错误信息
 - 使用 JWT 进行用户认证
 - 使用 Spring Boot 的配置属性进行配置管理
 - 使用 PF4J 插件框架扩展功能
 - ACME 证书管理遵循 RFC 8555 标准
 - 前端使用 Vuetify 组件库保持 UI 一致性
+- 前端使用 ESLint 进行代码质量检查
+
+### 安全实践
 - API 端点统一使用 `/hm` 前缀
 - 前端请求统一使用 `VITE_API_BASE_URL` 环境变量作为基础路径
 - 使用AOP记录API访问日志
 - 密码使用MD5加盐加密存储
+- JWT工具类支持敏感字段过滤，通过@JwtExclude注解标记敏感字段
+- 使用CORS配置支持跨域请求
+
+### 日志和监控
 - 日志系统使用SLF4J + Logback
-- 插件存储在 `./plugins` 目录
-- 系统启动时自动初始化管理员账户（用户名: admin，密码: 自动生成）
-- 使用tools.jackson库处理JSON数据，替代标准的com.fasterxml.jackson
+- 使用MDC进行日志追踪，便于调试和问题定位
+- 通过ApiAspect实现AOP日志记录
 - WebSocket日志系统支持按服务订阅和全量订阅
+
+### 插件系统
+- 插件存储在 `./plugins` 目录
+- 插件系统通过HmDnsProviderPlugin接口扩展DNS提供商功能
+- 支持ZIP格式插件上传
+- 插件系统支持版本检查和自动更新数据库记录
+
+### 证书管理
 - ACME证书申请使用DNS-01挑战方式
-- 插件上传支持ZIP格式文件
-- 使用Spring Scheduling实现定时任务
-- 定时DNS更新任务间隔为10分钟（600000毫秒），仅在非开发环境运行
-- 前端使用Vue 3 + Vite + Pinia架构
-- 前端使用@vueuse/core进行WebSocket连接管理
 - 证书文件存储在 `certs/{domain}` 目录下，包含.key、.crt、.pem、.fullchain.pem格式
 - 证书申请过程通过_acme-challenge TXT记录进行DNS验证
 - 证书申请完成后会清理验证用的DNS记录
-- 数据库连接使用 HikariCP 连接池进行优化
-- 支持多环境配置 (dev, prod)
-- 前端使用最新的 Vite 构建工具进行开发和构建
-- 支持文件上传功能，最大支持100MB
-- 使用MDC进行日志追踪，便于调试和问题定位
-- 定时任务使用Spring Scheduling，可配置线程池大小
-- 异常处理使用ControllerExceptionHandler统一处理
-- 插件系统通过HmDnsProviderPlugin接口扩展DNS提供商功能
-- 使用Spring Profiles控制不同环境下的功能启用（如定时任务仅在非dev环境运行）
-- 异步任务通过AcmeAsyncLogEntity实体跟踪日志和状态，解决异步处理中的日志查询问题
-- 定时任务线程池使用HMScheduling-前缀命名
-- ACME证书申请支持登录重试机制，最多重试3次
-- DNS传播验证使用最多10次尝试验证，每次间隔10秒
-- 证书申请过程包含自动清理验证用DNS记录功能
 - 证书打包功能支持ZIP格式压缩
-- 插件系统支持版本检查和自动更新数据库记录
-- 插件启动失败时会记录详细错误信息
+- 新增证书下载功能，通过GET /hm/acme/download-cert/{domain}端点提供ZIP格式证书包下载
+
+### 定时任务
+- 使用Spring Scheduling实现定时任务
+- 定时DNS更新任务间隔为10分钟（600000毫秒），仅在非开发环境运行
+- 定时任务通过@Profile("!dev")注解限制只在非开发环境运行
+- 定时任务使用Spring Scheduling，可配置线程池大小
+- 定时任务线程池使用HMScheduling-前缀命名
+
+### 数据库操作
+- 数据库连接使用 HikariCP 连接池进行优化
 - 修复了ACME证书申请过程中的数据库连接泄漏问题
 - 优化了异步任务中的数据库操作异常处理
+- 支持多环境配置 (dev, prod)
+
+### 文件上传
+- 支持文件上传功能，最大支持100MB
+- 前端使用最新的 Vite 构建工具进行开发和构建
+
+### 异常处理
+- 异常处理使用ControllerExceptionHandler统一处理
 - 增强了ACME证书申请过程中的网络异常处理
 - 添加了ACME挑战获取的异常处理机制
-- 优化了证书文件保存流程，确保私钥和证书链的正确生成和保存
-- 实现了WebSocket日志系统的ping/pong心跳机制，确保连接稳定性
-- 增强了插件系统的错误处理和日志记录功能
-- 优化了定时任务的执行逻辑，确保IP更新的准确性
 - 强化了异步任务的异常捕获和处理机制
-- 增加了对证书申请过程的详细日志记录
-- 优化了数据库连接池配置以提高性能
-- 强化了前端和后端的错误处理机制
-- 增加了对插件版本的管理和更新功能
-- 优化了WebSocket连接管理，防止连接泄漏
-- 增强了ACME证书申请过程中的网络超时设置
-- 优化了证书文件的打包和存储逻辑
-- 增加了对DNS更新失败情况的处理机制
-- 强化了插件加载失败的错误日志记录
-- 修复了腾讯云DNS插件中客户端未正确初始化的问题
+
+### 异步处理
+- 异步任务通过AcmeAsyncLogEntity实体跟踪日志和状态，解决异步处理中的日志查询问题
+- ACME证书申请支持登录重试机制，最多重试3次
+- DNS传播验证使用最多10次尝试验证，每次间隔10秒
+
+### 证书管理增强
+- 证书申请过程包含自动清理验证用DNS记录功能
 - 增加了证书有效期信息的数据库存储功能，通过AcmeCertificationEntity的notBefore和notAfter字段管理证书有效期
 - 通过DnsResolveUrlResp实体的acmeCerInfo字段在DNS解析信息中展示证书有效期
-- 新增证书下载功能，通过GET /hm/acme/download-cert/{domain}端点提供ZIP格式证书包下载
-- 使用MDC生成LOG_ID用于日志追踪，便于调试和问题定位
-- 定时任务通过@Profile("!dev")注解限制只在非开发环境运行
-- 证书下载功能支持多种格式(.key、.crt、.pem、.fullchain.pem)打包
-- 使用tools.jackson进行JSON处理，替代标准的com.fasterxml.jackson
-- JWT工具类支持敏感字段过滤，通过@JwtExclude注解标记敏感字段
-- 提供了完整的API访问日志记录功能，通过ApiAspect实现AOP日志记录
-- 实现了完整的用户认证拦截器，验证HMToken合法性
-- 配置了完整的CORS跨域策略，支持所有来源的请求
-- 使用Spring Boot的Banner功能展示自定义启动横幅
-- 提供了完整的插件管理功能，支持插件的动态加载和管理
+
+### 前端架构
+- 前端使用Vue 3 + Vite + Pinia架构
+- 前端使用@vueuse/core进行WebSocket连接管理
+- 前端代码质量通过ESLint进行规范检查
+- 使用现代前端构建工具链和插件优化开发体验
+
+### 连接管理
+- 实现了WebSocket日志系统的ping/pong心跳机制，确保连接稳定性
+- 优化了WebSocket连接管理，防止连接泄漏
+
+### 错误处理
+- 强化了前端和后端的错误处理机制
+- 修复了腾讯云DNS插件中客户端未正确初始化的问题
+- 强化了插件加载失败的错误日志记录
+
+### 网络优化
+- 增强了ACME证书申请过程中的网络超时设置
+- 增加了对DNS更新失败情况的处理机制
+
+### 存储优化
+- 优化了证书文件的打包和存储逻辑
+- 增加了对插件版本的管理和更新功能

@@ -28,7 +28,7 @@ HMoneta 项目遵循前后端分离架构设计，由后端API服务和前端Web
 ### 1.2 技术栈
 
 - **后端**: Spring Boot 4.0.0, Java 25
-- **前端**: Vue 3 (3.5.22), Vuetify 3 (3.10.5), Vite 7 (7.1.5), Pinia (3.0.3)
+- **前端**: Vue 3 (3.5.22), Vuetify 3 (3.10.5), Vite 7 (7.1.5), Pinia (3.0.3), Yarn 4.10.3
 - **数据库**: PostgreSQL, JPA/Hibernate
 - **插件系统**: PF4J (Plugin Framework for Java) + Spring Boot Integration
 - **安全**: JWT 认证, MD5 密码加密 (通过MD5 + salt实现)
@@ -37,6 +37,8 @@ HMoneta 项目遵循前后端分离架构设计，由后端API服务和前端Web
 - **证书管理**: ACME4J (3.5.0)
 - **配置管理**: Spring Dotenv (4.0.0)
 - **工具库**: Apache Commons Text, Commons Validator, Bouncy Castle (bcpkix-jdk18on), Hypersistence Utils for Hibernate, tools.jackson (for JSON processing)
+- **日志追踪**: MDC (Mapped Diagnostic Context) 用于日志ID追踪
+- **敏感信息过滤**: @JwtExclude 注解标记敏感字段
 
 ## 2. 后端架构
 
@@ -165,6 +167,7 @@ src/main/java/fan/summer/hmoneta/
 - 异步任务日志管理
 - 证书有效期管理和API查询
 - 证书下载功能
+- 敏感字段过滤和MDC日志追踪
 
 **核心组件**：
 - `AcmeController`: ACME相关API控制器
@@ -178,6 +181,14 @@ src/main/java/fan/summer/hmoneta/
 - `AcmeUserInfoEntity`: ACME用户信息实体
 - `AcmeAsyncLogEntity`: ACME异步任务日志实体，用于跟踪异步证书申请任务的状态和日志信息
 - `AcmeCerInfoResp`: ACME证书信息响应实体，包含证书有效期信息(notBefore/notAfter)
+
+**新增功能 (V0.0.1-Alpha)**:
+- **证书有效期管理**: 自动存储证书有效期信息（notBefore/notAfter）
+- **证书下载功能**: 支持ZIP格式证书包下载，包含.key、.crt、.pem、.fullchain.pem等格式
+- **敏感字段过滤**: 通过@JwtExclude注解标记敏感字段，防止敏感信息泄露
+- **MDC日志追踪**: 使用MDC（Mapped Diagnostic Context）实现日志ID追踪，便于调试和问题定位
+- **异步任务重试机制**: 包含登录重试（最多3次）和DNS传播验证（最多10次）
+- **自动清理功能**: 证书申请完成后自动清理验证用DNS记录
 
 #### 2.2.5 WebSocket日志模块 (`/websocket`)
 

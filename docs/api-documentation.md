@@ -30,7 +30,7 @@
 ### 2. 查询所有DNS解析记录
 
 - **接口路径**: `GET /hm/dns/resolve_info`
-- **功能描述**: 查询所有DNS解析记录信息
+- **功能描述**: 查询所有DNS解析记录信息，包含证书有效期信息
 - **请求参数**: 无
 - **响应示例**:
 ```json
@@ -44,16 +44,21 @@
         "id": 1,
         "url": "example.com",
         "currentIp": "192.168.1.1",
-        "lastUpdateTime": "2025-11-22T10:30:00",
+        "lastUpdateTime": "2025-12-22T10:30:00",
         "acmeCerInfo": {
-          "notBefore": "2025-11-22T00:00:00Z",
-          "notAfter": "2026-02-20T23:59:59Z"
+          "notBefore": "2025-12-22T00:00:00Z",
+          "notAfter": "2026-03-22T23:59:59Z"
         }
       }
     ]
   }
 ]
 ```
+
+**新增字段说明**:
+- `acmeCerInfo`: 证书有效期信息对象
+  - `notBefore`: 证书生效时间 (ISO 8601格式)
+  - `notAfter`: 证书到期时间 (ISO 8601格式)
 
 ### 3. 插入DNS解析分组
 
