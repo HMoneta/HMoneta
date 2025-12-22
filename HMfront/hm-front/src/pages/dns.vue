@@ -140,8 +140,8 @@ const submitModify = async () => {
 const submitDelete = async () => {
   try {
     modifyGroup.isDelete = true
-    await http.post('/dns/modify_group', modifyGroup)
-    notificationStore.showSuccess("修改成功")
+    await http.post('/dns/delete_group', modifyGroup)
+    notificationStore.showSuccess("删除成功")
     modifyGroupDialog.value = false
     await queryAllDnsResolveInfo()
   } catch (err) {

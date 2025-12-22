@@ -24,6 +24,7 @@ import fan.summer.hmoneta.util.WebUtil;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -135,9 +136,27 @@ public class DnsService {
 
     }
 
+    @Transactional
     public void deleteDnsResolveGroup(GroupModifyReq req) {
         if (ObjectUtil.isEmpty(req) || ObjectUtil.isEmpty(req.getId())) {
             throw new HMException(DnsExceptionEnum.DNS_GROUP_MODIFY_INFO_EMPTY);
+        } else {
+            // 查询分组是否有已经解析的网址
+            String groupId = req.getId();
+            dnsResolveGroupRepository.findById(groupId).ifPresentOrElse(dnsResolveGroupEntity -> {
+                        List<DnsResolveUrlEntity> allByGroupId = dnsResolveUrlRepository.findAllByGroupId(groupId);
+                        if (ObjectUtil.isNotEmpty(allByGroupId)) {
+                            for (DnsResolveUrlEntity dnsResolveUrlEntity : allByGroupId) {
+                                ((DnsService) AopContext.currentProxy()).deleteDnsResolveUrl(dnsResolveUrlEntity.getId());
+                            }
+                            dnsResolveUrlRepository.deleteAll(allByGroupId);
+                        }
+                        dnsResolveGroupRepository.deleteById(dnsResolveGroupEntity.getId());
+                    },
+                    () -> {
+                        throw new HMException(DnsExceptionEnum.DNS_GROUP_NOT_FOUND_EMPTY);
+                    }
+            );
         }
 
     }
