@@ -481,12 +481,12 @@ onMounted(() => {
         ></v-btn>
         <v-toolbar-title>编辑网址</v-toolbar-title>
       </v-toolbar>
-      <v-text-field class="pt-4 pl-2 pr-2" v-model="modifyUrl.url" clearable label="分组名称"
+      <v-text-field class="pt-4 pl-2 pr-2" v-model="modifyUrl.url" clearable label="待解析网址"
                     variant="outlined"/>
       <v-card-actions>
         <v-btn
           color="#5865f2"
-          text="修改网址"
+          text="提交"
           variant="flat"
           @click="submitUrlModify"
           block
