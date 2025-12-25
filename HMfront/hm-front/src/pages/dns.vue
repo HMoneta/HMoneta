@@ -187,6 +187,13 @@ const getCertificateClass = (certInfo) => {
   if (acmeCerInfo.haveCer) return 'cert-valid'
 }
 
+const getPopText = (certInfo) => {
+  console.log(certInfo)
+  if (!certInfo.acmeCerInfo) return '申请证书'
+  const acmeCerInfo = certInfo.acmeCerInfo
+  if (acmeCerInfo.haveCer) return '下载证书(有效期：' + acmeCerInfo.notAfter + ")"
+}
+
 
 // 监听DNS服务商选择变化
 watch(selected, (newVal) => {
@@ -404,7 +411,7 @@ onMounted(() => {
             ></v-btn>
           </template>
         </v-tooltip>
-        <v-tooltip text="申请证书">
+        <v-tooltip :text=getPopText(item)>
           <template v-slot:activator="{ props }">
             <v-btn
               v-bind="props"
