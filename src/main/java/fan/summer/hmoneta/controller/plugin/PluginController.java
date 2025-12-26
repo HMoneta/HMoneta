@@ -68,13 +68,12 @@ public class PluginController {
         String fileName = new File(originalFileName).getName();
 
         // 添加时间戳防止重名
-        String timeStamp = String.valueOf(System.currentTimeMillis());
         int dotIndex = fileName.lastIndexOf(".");
 
         if (dotIndex > 0) {
-            return fileName.substring(0, dotIndex) + "_" + timeStamp + fileName.substring(dotIndex);
+            return fileName.substring(0, dotIndex) + fileName.substring(dotIndex);
         } else {
-            return fileName + "_" + timeStamp;
+            return fileName;
         }
     }
 }

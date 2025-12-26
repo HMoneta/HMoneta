@@ -1,6 +1,8 @@
 package fan.summer.hmoneta.service.plugin;
 
 
+import fan.summer.hmoneta.common.enums.exception.plugin.PluginExceptionEnum;
+import fan.summer.hmoneta.common.exception.HMException;
 import fan.summer.hmoneta.database.entity.dns.DnsProviderEntity;
 import fan.summer.hmoneta.database.repository.dns.DnsProviderRepository;
 import fan.summer.hmoneta.plugin.api.dns.HmDnsProviderPlugin;
@@ -188,7 +190,13 @@ public class PluginService {
     }
 
     public void upLoadPlugin(InputStream plugin, Path filePath) throws IOException {
-        Files.copy(plugin, filePath);
+        boolean exists = filePath.toFile().exists();
+        if(exists){
+            throw new HMException(PluginExceptionEnum.PLUGIN_FILE_EXIST_ERROR);
+        }else {
+            Files.copy(plugin, filePath);
+        }
+
 
     }
 
