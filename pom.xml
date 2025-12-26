@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.0</version>
+        <version>4.0.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>fan.summer</groupId>
@@ -113,8 +113,8 @@
 
         <dependency>
             <groupId>io.hypersistence</groupId>
-            <artifactId>hypersistence-utils-hibernate-70</artifactId>
-            <version>3.11.0</version>
+            <artifactId>hypersistence-utils-hibernate-71</artifactId>
+            <version>3.14.1</version>
         </dependency>
 
         <dependency>
