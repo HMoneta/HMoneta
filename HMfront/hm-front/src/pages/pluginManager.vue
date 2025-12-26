@@ -1,12 +1,19 @@
 <script setup>
 import {http} from "@/common/request.js";
+import {userNotificationStore} from "@/stores/app.js";
+
+let notificationStore = userNotificationStore();
 
 const plugin = ref();
 const onUpload = async () => {
-  console.log();
-  const formData = new FormData();
-  formData.append('plugin', plugin.value);
-  await http.post("/plugin/upload", formData)
+  try {
+    const formData = new FormData();
+    formData.append('plugin', plugin.value);
+    await http.post("/plugin/upload", formData)
+    notificationStore.showSuccess("上传成功")
+  }catch (e){
+
+  }
 }
 </script>
 
