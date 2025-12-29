@@ -164,7 +164,7 @@ hmoneta.acme.uri: ACME 服务提供商 URI (如 Let's Encrypt)
 ### 前端结构
 
 - `HMfront/hm-front/`: Vue 3 前端项目
-  - `src/pages/`: 页面组件 (about.vue, dns.vue, index.vue, login.vue, loginNew.vue, logPage.vue, pluginManager.vue, setting.vue, HelloWorld.vue)
+  - `src/pages/`: 页面组件 (about.vue, dns.vue, index.vue, login.vue, loginNew.vue（全新重写）, logPage.vue, pluginManager.vue, setting.vue, HelloWorld.vue)
   - `src/components/`: 通用组件
   - `src/common/request.js`: API 请求配置和封装
   - `src/stores/`: Pinia 状态管理

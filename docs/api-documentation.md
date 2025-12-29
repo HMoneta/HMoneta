@@ -346,4 +346,55 @@ function downloadCertificate(domain) {
     window.URL.revokeObjectURL(url);
   });
 }
+
+// 查询DNS解析记录（包含证书有效期信息）
+fetch('http://localhost:8080/hm/dns/resolve_info', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer ' + token
+  }
+})
+.then(response => response.json())
+.then(data => {
+  console.log('DNS解析记录:', data);
+  data.forEach(group => {
+    group.dnsRecords.forEach(record => {
+      if (record.acmeCerInfo) {
+        console.log(`域名 ${record.url} 证书有效期:`, record.acmeCerInfo);
+      }
+    });
+  });
+});
 ```
+
+## 新增功能说明 (V0.0.1-Alpha)
+
+### 证书有效期管理
+- 在DNS解析信息中自动包含证书有效期信息
+- 通过`acmeCerInfo`字段提供证书生效时间和到期时间
+- 支持证书有效期API查询和前端展示
+
+### 证书下载功能
+- 新增证书下载API：`GET /hm/acme/download-cert/{domain}`
+- 支持ZIP格式证书包下载，包含多种证书格式
+- 包含.key、.crt、.pem、.fullchain.pem等完整证书链文件
+
+### 敏感字段过滤
+- 通过@JwtExclude注解标记敏感字段
+- JWT工具类支持敏感字段过滤机制
+- 增强API响应安全性
+
+### MDC日志追踪
+- 使用MDC（Mapped Diagnostic Context）实现日志ID追踪
+- 生成LOG_ID用于日志追踪和调试
+- 便于问题定位和系统监控
+
+### WebSocket增强
+- 支持按服务订阅日志和全量订阅
+- 实现ping/pong心跳机制
+- 优化连接管理和错误处理
+
+### 前端界面优化
+- 登录界面完全重写，提供更现代化体验
+- 支持全屏登录显示模式
+- 新增即时DNS解析功能，修改网址后直接触发解析
