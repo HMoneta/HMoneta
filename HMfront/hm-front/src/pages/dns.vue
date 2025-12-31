@@ -250,7 +250,7 @@ onMounted(() => {
                   cols="12"
                   sm="5"
                 >
-                  <v-sheet class="ma-2 pa-2 w-100">
+                  <v-sheet class="ma-2 pa-2 w-100" color="transparent">
                     <v-select
                       v-model="selected"
                       label="选择DNS服务商"
@@ -352,83 +352,85 @@ onMounted(() => {
     </v-card>
 
   </v-dialog>
-  <v-card class="mt-5" v-for="group in dnsGroups" :key="group.id">
-    <v-toolbar>
-      <v-toolbar-title>{{ group.groupName }}</v-toolbar-title>
-      <v-tooltip text="增加解析网址">
-        <template v-slot:activator="{ props }">
-          <v-btn
-            v-bind="props"
-            icon="mdi-plus-circle"
-            @click="addurl(group)"
-          ></v-btn>
-        </template>
-      </v-tooltip>
+  <v-sheet color="transparent">
+    <v-card class="mt-6" v-for="group in dnsGroups" :key="group.id">
+      <v-toolbar>
+        <v-toolbar-title>{{ group.groupName }}</v-toolbar-title>
+        <v-tooltip text="增加解析网址">
+          <template v-slot:activator="{ props }">
+            <v-btn
+              v-bind="props"
+              icon="mdi-plus-circle"
+              @click="addurl(group)"
+            ></v-btn>
+          </template>
+        </v-tooltip>
 
-      <v-tooltip text="修改解析组">
-        <template v-slot:activator="{ props }">
-          <v-btn
-            v-bind="props"
-            icon="mdi-pencil"
-            @click="modifyGroupFuc(group)"
-          ></v-btn>
-        </template>
-      </v-tooltip>
-
-
-    </v-toolbar>
-    <v-data-table-server
-      :headers="headers"
-      :items="group.urls"
-      item-value="name"
-    >
-      <template v-slot:item.resolveStatus="{ item }">
-        <span v-if="item.resolveStatus === 0"><v-badge inline location="top right" color="error"
-                                                       content="解析失败"/></span>
-        <span v-else><v-badge inline location="top right" color="success" content="解析成功"/></span>
-      </template>
-      <template v-slot:item.action="{ item }">
-        <v-tooltip text="修改网址">
+        <v-tooltip text="修改解析组">
           <template v-slot:activator="{ props }">
             <v-btn
               v-bind="props"
               icon="mdi-pencil"
-              size="small"
-              variant="text"
-              @click="editItem(item)"
-            ></v-btn>
-          </template>
-        </v-tooltip>
-        <v-tooltip text="删除解析">
-          <template v-slot:activator="{ props }">
-            <v-btn
-              v-bind="props"
-              icon="mdi-delete"
-              size="small"
-              variant="text"
-              color="error"
-              @click="deleteItem(item)"
-            ></v-btn>
-          </template>
-        </v-tooltip>
-        <v-tooltip :text=getPopText(item)>
-          <template v-slot:activator="{ props }">
-            <v-btn
-              v-bind="props"
-              icon="mdi-certificate"
-              :class="getCertificateClass(item)"
-              size="small"
-              variant="text"
-              @click="applyCertificate(item)"
+              @click="modifyGroupFuc(group)"
             ></v-btn>
           </template>
         </v-tooltip>
 
 
-      </template>
+      </v-toolbar>
+      <v-data-table-server
+        :headers="headers"
+        :items="group.urls"
+        item-value="name"
+      >
+        <template v-slot:item.resolveStatus="{ item }">
+        <span v-if="item.resolveStatus === 0"><v-badge inline location="top right" color="error"
+                                                       content="解析失败"/></span>
+          <span v-else><v-badge inline location="top right" color="success" content="解析成功"/></span>
+        </template>
+        <template v-slot:item.action="{ item }">
+          <v-tooltip text="修改网址">
+            <template v-slot:activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-pencil"
+                size="small"
+                variant="text"
+                @click="editItem(item)"
+              ></v-btn>
+            </template>
+          </v-tooltip>
+          <v-tooltip text="删除解析">
+            <template v-slot:activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-delete"
+                size="small"
+                variant="text"
+                color="error"
+                @click="deleteItem(item)"
+              ></v-btn>
+            </template>
+          </v-tooltip>
+          <v-tooltip :text=getPopText(item)>
+            <template v-slot:activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-certificate"
+                :class="getCertificateClass(item)"
+                size="small"
+                variant="text"
+                @click="applyCertificate(item)"
+              ></v-btn>
+            </template>
+          </v-tooltip>
 
-    </v-data-table-server>
-  </v-card>
+
+        </template>
+
+      </v-data-table-server>
+    </v-card>
+  </v-sheet>
 
   <v-dialog
     v-model="modifyGroupDialog"

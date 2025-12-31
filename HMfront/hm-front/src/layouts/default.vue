@@ -21,7 +21,7 @@
 
       <v-main class="main-content">
         <v-container>
-          <v-sheet>
+          <v-sheet color="transparent">
             <router-view></router-view>
           </v-sheet>
         </v-container>
