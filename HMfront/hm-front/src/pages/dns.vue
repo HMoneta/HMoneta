@@ -221,9 +221,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <v-btn @click="addDns">
-    增加DNS解析组
-  </v-btn>
+  <v-fab
+    icon="mdi-cloud-plus-outline"
+    location="bottom right"
+    size="large"
+    app
+    appear
+    class="mb-10"
+    @click="addDns"
+  ></v-fab>
   <v-dialog
     v-model="dialog"
     width="auto"
