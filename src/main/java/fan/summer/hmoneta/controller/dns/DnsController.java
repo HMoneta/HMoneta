@@ -51,11 +51,6 @@ public class DnsController {
         return ResponseEntity.ok("success");
     }
 
-    @PostMapping("/delete_group")
-    public ResponseEntity<String> deleteDnsResolveGroup(@RequestBody GroupModifyReq req) {
-        dnsService.deleteDnsResolveGroup(req);
-        return ResponseEntity.ok("success");
-    }
 
     @PostMapping("/url/modify")
     public ResponseEntity<String> deleteDnsResolveUrl(@RequestBody DnsResolveUrlReq req) {

@@ -110,22 +110,14 @@ public class DnsService {
         }
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void modifyDnsResolveGroup(GroupModifyReq req) {
         if (ObjectUtil.isEmpty(req.getId()) || ObjectUtil.isEmpty(req.getAuthenticateWayMap()) || ObjectUtil.isEmpty(req.getGroupName()) || ObjectUtil.isEmpty(req.getIsDelete())) {
             throw new HMException(DnsExceptionEnum.DNS_GROUP_MODIFY_INFO_EMPTY);
         }
         String id = req.getId();
         if (req.getIsDelete()) {
-            dnsResolveGroupRepository.findById(req.getId()).ifPresentOrElse(dnsResolveGroupEntity -> {
-                // 先删除分组下所有解析
-                List<DnsResolveUrlEntity> allByGroupId = dnsResolveUrlRepository.findAllByGroupId(dnsResolveGroupEntity.getId());
-                if (ObjectUtil.isNotEmpty(allByGroupId)) {
-                    dnsResolveUrlRepository.deleteAll(allByGroupId);
-                }
-                dnsResolveGroupRepository.deleteById(dnsResolveGroupEntity.getId());
-            }, () -> {
-                throw new HMException(DnsExceptionEnum.DNS_GROUP_NOT_FOUND_EMPTY);
-            });
+            deleteDnsResolveGroup(req);
         } else {
             dnsResolveGroupRepository.findById(id).ifPresent(dnsResolveGroupEntity -> {
                 dnsResolveGroupEntity.setGroupName(req.getGroupName());
@@ -137,7 +129,7 @@ public class DnsService {
     }
 
     @Transactional
-    public void deleteDnsResolveGroup(GroupModifyReq req) {
+    protected void deleteDnsResolveGroup(GroupModifyReq req) {
         if (ObjectUtil.isEmpty(req) || ObjectUtil.isEmpty(req.getId())) {
             throw new HMException(DnsExceptionEnum.DNS_GROUP_MODIFY_INFO_EMPTY);
         } else {

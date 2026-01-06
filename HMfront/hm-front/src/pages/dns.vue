@@ -126,28 +126,22 @@ const modifyGroupFuc = (group) => {
   modifyGroupDialog.value = true
 }
 
-const submitModify = async () => {
+const submitModify = async (isDelete) => {
   try {
-    modifyGroup.isDelete = false
+    modifyGroup.isDelete = isDelete
     await http.post('/dns/modify_group', modifyGroup)
-    notificationStore.showSuccess("修改成功")
+    if (isDelete) {
+      notificationStore.showSuccess("删除成功")
+    } else {
+      notificationStore.showSuccess("修改成功")
+    }
     modifyGroupDialog.value = false
     await queryAllDnsResolveInfo()
   } catch (err) {
 
   }
 }
-const submitDelete = async () => {
-  try {
-    modifyGroup.isDelete = true
-    await http.post('/dns/delete_group', modifyGroup)
-    notificationStore.showSuccess("删除成功")
-    modifyGroupDialog.value = false
-    await queryAllDnsResolveInfo()
-  } catch (err) {
 
-  }
-}
 // 证书申请
 const applyCertificate = async (item) => {
   try {
@@ -462,7 +456,7 @@ onMounted(() => {
           color="#5865f2"
           text="修改分组"
           variant="flat"
-          @click="submitModify"
+          @click="submitModify(false)"
           block
         >
         </v-btn>
@@ -472,7 +466,7 @@ onMounted(() => {
           color="red-lighten-2"
           text="删除分组"
           variant="outlined"
-          @click="submitDelete"
+          @click="submitModify(true)"
           block
         ></v-btn>
       </v-card-actions>
