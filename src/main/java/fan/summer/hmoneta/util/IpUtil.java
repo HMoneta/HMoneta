@@ -185,7 +185,8 @@ public class IpUtil {
      */
     public static String getPublicIp() {
         String ip = null;
-        try (HttpClient client = HttpClient.newHttpClient()) {
+        HttpClient client = HttpClient.newHttpClient();
+        try {
             log.info("-------------开始获取公网IP地址-------------");
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://ipinfo.io/ip"))
@@ -194,19 +195,40 @@ public class IpUtil {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
+
                 ip = response.body();
+
                 log.info("公网Ip为:{}", ip);
+
             } else log.info("无法获取IP地址。HTTP状态码: {}", response.statusCode());
+
         } catch (IOException e) {
+
             log.error("发生IO错误: {}", e.getMessage());
+
             log.warn(String.valueOf(e.fillInStackTrace()));
+
         } catch (InterruptedException e) {
+
             log.error("发生中断错误: {}", e.getMessage());
+
             Thread.currentThread().interrupt(); // 重新设置中断标志
+
         } catch (Exception e) {
+
             log.error("发生未预期的错误: {}", e.getMessage());
+
+        } finally {
+
+            // HttpClient doesn't need explicit closing in Java 17, but we'll log it for consistency
+
+            log.debug("HttpClient usage completed");
+
         }
+
         log.info("-------------完成获取公网IP地址-------------");
+
+
         return ip;
     }
 }

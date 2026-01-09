@@ -87,7 +87,7 @@ public class AcmeServiceComponent {
         }
 
         if (ObjectUtils.isNotEmpty(allAcmeUserInfo)) {
-            acmeUserInfo = allAcmeUserInfo.getFirst();
+            acmeUserInfo = allAcmeUserInfo.get(0);
             if (ObjectUtils.isEmpty(acmeUserInfo.getPrivateKey()) && ObjectUtils.isEmpty(acmeUserInfo.getPublicKey())) {
                 needCreateAcmeUser = true;
             }
@@ -168,7 +168,7 @@ public class AcmeServiceComponent {
             logger.info("[ACME-Task:{}]创建订单", acmeTaskContext.getTaskId());
             Order order = login.newOrder().domain(acmeTaskContext.getDomain()).create();
             Order bindOrder = login.bindOrder(order.getLocation());
-            Authorization authorization = bindOrder.getAuthorizations().getFirst();
+            Authorization authorization = bindOrder.getAuthorizations().get(0);
             logger.info("[ACME-Task:{}]发起DNS-01挑战", acmeTaskContext.getTaskId());
 
             // 添加对授权获取的异常处理
