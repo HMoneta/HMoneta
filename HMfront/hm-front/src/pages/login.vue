@@ -1,464 +1,267 @@
 <template>
   <div class="login-container">
-    <!-- 优雅的现代背景 -->
-    <div class="elegant-background">
-      <!-- 动态渐变背景 -->
-      <div class="gradient-orb orb-1"></div>
-      <div class="gradient-orb orb-2"></div>
-      <div class="gradient-orb orb-3"></div>
-
-      <!-- 柔和网格 -->
-      <div class="soft-grid"></div>
-
-      <!-- 浮动光点 -->
-      <div class="floating-lights">
-        <div class="light-dot" v-for="n in 20" :key="n"
-             :style="getLightDotStyle(n)"></div>
-      </div>
-
-      <!-- 优雅的几何形状 -->
-      <div class="geometric-elements">
-        <div class="floating-circle circle-1"></div>
-        <div class="floating-circle circle-2"></div>
-        <div class="floating-rect rect-1"></div>
-        <div class="floating-rect rect-2"></div>
-      </div>
-
-      <!-- 柔光效果 -->
-      <div class="ambient-glow"></div>
-    </div>
-
     <v-container class="login-content">
       <v-row justify="center" align="center" class="fill-height">
         <v-col cols="12" sm="10" md="6" lg="5" xl="4">
-          <v-card
-            class="login-card"
-            elevation="24"
-          >
-            <v-card-text class="pa-8">
-              <!-- Logo and Title -->
-              <div class="text-center mb-8">
-                <v-avatar
-                  size="120"
-                  class="mb-4 logo-avatar pulse-animation"
-                  color="primary"
-                >
-                  <v-icon size="60" color="white">mdi-home-automation</v-icon>
-                </v-avatar>
-
-                <h2 class="text-h4 font-weight-bold text-white mb-2 gradient-text">
-                  HMoneta
-                </h2>
+          <div class="card-container">
+            <div class="card-content">
+              <!-- 顶部装饰区域 - Vanta.js背景 -->
+              <div class="header-section">
+                <div id="vanta-canvas" ref="vantaRef"></div>
+                <div class="header-content">
+                  <span class="secure-badge">SECURE ACCESS</span>
+                  <h2 class="main-title">HMoneta</h2>
+                  <div class="title-underline"></div>
+                </div>
               </div>
 
-              <!-- Form -->
-              <v-form ref="loginForm" @submit.prevent="handleLogin">
-                <!-- Username -->
-                <v-text-field
-                  v-model="loginInfo.username"
-                  label="用户名"
-                  prepend-inner-icon="mdi-account"
-                  variant="outlined"
-                  density="comfortable"
-                  class="glass-input mb-4"
-                  :rules="usernameRules"
-                  @keyup.enter="handleLogin"
-                ></v-text-field>
+              <!-- 表单区域 -->
+              <div class="form-section">
+                <div>
+                  <span class="auth-badge">AUTHENTICATION</span>
+                  <h3 class="section-title">Account Login</h3>
 
-                <!-- Password -->
-                <v-text-field
-                  v-model="loginInfo.password"
-                  label="密码"
-                  prepend-inner-icon="mdi-lock"
-                  :type="showPassword ? 'text' : 'password'"
-                  :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-                  @click:append-inner="showPassword = !showPassword"
-                  variant="outlined"
-                  density="comfortable"
-                  class="glass-input mb-4"
-                  :rules="passwordRules"
-                  @keyup.enter="handleLogin"
-                ></v-text-field>
+                  <v-form ref="loginForm" @submit.prevent="handleLogin">
+                    <!-- 用户名 -->
+                    <div class="input-group">
+                      <label for="username" class="input-label">USERNAME</label>
+                      <input
+                        v-model="loginInfo.username"
+                        type="text"
+                        id="username"
+                        class="tech-input"
+                        placeholder="Enter your username"
+                        @keyup.enter="handleLogin"
+                      />
+                    </div>
 
+                    <!-- 密码 -->
+                    <div class="input-group">
+                      <div class="label-row">
+                        <label for="password" class="input-label">PASSWORD</label>
+                        <!--                        <a href="#" class="forgot-link">Forgot?</a>-->
+                      </div>
+                      <div class="password-wrapper">
+                        <input
+                          v-model="loginInfo.password"
+                          :type="showPassword ? 'text' : 'password'"
+                          id="password"
+                          class="tech-input"
+                          placeholder="••••••••"
+                          @keyup.enter="handleLogin"
+                        />
+                        <button
+                          type="button"
+                          class="toggle-password"
+                          @click="showPassword = !showPassword"
+                        >
+                          <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" class="icon" fill="none"
+                               viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                          </svg>
+                          <svg v-else xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24"
+                               stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
 
-                <!-- Submit Button -->
-                <v-btn
-                  type="submit"
-                  block
-                  size="large"
-                  class="submit-btn mb-6"
-                  :loading="loading"
-                >
-                  <v-icon start>mdi-lock-open</v-icon>
-                  登录
-                </v-btn>
-              </v-form>
-            </v-card-text>
-          </v-card>
+                    <!-- 按钮组 -->
+                    <div class="button-group">
+                      <button type="submit" class="tech-btn primary-btn" :disabled="loading">
+                        <svg v-if="!loading" xmlns="http://www.w3.org/2000/svg" class="btn-icon" fill="none"
+                             viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                        </svg>
+                        <span v-if="loading" class="loading-spinner"></span>
+                        {{ loading ? 'Logging in...' : 'Login' }}
+                      </button>
+                    </div>
+                  </v-form>
+                </div>
+
+                <!-- 底部信息 -->
+                <div class="footer-section">
+                  <div class="divider-gradient"></div>
+                  <div class="status-indicator">
+    <span
+      class="status-dot"
+      :style="{ backgroundColor: statusConfig.color }"
+    ></span>
+                    <span class="status-text">System Status: {{ statusConfig.text }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </v-col>
       </v-row>
     </v-container>
 
-    <!-- 优雅的扫描线 -->
-    <div class="elegant-scanline"></div>
+    <!-- 错误提示 -->
+    <transition name="slide">
+      <div v-if="errorMessage" class="error-toast">
+        {{ errorMessage }}
+      </div>
+    </transition>
   </div>
 </template>
 
 <script setup>
-import {http} from "@/common/request.js";
+import {onBeforeUnmount, onMounted, reactive, ref} from 'vue';
 import {useUserStore} from "@/stores/app.js";
-import router from "@/router/index.js"; // Form state
+import {http} from "@/common/request.js";
+import router from "@/router/index.js";
 
-// Form state
-const showPassword = ref(false)
-const rememberMe = ref(false)
-const loading = ref(false)
-const loginForm = ref(null)
+// 状态
+const showPassword = ref(false);
+const rememberMe = ref(false);
+const loading = ref(false);
+const loginForm = ref(null);
+const errorMessage = ref('');
+const vantaRef = ref(null);
+let vantaEffect = null;
 
-// Login info
+// 检查后端服务器状态
+const statusConfig = ref(
+  {color: '#6b7280', text: 'Offline'}
+)
+const fetchServerStatus = async () => {
+  try {
+    const response = await http.get('/user/login/status')
+    console.log(response)
+    if (response) {
+      statusConfig.value.color = '#10b981'
+      statusConfig.value.text = 'Operational'
+    }
+  } catch (error) {
+    statusConfig.value.color = '#ef4444'
+    statusConfig.value.text = 'Offline'
+  }
+
+}
+
+
+// 登录信息
 const loginInfo = reactive({
   username: "",
   password: "",
-})
+});
 
-// Validation rules
-const usernameRules = [
-  v => !!v || '用户名是必需的',
-  v => v.length >= 3 || '用户名至少需要3个字符'
-]
-
-const passwordRules = [
-  v => !!v || '密码是必需的',
-  v => v.length >= 6 || '密码至少需要6个字符'
-]
-
-// Methods
+// 登录处理
 const handleLogin = async () => {
   if (!loginInfo.username || !loginInfo.password) {
-    showSnackbar('请输入用户名和密码');
+    showError('请输入用户名和密码');
     return;
   }
 
-  const {valid} = await loginForm.value.validate()
-  if (valid) {
-    loading.value = true
-
-    try {
-      const json = await http.post("/user/login", loginInfo);
-      const userStore = useUserStore();
-      userStore.login(json);
-      await router.push('/');
-    } catch (error) {
-      showSnackbar(error.toString());
-    } finally {
-      loading.value = false;
-    }
+  if (loginInfo.username.length < 3) {
+    showError('用户名至少需要3个字符');
+    return;
   }
-}
 
+  if (loginInfo.password.length < 6) {
+    showError('密码至少需要6个字符');
+    return;
+  }
 
-const showSnackbar = (message) => {
+  loading.value = true;
+  errorMessage.value = '';
 
-}
+  try {
+    const json = await http.post("/user/login", loginInfo);
+    const userStore = useUserStore();
+    userStore.login(json);
+    await router.push('/');
 
-// 光点样式计算
-const getLightDotStyle = (index) => {
-  const positions = [
-    {top: '20%', left: '15%'},
-    {top: '30%', left: '80%'},
-    {top: '50%', left: '25%'},
-    {top: '70%', left: '75%'},
-    {top: '80%', left: '40%'},
-    {top: '15%', left: '60%'},
-    {top: '45%', left: '85%'},
-    {top: '65%', left: '20%'},
-    {top: '25%', left: '45%'},
-    {top: '75%', left: '65%'},
-    {top: '35%', left: '70%'},
-    {top: '55%', left: '35%'},
-    {top: '85%', left: '25%'},
-    {top: '40%', left: '90%'},
-    {top: '60%', left: '15%'},
-    {top: '18%', left: '75%'},
-    {top: '42%', left: '50%'},
-    {top: '78%', left: '85%'},
-    {top: '32%', left: '30%'},
-    {top: '68%', left: '55%'}
-  ];
-
-  const pos = positions[index - 1] || {top: '50%', left: '50%'};
-  const size = 3 + Math.random() * 4;
-  const delay = Math.random() * 8;
-  const duration = 6 + Math.random() * 4;
-  const opacity = 0.2 + Math.random() * 0.4;
-
-  return {
-    ...pos,
-    width: size + 'px',
-    height: size + 'px',
-    animationDelay: delay + 's',
-    animationDuration: duration + 's',
-    opacity: opacity
-  };
+  } catch (error) {
+    showError(error.toString());
+  } finally {
+    loading.value = false;
+  }
 };
 
+const showError = (message) => {
+  errorMessage.value = message;
+  setTimeout(() => {
+    errorMessage.value = '';
+  }, 3000);
+};
+
+// 加载外部脚本
+const loadScript = (src) => {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+};
+
+// 初始化 Vanta.js 效果
+const initVanta = () => {
+  if (window.VANTA && window.VANTA.NET && vantaRef.value) {
+    vantaEffect = window.VANTA.NET({
+      el: vantaRef.value,
+      mouseControls: true,
+      touchControls: true,
+      gyroControls: false,
+      minHeight: 150,
+      minWidth: 200,
+      scale: 1.00,
+      scaleMobile: 1.00,
+      color: 0xd1d5db,
+      backgroundColor: 0x171717,
+      points: 8,
+      maxDistance: 20.00,
+      spacing: 18.00,
+      showDots: true
+    });
+  }
+};
+
+onMounted(async () => {
+  try {
+    // 检查脚本是否已加载
+    if (!window.THREE) {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js');
+    }
+    if (!window.VANTA) {
+      await loadScript('https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js');
+    }
+
+    // 等待DOM更新后初始化
+    setTimeout(() => {
+      initVanta();
+    }, 100);
+    fetchServerStatus()
+  } catch (error) {
+    console.error('加载Vanta.js失败:', error);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (vantaEffect) {
+    vantaEffect.destroy();
+  }
+});
 </script>
 
 <style scoped lang="scss">
-/* 容器样式 */
+/* 容器 */
 .login-container {
   position: relative;
   width: 100%;
   min-height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #0a0a23 0%, #1a1a3a 30%, #2d1b69 70%, #0a0a23 100%);
-}
-
-/* 优雅背景容器 */
-.elegant-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  overflow: hidden;
-}
-
-/* 动态渐变光球 */
-.gradient-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.6;
-  animation: float-gentle 20s ease-in-out infinite;
-}
-
-.orb-1 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(103, 58, 183, 0.4) 0%, transparent 70%);
-  top: -200px;
-  left: -200px;
-  animation-delay: 0s;
-}
-
-.orb-2 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(33, 150, 243, 0.3) 0%, transparent 70%);
-  top: 50%;
-  right: -250px;
-  animation-delay: -7s;
-}
-
-.orb-3 {
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(156, 39, 176, 0.2) 0%, transparent 70%);
-  bottom: -150px;
-  left: 30%;
-  animation-delay: -14s;
-}
-
-@keyframes float-gentle {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px) scale(1);
-  }
-  25% {
-    transform: translateY(-30px) translateX(20px) scale(1.05);
-  }
-  50% {
-    transform: translateY(-60px) translateX(-10px) scale(0.95);
-  }
-  75% {
-    transform: translateY(-30px) translateX(-30px) scale(1.02);
-  }
-}
-
-/* 柔和网格 */
-.soft-grid {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-  linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 60px 60px;
-  animation: grid-move 30s linear infinite;
-}
-
-@keyframes grid-move {
-  0% {
-    transform: translate(0, 0);
-  }
-  100% {
-    transform: translate(60px, 60px);
-  }
-}
-
-/* 浮动光点 */
-.floating-lights {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.light-dot {
-  position: absolute;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(103, 58, 183, 0.4) 50%, transparent 100%);
-  border-radius: 50%;
-  animation: light-float 10s ease-in-out infinite;
-  box-shadow: 0 0 20px rgba(103, 58, 183, 0.3);
-}
-
-@keyframes light-float {
-  0%, 100% {
-    transform: translateY(0px) scale(1);
-    opacity: 0.6;
-  }
-  50% {
-    transform: translateY(-40px) scale(1.2);
-    opacity: 1;
-  }
-}
-
-/* 几何元素 */
-.geometric-elements {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.floating-circle {
-  position: absolute;
-  border: 1px solid rgba(103, 58, 183, 0.2);
-  border-radius: 50%;
-  animation: circle-drift 25s ease-in-out infinite;
-}
-
-.circle-1 {
-  width: 120px;
-  height: 120px;
-  top: 20%;
-  left: 10%;
-  animation-delay: 0s;
-}
-
-.circle-2 {
-  width: 80px;
-  height: 80px;
-  bottom: 30%;
-  right: 15%;
-  animation-delay: -12s;
-}
-
-.floating-rect {
-  position: absolute;
-  border: 1px solid rgba(33, 150, 243, 0.15);
-  border-radius: 8px;
-  animation: rect-rotate 30s linear infinite;
-}
-
-.rect-1 {
-  width: 100px;
-  height: 60px;
-  top: 60%;
-  left: 80%;
-  animation-delay: -5s;
-}
-
-.rect-2 {
-  width: 70px;
-  height: 100px;
-  top: 15%;
-  right: 25%;
-  animation-delay: -18s;
-}
-
-@keyframes circle-drift {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-    opacity: 0.4;
-  }
-  50% {
-    transform: translateY(-50px) rotate(180deg);
-    opacity: 0.8;
-  }
-}
-
-@keyframes rect-rotate {
-  0% {
-    transform: rotate(0deg) scale(1);
-    opacity: 0.3;
-  }
-  50% {
-    transform: rotate(180deg) scale(1.1);
-    opacity: 0.6;
-  }
-  100% {
-    transform: rotate(360deg) scale(1);
-    opacity: 0.3;
-  }
-}
-
-/* 柔光效果 */
-.ambient-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 30% 30%, rgba(103, 58, 183, 0.1) 0%, transparent 50%),
-  radial-gradient(circle at 70% 70%, rgba(33, 150, 243, 0.08) 0%, transparent 50%),
-  radial-gradient(circle at 50% 50%, rgba(156, 39, 176, 0.05) 0%, transparent 70%);
-  animation: ambient-pulse 15s ease-in-out infinite;
-}
-
-@keyframes ambient-pulse {
-  0%, 100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 0.8;
-  }
-}
-
-/* 优雅扫描线 */
-.elegant-scanline {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.02) 50%,
-      transparent 100%
-  );
-  background-size: 200% 100%;
-  pointer-events: none;
-  z-index: 3;
-  animation: elegant-scan 8s linear infinite;
-}
-
-@keyframes elegant-scan {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  background: #0a0a0a;
 }
 
 .login-content {
@@ -467,260 +270,375 @@ const getLightDotStyle = (index) => {
   height: 100vh;
 }
 
-.login-card {
-  backdrop-filter: blur(30px);
-  background: rgba(26, 26, 58, 0.85) !important;
-  border: 1px solid rgba(103, 58, 183, 0.2);
-  border-radius: 20px !important;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-  0 0 0 1px rgba(103, 58, 183, 0.1),
-  inset 0 1px 0 rgba(255, 255, 255, 0.05);
-
-  &:hover {
-    transform: translateY(-6px) scale(1.01);
-    box-shadow: 0 20px 60px rgba(103, 58, 183, 0.2),
-    0 0 0 1px rgba(103, 58, 183, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    border-color: rgba(103, 58, 183, 0.4);
-  }
-}
-
-.logo-avatar {
-  background: linear-gradient(135deg, #673ab7 0%, #2196f3 50%, #9c27b0 100%) !important;
-  box-shadow: 0 8px 32px rgba(103, 58, 183, 0.3),
-  0 0 0 1px rgba(103, 58, 183, 0.2);
-  padding: 15px;
+/* 卡片容器 */
+.card-container {
   position: relative;
-  overflow: hidden;
+  z-index: 0;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    animation: logo-shimmer 4s linear infinite;
+    inset: -1px;
+    background: linear-gradient(to bottom right, #525252, transparent, #262626);
+    border-radius: 12px;
+    z-index: -1;
   }
 }
 
-@keyframes logo-shimmer {
-  0% {
-    transform: rotate(0deg);
+.card-content {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #171717;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* 头部区域 */
+.header-section {
+  height: 150px;
+  position: relative;
+  overflow: hidden;
+}
+
+#vanta-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.header-content {
+  position: relative;
+  z-index: 10;
+  padding: 16px;
+}
+
+.secure-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: rgba(38, 38, 38, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  color: #a3a3a3;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.main-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin: 8px 0;
+}
+
+.title-underline {
+  height: 4px;
+  width: 48px;
+  background: #a3a3a3;
+  border-radius: 9999px;
+  margin-top: 8px;
+}
+
+/* 表单区域 */
+.form-section {
+  padding: 24px;
+  background: #171717;
+}
+
+.auth-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: #262626;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  color: #a3a3a3;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e5e5e5;
+  margin-bottom: 16px;
+}
+
+/* 输入组 */
+.input-group {
+  margin-bottom: 16px;
+}
+
+.input-label {
+  display: block;
+  color: #d4d4d4;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.forgot-link {
+  color: #a3a3a3;
+  font-size: 0.75rem;
+  text-decoration: none;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #d4d4d4;
   }
-  100% {
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.tech-input {
+  width: 100%;
+  background: #262626;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: #e5e5e5;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: #525252;
+    box-shadow: 0 0 0 2px rgba(82, 82, 82, 0.2);
+  }
+
+  &::placeholder {
+    color: #737373;
+  }
+}
+
+.password-wrapper .tech-input {
+  padding-right: 40px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #737373;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    color: #a3a3a3;
+  }
+
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* 记住我 */
+.remember-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.tech-checkbox {
+  width: 16px;
+  height: 16px;
+  background: #262626;
+  border: 1px solid #404040;
+  border-radius: 4px;
+  margin-right: 8px;
+  cursor: pointer;
+  accent-color: #525252;
+}
+
+.remember-label {
+  color: #a3a3a3;
+  font-size: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* 按钮组 */
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.tech-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+}
+
+.primary-btn {
+  background: #262626;
+  color: #e5e5e5;
+
+  &:hover:not(:disabled) {
+    background: #404040;
+  }
+}
+
+.secondary-btn {
+  background: #0a0a0a;
+  color: #d4d4d4;
+
+  &:hover {
+    background: #262626;
+  }
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #404040;
+  border-top-color: #e5e5e5;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to {
     transform: rotate(360deg);
   }
 }
 
-.pulse-animation {
-  animation: elegant-pulse 3s ease-in-out infinite;
+/* 底部区域 */
+.footer-section {
+  padding-top: 16px;
+  text-align: center;
 }
 
-@keyframes elegant-pulse {
-  0%, 100% {
-    box-shadow: 0 8px 32px rgba(103, 58, 183, 0.3),
-    0 0 0 0 rgba(33, 150, 243, 0.3);
-  }
-  50% {
-    box-shadow: 0 8px 32px rgba(103, 58, 183, 0.5),
-    0 0 0 15px rgba(33, 150, 243, 0);
-  }
+.divider-gradient {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #525252, transparent);
+  margin-bottom: 16px;
 }
 
-.gradient-text {
-  background: linear-gradient(90deg, #673ab7, #2196f3, #9c27b0, #673ab7);
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: text-gradient 4s ease-in-out infinite;
+.footer-text {
+  color: #a3a3a3;
+  font-size: 0.75rem;
+  margin-bottom: 16px;
 }
 
-@keyframes text-gradient {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-:deep(.glass-input) {
-  .v-field {
-    background: rgba(26, 26, 58, 0.8) !important;
-    border: 1px solid rgba(103, 58, 183, 0.25);
-    backdrop-filter: blur(20px);
-    border-radius: 14px;
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    position: relative;
-    overflow: hidden;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(103, 58, 183, 0.1), transparent);
-      transition: 0.8s;
-    }
-
-    &:hover::before {
-      left: 100%;
-    }
-
-    &:hover {
-      background: rgba(26, 26, 58, 0.9) !important;
-      border-color: rgba(103, 58, 183, 0.5);
-      box-shadow: 0 0 25px rgba(103, 58, 183, 0.2),
-      0 8px 32px rgba(0, 0, 0, 0.3);
-      transform: translateY(-1px);
-    }
-  }
-
-  .v-field--focused {
-    background: rgba(26, 26, 58, 0.95) !important;
-    border-color: #673ab7 !important;
-    box-shadow: 0 0 30px rgba(103, 58, 183, 0.4),
-    0 8px 32px rgba(0, 0, 0, 0.4);
-    transform: translateY(-1px);
-  }
-
-  .v-field__input,
-  .v-label,
-  .v-icon {
-    color: rgba(255, 255, 255, 0.95) !important;
-  }
-
-  .v-label.v-field-label--floating {
-    color: #673ab7 !important;
-  }
-}
-
-.submit-btn {
-  background: linear-gradient(135deg, #673ab7 0%, #2196f3 50%, #9c27b0 100%) !important;
-  background-size: 200% 100%;
-  color: white !important;
-  font-weight: 600;
-  text-transform: none;
-  border-radius: 14px;
-  box-shadow: 0 8px 25px rgba(103, 58, 183, 0.3),
-  0 0 0 1px rgba(103, 58, 183, 0.2);
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  overflow: hidden;
-  position: relative;
-  animation: button-shimmer 4s ease-in-out infinite;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.2),
-        transparent
-    );
-    transition: 0.6s;
-  }
-
-  &:hover::before {
-    left: 100%;
-  }
+.footer-link {
+  color: #d4d4d4;
+  text-decoration: none;
 
   &:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 12px 35px rgba(103, 58, 183, 0.4),
-    0 0 0 1px rgba(103, 58, 183, 0.3);
-    background-position: 100% 0;
-  }
-
-  &:active {
-    transform: translateY(-1px) scale(0.98);
+    text-decoration: underline;
   }
 }
 
-@keyframes button-shimmer {
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
   0%, 100% {
-    background-position: 0% 50%;
+    opacity: 1;
   }
   50% {
-    background-position: 100% 50%;
+    opacity: 0.5;
   }
 }
 
-.social-btn {
-  background: rgba(26, 26, 58, 0.8) !important;
-  border: 1px solid rgba(103, 58, 183, 0.3) !important;
-  border-radius: 12px;
-  color: rgba(255, 255, 255, 0.9) !important;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(15px);
-
-  &:hover {
-    background: rgba(26, 26, 58, 0.95) !important;
-    border-color: rgba(103, 58, 183, 0.5) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(103, 58, 183, 0.2);
-  }
+.status-text {
+  color: #a3a3a3;
+  font-size: 0.75rem;
 }
 
-:deep(.v-checkbox) {
-  .v-label {
-    color: rgba(255, 255, 255, 0.8) !important;
-  }
-
-  .v-selection-control__input {
-    color: #673ab7 !important;
-  }
+/* 错误提示 */
+.error-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  background: #7f1d1d;
+  color: #fecaca;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-:deep(.v-divider) {
-  border-color: rgba(103, 58, 183, 0.3);
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #673ab7, transparent);
-    animation: divider-shimmer 3s ease-in-out infinite;
-  }
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.3s ease-out;
 }
 
-@keyframes divider-shimmer {
-  0%, 100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 0.8;
-  }
+.slide-enter-from {
+  transform: translateX(400px);
+  opacity: 0;
 }
 
-:deep(.v-chip) {
-  background-color: rgba(103, 58, 183, 0.15) !important;
-  border-color: rgba(103, 58, 183, 0.4) !important;
-  color: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(15px);
-  animation: chip-glow 4s ease-in-out infinite;
+.slide-leave-to {
+  transform: translateX(400px);
+  opacity: 0;
 }
 
-@keyframes chip-glow {
-  0%, 100% {
-    box-shadow: 0 0 8px rgba(103, 58, 183, 0.2);
+/* 响应式 */
+@media (max-width: 640px) {
+  .button-group {
+    flex-direction: column;
   }
-  50% {
-    box-shadow: 0 0 15px rgba(103, 58, 183, 0.4);
+
+  .header-section {
+    height: 120px;
+  }
+
+  .main-title {
+    font-size: 1.25rem;
   }
 }
 </style>
