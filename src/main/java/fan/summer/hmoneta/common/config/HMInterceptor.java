@@ -21,6 +21,6 @@ public class HMInterceptor implements WebMvcConfigurer {
         registry.addInterceptor(apiInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns("/hm/user/login",
-                        "/hm/user/valid");
+                        "/hm/user/valid", "/hm/user/login/status");
     }
 }
