@@ -39,7 +39,11 @@ public class UserController {
 
     @GetMapping("/valid")
     public ResponseEntity<Boolean> tokenValid(@RequestParam String HMToken) {
-        System.out.println(1);
         return ResponseEntity.ok(jwtUtil.validate(HMToken));
+    }
+
+    @GetMapping("/login/status")
+    public ResponseEntity<Boolean> tokenValid() {
+        return ResponseEntity.ok(true);
     }
 }
