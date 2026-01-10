@@ -240,7 +240,7 @@ onMounted(async () => {
     // 等待DOM更新后初始化
     setTimeout(() => {
       initVanta();
-    }, 100);
+    }, 20);
     fetchServerStatus()
   } catch (error) {
     console.error('加载Vanta.js失败:', error);
