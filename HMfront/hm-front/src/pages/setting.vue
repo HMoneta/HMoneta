@@ -16,11 +16,13 @@ const onSubmit = async () => {
 const unifiInfo = reactive({
   baseUri: null,
   apiKey: null,
+  localBaseUri: null,
+  localApiKey: null,
 })
 
 const onUnifiSubmit = async () => {
   try {
-    await http.post("/unifi/setting", {"baseUri": unifiInfo.baseUri, "apiKey": unifiInfo.apiKey});
+    await http.post("/unifi/setting", unifiInfo);
     userNotificationStore().showSuccess("设置保存成功")
   } catch (err) {
 
@@ -59,6 +61,10 @@ const onUnifiSubmit = async () => {
                           v-model="unifiInfo.baseUri" class="mt-3"></v-text-field>
             <v-text-field clearable label="UnifiApiKey" variant="solo-filled"
                           v-model="unifiInfo.apiKey" class="mt-3"></v-text-field>
+            <v-text-field clearable label="UnifiApiBaseUrl-Local" variant="solo-filled"
+                          v-model="unifiInfo.localBaseUri" class="mt-3"></v-text-field>
+            <v-text-field clearable label="UnifiApiKey-Local" variant="solo-filled"
+                          v-model="unifiInfo.localApiKey" class="mt-3"></v-text-field>
             <v-btn color="primary" @click="onUnifiSubmit" variant="flat">提交</v-btn>
           </v-card>
         </v-sheet>
