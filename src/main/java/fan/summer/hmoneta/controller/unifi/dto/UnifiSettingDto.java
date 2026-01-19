@@ -13,4 +13,6 @@ import lombok.Data;
 public class UnifiSettingDto {
     private String baseUri;
     private String apiKey;
+    private String localBaseUri;
+    private String localApiKey;
 }

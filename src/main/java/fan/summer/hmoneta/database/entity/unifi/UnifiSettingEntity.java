@@ -21,4 +21,6 @@ public class UnifiSettingEntity {
     private Long id;
     private String baseUri;
     private String apiKey;
+    private String localBaseUri;
+    private String localApiKey;
 }
