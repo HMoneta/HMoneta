@@ -27,6 +27,8 @@ public class UnifiController {
         UnifiSettingEntity unifiSettingEntity = new UnifiSettingEntity();
         unifiSettingEntity.setBaseUri(unifiSettingDto.getBaseUri());
         unifiSettingEntity.setApiKey(unifiSettingDto.getApiKey());
+        unifiSettingEntity.setLocalBaseUri(unifiSettingDto.getLocalBaseUri());
+        unifiSettingEntity.setLocalApiKey(unifiSettingDto.getLocalApiKey());
         unifiApiService.settingUnifiSettingInfo(unifiSettingEntity);
         return ResponseEntity.ok(true);
     }
