@@ -61,12 +61,19 @@ dependencies {
 
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 group = 'fan.summer'
-version = '0.0.1-Beta2'
+version = '0.0.2-Alpha1'
 description = 'HMoneta'
 java.sourceCompatibility = JavaVersion.VERSION_25
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
 
 dependencyManagement {
     imports {
@@ -101,4 +108,5 @@ tasks.named('jar') {
 
 tasks.named('test') {
     failOnNoDiscoveredTests = false
+    useJUnitPlatform()
 }
