@@ -51,6 +51,7 @@ const isLoginPage = computed(() => {
 // 定义菜单项
 const menuItems = ref([
   {title: 'DNS', route: '/dns'},
+  {title: '网络', route: '/network'},
   {title: '插件管理', route: '/pluginManager'},
   {title: '日志', route: '/logPage'},
   {title: '设置', route: '/setting'},
