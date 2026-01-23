@@ -229,21 +229,21 @@ const initVanta = () => {
 
 onMounted(async () => {
   try {
+    await fetchServerStatus()
     // 检查脚本是否已加载
     if (!window.THREE) {
       await loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js');
     }
     if (!window.VANTA) {
-      await loadScript('https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js');
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.net.min.js');
     }
 
     // 等待DOM更新后初始化
     setTimeout(() => {
       initVanta();
     }, 20);
-    fetchServerStatus()
   } catch (error) {
-    console.error('加载Vanta.js失败:', error);
+    showError(error.toString())
   }
 });
 
