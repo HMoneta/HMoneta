@@ -25,6 +25,11 @@ import java.util.Map;
 public class UnifiController {
     private final UnifiApiService unifiApiService;
 
+    @GetMapping("/status")
+    public ResponseEntity<Boolean> checkUnifiAccessible() {
+        return ResponseEntity.ok(unifiApiService.unifiIsAccessible());
+    }
+
     @PostMapping("/setting")
     public ResponseEntity<Boolean> setUnifiSetting(@RequestBody UnifiSettingDto unifiSettingDto) {
         UnifiSettingEntity unifiSettingEntity = new UnifiSettingEntity();
