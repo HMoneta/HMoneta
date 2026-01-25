@@ -32,6 +32,17 @@ public class UnifiApiService {
         this.unifiSettingRepository = unifiSettingRepository;
     }
 
+    // 是否配置Unifi信息
+    public boolean unifiIsAccessible() {
+        UnifiSettingEntity unifiSettingEntity = queryUnifiSettingInfo();
+        if (unifiSettingEntity == null) {
+            return false;
+        } else {
+            SiteManagerLocalResp<SiteInfoLocal> siteInfoLocalSiteManagerLocalResp = listLocalSites();
+            return siteInfoLocalSiteManagerLocalResp != null;
+        }
+    }
+
     // Unifi设置信息
     public UnifiSettingEntity queryUnifiSettingInfo() {
         return unifiSettingRepository.findAll().stream().findFirst().orElse(null);
