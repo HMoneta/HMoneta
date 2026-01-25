@@ -12,7 +12,7 @@ const acmeInfo = reactive({
 const onSubmit = async () => {
   await http.post("/acme/modify", acmeInfo);
 }
-
+// unifi
 const unifiInfo = reactive({
   baseUri: null,
   apiKey: null,
@@ -23,6 +23,19 @@ const unifiInfo = reactive({
 const onUnifiSubmit = async () => {
   try {
     await http.post("/unifi/setting", unifiInfo);
+    userNotificationStore().showSuccess("设置保存成功")
+  } catch (err) {
+
+  }
+}
+
+// LeiChi
+const leichi = reactive({
+  apiToken: ''
+})
+const onLeiChiSubmit = async () => {
+  try {
+    await http.post("/waf/lc/token", leichi);
     userNotificationStore().showSuccess("设置保存成功")
   } catch (err) {
 
@@ -66,6 +79,12 @@ const onUnifiSubmit = async () => {
             <v-text-field clearable label="UnifiApiKey-Local" variant="solo-filled"
                           v-model="unifiInfo.localApiKey" class="mt-3"></v-text-field>
             <v-btn color="primary" @click="onUnifiSubmit" variant="flat">提交</v-btn>
+          </v-card>
+
+          <v-card class="pa-5" title="LeiChi设置">
+            <v-text-field clearable label="ApiToken" variant="solo-filled"
+                          v-model="leichi.apiToken" class="mt-3"></v-text-field>
+            <v-btn color="primary" @click="onLeiChiSubmit" variant="flat">保存</v-btn>
           </v-card>
         </v-sheet>
       </v-tabs-window-item>
