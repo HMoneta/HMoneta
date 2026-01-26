@@ -1,11 +1,12 @@
 <script setup>
 import {http} from "@/common/request.js";
+import {userNotificationStore} from "@/stores/app.js";
 
 // Unifi相关代码
 const toolbarTitle = ref();
 const unifiStatus = ref(false);
 const checkUnifiAccessible = async () => {
-  return await http.get("/unifi/status")
+  unifiStatus.value = await http.get("/unifi/status")
 }
 const siteLists = ref();
 const siteClientsMap = ref({})
@@ -38,10 +39,13 @@ const clientsHeaders = ref([
   {title: 'Ip地址', key: 'ipAddress', align: 'center'},
 ])
 onMounted(() => {
-  unifiStatus.value = checkUnifiAccessible()
+  checkUnifiAccessible()
   if (unifiStatus.value) {
     toolbarTitle.value = '已连接Unifi'
     querySites()
+  }else {
+    const notification = userNotificationStore()
+    notification.showError("未配置UnifiApi相关信息，无法连接至Unifi")
   }
 
 })
