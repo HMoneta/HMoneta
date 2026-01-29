@@ -38,12 +38,12 @@ const clientsHeaders = ref([
   {title: '连接时间', key: 'connectedAt', align: 'center'},
   {title: 'Ip地址', key: 'ipAddress', align: 'center'},
 ])
-onMounted(() => {
-  checkUnifiAccessible()
+onMounted(async () => {
+  await checkUnifiAccessible()
   if (unifiStatus.value) {
     toolbarTitle.value = '已连接Unifi'
-    querySites()
-  }else {
+    await querySites()
+  } else {
     const notification = userNotificationStore()
     notification.showError("未配置UnifiApi相关信息，无法连接至Unifi")
   }
