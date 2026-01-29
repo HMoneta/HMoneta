@@ -59,8 +59,12 @@ public class UnifiApiService {
         if (unifiSettingEntity == null) {
             return false;
         } else {
-            SiteManagerLocalResp<SiteInfoLocal> siteInfoLocalSiteManagerLocalResp = listLocalSites();
-            return siteInfoLocalSiteManagerLocalResp != null;
+            try {
+                SiteManagerLocalResp<SiteInfoLocal> siteInfoLocalSiteManagerLocalResp = listLocalSites();
+                return siteInfoLocalSiteManagerLocalResp != null;
+            } catch (Exception e) {
+                return false;
+            }
         }
     }
 
