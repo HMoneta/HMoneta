@@ -20,6 +20,20 @@ const unifiInfo = reactive({
   localApiKey: null,
 })
 
+const queryUnifiInfo = async () => {
+  try {
+    const json = await http.get("/unifi/info")
+    if (json != null) {
+      unifiInfo.baseUri = json.baseUri;
+      unifiInfo.apiKey = json.apiKey;
+      unifiInfo.localApiKey = json.localApiKey
+      unifiInfo.localBaseUri = json.localBaseUri
+    }
+  } catch (_) {
+
+  }
+}
+
 const onUnifiSubmit = async () => {
   try {
     await http.post("/unifi/setting", unifiInfo);
@@ -41,6 +55,9 @@ const onLeiChiSubmit = async () => {
 
   }
 }
+onMounted(async () => {
+  await queryUnifiInfo();
+})
 </script>
 
 <template>

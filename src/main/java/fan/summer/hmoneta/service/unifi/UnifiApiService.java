@@ -1,5 +1,6 @@
 package fan.summer.hmoneta.service.unifi;
 
+import fan.summer.hmoneta.controller.unifi.dto.UnifiSettingDto;
 import fan.summer.hmoneta.database.entity.unifi.UnifiSettingEntity;
 import fan.summer.hmoneta.database.repository.unifi.UnifiSettingRepository;
 import fan.summer.hmoneta.service.unifi.dto.SiteManager.SiteManagerHostResp;
@@ -7,6 +8,7 @@ import fan.summer.hmoneta.service.unifi.dto.SiteManager.local.SiteInfoLocal;
 import fan.summer.hmoneta.service.unifi.dto.SiteManager.local.SiteManagerLocalResp;
 import fan.summer.hmoneta.service.unifi.dto.SiteManager.local.client.ClientsLocalInfo;
 import fan.summer.hmoneta.util.WebApiUtil;
+import org.springframework.beans.BeanUtils;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -55,8 +57,8 @@ public class UnifiApiService {
      * @return true 表示 UniFi API 可访问，false 表示不可访问或未配置
      */
     public boolean unifiIsAccessible() {
-        UnifiSettingEntity unifiSettingEntity = queryUnifiSettingInfo();
-        if (unifiSettingEntity == null) {
+        UnifiSettingDto unifiSettingDto = queryUnifiSettingInfo();
+        if (unifiSettingDto == null) {
             return false;
         } else {
             try {
@@ -76,8 +78,15 @@ public class UnifiApiService {
      *
      * @return UnifiSettingEntity 配置实体，若未配置则返回 null
      */
-    public UnifiSettingEntity queryUnifiSettingInfo() {
-        return unifiSettingRepository.findAll().stream().findFirst().orElse(null);
+    public UnifiSettingDto queryUnifiSettingInfo() {
+        UnifiSettingEntity unifiSettingEntity = unifiSettingRepository.findAll().stream().findFirst().orElse(null);
+        UnifiSettingDto unifiSettingDto = new UnifiSettingDto();
+        if (unifiSettingEntity != null) {
+            BeanUtils.copyProperties(unifiSettingEntity, unifiSettingDto);
+            return unifiSettingDto;
+        } else {
+            return null;
+        }
     }
 
     /**

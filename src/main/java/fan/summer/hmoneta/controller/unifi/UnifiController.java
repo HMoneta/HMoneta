@@ -10,8 +10,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 /**
  * 类的详细说明
  *
@@ -42,9 +40,9 @@ public class UnifiController {
     }
 
     @GetMapping("/info")
-    public ResponseEntity<Map<String, String>> getUnifiSetting() {
-        UnifiSettingEntity unifiSettingEntity = unifiApiService.queryUnifiSettingInfo();
-        return ResponseEntity.ok(Map.of("baseUri", unifiSettingEntity.getBaseUri()));
+    public ResponseEntity<UnifiSettingDto> getUnifiSetting() {
+        UnifiSettingDto unifiSettingDto = unifiApiService.queryUnifiSettingInfo();
+        return ResponseEntity.ok(unifiSettingDto);
     }
 
     // sites
