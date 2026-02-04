@@ -23,6 +23,11 @@ public class LeiChiWafService {
         this.leiChiRepository = leiChiRepository;
     }
 
+    public String queryLeiChiToken() {
+        String s = leiChiRepository.findAll().stream().findFirst().map(LeiChiTokenEntity::getToken).orElse(null);
+        return s;
+    }
+
     public void insertLeiChiApiToken(LeiChiTokenEntity leiChiTokenEntity) {
         List<LeiChiTokenEntity> all = leiChiRepository.findAll();
         if (!all.isEmpty()) {

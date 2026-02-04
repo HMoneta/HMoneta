@@ -5,10 +5,7 @@ import fan.summer.hmoneta.database.entity.waf.LeiChiTokenEntity;
 import fan.summer.hmoneta.service.waf.LeiChiWafService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 类的详细说明
@@ -21,7 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/hm/waf/lc")
 @AllArgsConstructor
 public class LeiChiWafController {
+
     private LeiChiWafService leiChiWafService;
+
+    @GetMapping("/info")
+    public ResponseEntity<String> queryLeichiToken() {
+        return ResponseEntity.ok(leiChiWafService.queryLeiChiToken());
+    }
 
     @PostMapping("/token")
     public ResponseEntity<Boolean> setLeiChiApiToken(@RequestBody LeiChiTokenDto leiChiTokenDto) {

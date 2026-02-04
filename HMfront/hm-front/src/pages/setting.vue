@@ -47,6 +47,13 @@ const onUnifiSubmit = async () => {
 const leichi = reactive({
   apiToken: ''
 })
+const queryLeiChiToken = async () => {
+  try {
+    leichi.apiToken = await http.get("/waf/lc/info");
+    console.log(leichi.apiToken)
+  } catch (err) {
+  }
+}
 const onLeiChiSubmit = async () => {
   try {
     await http.post("/waf/lc/token", leichi);
@@ -57,6 +64,7 @@ const onLeiChiSubmit = async () => {
 }
 onMounted(async () => {
   await queryUnifiInfo();
+  await queryLeiChiToken();
 })
 </script>
 
