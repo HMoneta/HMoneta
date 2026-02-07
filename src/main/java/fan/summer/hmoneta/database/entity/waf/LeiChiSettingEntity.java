@@ -18,7 +18,7 @@ import lombok.Data;
  */
 @Data
 @Entity
-public class LeiChiTokenEntity {
+public class LeiChiSettingEntity {
 
     /**
      * 主键ID
@@ -27,6 +27,11 @@ public class LeiChiTokenEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    /**
+     * 雷池WAF Api基本连接地址
+     */
+    private String baseUrl;
 
     /**
      * 雷池WAF访问令牌

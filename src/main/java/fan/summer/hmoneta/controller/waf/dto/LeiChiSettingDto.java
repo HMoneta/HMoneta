@@ -10,6 +10,7 @@ import lombok.Data;
  * @Date 2026/1/25
  */
 @Data
-public class LeiChiTokenDto {
+public class LeiChiSettingDto {
+    private String baseUrl;
     private String token;
 }
