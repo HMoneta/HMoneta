@@ -1,5 +1,6 @@
 package fan.summer.hmoneta.controller.waf;
 
+import fan.summer.hmoneta.controller.waf.dto.LeiChiCrtModifyDto;
 import fan.summer.hmoneta.controller.waf.dto.LeiChiSettingDto;
 import fan.summer.hmoneta.database.entity.waf.LeiChiSettingEntity;
 import fan.summer.hmoneta.service.waf.LeiChiWafService;
@@ -91,5 +92,11 @@ public class LeiChiWafController {
     public ResponseEntity<LeiChiSslInfoResp> listLeiChiSslCer() {
         LeiChiSslInfoResp leiChiSslInfoResp = leiChiWafService.listSslCert();
         return ResponseEntity.ok(leiChiSslInfoResp);
+    }
+
+    @PostMapping("/ssl/modify")
+    public ResponseEntity<String> modifySslCert(@RequestBody LeiChiCrtModifyDto req) {
+        leiChiWafService.modifySslCert(req.getCrt(), req.getKey());
+        return ResponseEntity.ok("success");
     }
 }

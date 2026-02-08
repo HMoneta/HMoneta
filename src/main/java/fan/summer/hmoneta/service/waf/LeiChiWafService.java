@@ -57,7 +57,7 @@ public class LeiChiWafService {
     /**
      * 构造方法
      *
-     * @param leiChiRepository   雷池设置存储库
+     * @param leiChiRepository    雷池设置存储库
      * @param leiChiWafSslService 雷池 SSL 证书服务
      */
     public LeiChiWafService(LeiChiRepository leiChiRepository, LeiChiWafSslService leiChiWafSslService) {
@@ -121,6 +121,10 @@ public class LeiChiWafService {
         LeiChiWafApiResp<LeiChiSslInfoResp> result = leiChiWafSslService.listSslCert(webApiUtil);
         LeiChiSslInfoResp data = result.getData();
         return data;
+    }
+
+    public void modifySslCert(String crt, String key) {
+        String s = leiChiWafSslService.modifySslCert(webApiUtil, crt, key);
     }
 
     /**

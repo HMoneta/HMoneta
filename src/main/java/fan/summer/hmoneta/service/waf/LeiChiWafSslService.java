@@ -1,11 +1,13 @@
 package fan.summer.hmoneta.service.waf;
 
 import fan.summer.hmoneta.service.waf.dto.LeiChiWafApiResp;
+import fan.summer.hmoneta.service.waf.dto.ssl.LeiChiSslCerInsertReq;
 import fan.summer.hmoneta.service.waf.dto.ssl.LeiChiSslInfoResp;
 import fan.summer.hmoneta.util.WebApiUtil;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 /**
@@ -38,5 +40,28 @@ public class LeiChiWafSslService {
         );
         LeiChiWafApiResp<LeiChiSslInfoResp> result = api.block();
         return result;
+    }
+
+    protected String modifySslCert(WebApiUtil webApiUtil, String crt, String key) {
+        LeiChiSslCerInsertReq req = new LeiChiSslCerInsertReq();
+        LeiChiSslCerInsertReq.CertInfo certInfo = new LeiChiSslCerInsertReq.CertInfo();
+        certInfo.setCrt(crt);
+        certInfo.setKey(key);
+        req.setManual(certInfo);
+        req.setType(2);
+        try {
+            Mono<String> api = webApiUtil.api(HttpMethod.POST, "/open/cert", null, req, new ParameterizedTypeReference<String>() {
+            });
+            return api.block();
+        } catch (WebClientResponseException e) {
+            String errorBody = e.getResponseBodyAsString();
+            int statusCode = e.getStatusCode().value();
+            throw new RuntimeException(
+                    "雷池 API 返回错误 [" + statusCode + "]: " + errorBody,
+                    e
+            );
+
+        }
+
     }
 }
