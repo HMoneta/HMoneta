@@ -27,18 +27,20 @@ HMoneta 项目遵循前后端分离架构设计，由后端API服务和前端Web
 
 ### 1.2 技术栈
 
-- **后端**: Spring Boot 4.0.0, Java 25
+- **后端**: Spring Boot 4.0.2, Java 25
 - **前端**: Vue 3 (3.5.22), Vuetify 3 (3.10.5), Vite 7 (7.1.5), Pinia (3.0.3), Yarn 4.10.3
 - **数据库**: PostgreSQL, JPA/Hibernate
+- **依赖管理**: Gradle 9.2.1
 - **插件系统**: PF4J (Plugin Framework for Java) + Spring Boot Integration
 - **安全**: JWT 认证, MD5 密码加密 (通过MD5 + salt实现)
 - **定时任务**: Spring Scheduling
 - **实时通信**: WebSocket
 - **证书管理**: ACME4J (3.5.0)
 - **配置管理**: Spring Dotenv (4.0.0)
-- **工具库**: Apache Commons Text, Commons Validator, Bouncy Castle (bcpkix-jdk18on), Hypersistence Utils for Hibernate, tools.jackson (for JSON processing)
+- **工具库**: Apache Commons Text, Commons Validator, Bouncy Castle (bcpkix-jdk18on), Hypersistence Utils for Hibernate, Jackson (JSON processing)
 - **日志追踪**: MDC (Mapped Diagnostic Context) 用于日志ID追踪
 - **敏感信息过滤**: @JwtExclude 注解标记敏感字段
+- **网络客户端**: Spring WebFlux (响应式 Web 客户端，用于 UniFi API 调用)
 
 ## 2. 后端架构
 
@@ -50,7 +52,8 @@ src/main/java/fan/summer/hmoneta/
 ├── common/                         # 通用组件
 │   ├── HMBanner.java               # Banner显示
 │   ├── aspect/                     # AOP切面
-│   │   └── ApiAspect.java          # API日志切面
+│   │   ├── ApiAspect.java          # API日志切面
+│   │   └── LeiChiWafAspect.java   # 雷池WAF AOP切面
 │   ├── config/                     # 配置类
 │   │   ├── CorsConfig.java         # CORS配置
 │   │   ├── HMInterceptor.java      # 拦截器配置
@@ -62,7 +65,10 @@ src/main/java/fan/summer/hmoneta/
 │   │       ├── acme/               # ACME相关异常枚举
 │   │       ├── dns/                # DNS相关异常枚举
 │   │       ├── plugin/             # 插件相关异常枚举
-│   │       └── user/               # 用户相关异常枚举
+│   │       ├── user/               # 用户相关异常枚举
+│   │       ├── unifi/              # UniFi相关异常枚举
+│   │       └── waf/                # WAF相关异常枚举
+│   │           └── LeiChiExceptionEnum.java # 雷池WAF异常枚举
 │   ├── exception/                  # 异常处理
 │   │   └── HMException.java        # 自定义异常
 │   └── interceptor/                # 拦截器
@@ -74,8 +80,12 @@ src/main/java/fan/summer/hmoneta/
 │   │   └── DnsController.java      # DNS管理控制器
 │   ├── plugin/                     # 插件相关控制器
 │   │   └── PluginController.java   # 插件管理控制器
-│   └── user/                       # 用户相关控制器
-│       └── UserController.java     # 用户管理控制器
+│   ├── unifi/                      # UniFi相关控制器
+│   │   └── UnifiController.java   # UniFi网络管理控制器
+│   ├── user/                       # 用户相关控制器
+│   │   └── UserController.java     # 用户管理控制器
+│   └── waf/                        # WAF相关控制器
+│       └── LeiChiWafController.java # 雷池WAF API控制器
 ├── database/                       # 数据库相关
 │   ├── entity/                     # 实体类
 │   │   ├── acme/                   # ACME相关实体
@@ -99,10 +109,24 @@ src/main/java/fan/summer/hmoneta/
 │   │   └── AcmeTaskContext.java    # ACME任务上下文
 │   ├── dns/                        # DNS服务
 │   │   └── DnsService.java         # DNS解析管理服务
+│   ├── network/                    # 网络服务
+│   │   └── NetworkService.java    # 网络服务（预留扩展）
 │   ├── plugin/                     # 插件服务
 │   │   └── PluginService.java      # 插件管理服务
-│   └── user/                       # 用户服务
-│       └── UserService.java        # 用户认证管理服务
+│   ├── unifi/                      # UniFi网络服务
+│   │   └── UnifiApiService.java   # UniFi API服务（支持本地/远程授权）
+│   │       └── dto/                # 数据传输对象
+│   │           └── SiteManager/    # Site Manager API响应DTO
+│   ├── user/                       # 用户服务
+│   │   └── UserService.java        # 用户认证管理服务
+│   └── waf/                        # WAF服务
+│       ├── LeiChiWafService.java   # 雷池WAF服务
+│       ├── LeiChiWafSslService.java # 雷池WAF SSL证书服务
+│       └── dto/                    # WAF相关DTO
+│           ├── LeiChiWafApiResp.java # 雷池API通用响应结构
+│           └── ssl/                # SSL证书相关DTO
+│               ├── LeiChiSslCerInsertReq.java # 雷池SSL证书插入请求
+│               └── LeiChiSslInfoResp.java # 雷池SSL证书信息响应
 ├── task/                           # 定时任务
 │   └── dns/                        # DNS相关任务
 │       └── DnsUpdateTask.java      # DNS更新定时任务
@@ -111,6 +135,7 @@ src/main/java/fan/summer/hmoneta/
 │   ├── JwtUtil.java                # JWT工具类
 │   ├── Md5Util.java                # MD5工具类
 │   ├── ObjectUtil.java             # 对象工具类
+│   ├── WebApiUtil.java             # Web API工具类（使用WebClient构建器模式）
 │   └── WebUtil.java                # Web工具类
 └── websocket/                      # WebSocket相关
     └── log/                        # 日志相关
@@ -201,6 +226,59 @@ src/main/java/fan/summer/hmoneta/
 - `LogWebSocketHandler`: 日志WebSocket处理器
 - `WebSocketLogAppender`: WebSocket日志追加器
 
+#### 2.2.6 UniFi Network 模块 (`/unifi`)
+
+**职责**：
+- UniFi Network API 集成
+- 支持本地和远程两种 API 授权方式
+- 管理网络站点和客户端信息
+
+**核心组件**：
+- `UnifiController`: UniFi管理API入口
+- `UnifiApiService`: UniFi API服务，支持本地和远程授权
+- `UnifiSettingEntity`: UniFi设置实体
+- `WebApiUtil`: 通用Web API工具类，使用Spring WebFlux和Netty实现响应式HTTP客户端
+
+**API端点**：
+- `POST /hm/unifi/setting`: 设置UniFi API连接信息
+- `GET /hm/unifi/info`: 获取当前UniFi设置信息
+- `GET /hm/unifi/status`: 检查UniFi连接状态
+- `GET /hm/unifi/sites/info`: 获取站点列表信息
+- `GET /hm/unifi/sites/clients/info`: 获取站点客户端信息
+
+#### 2.2.7 雷池 WAF 模块 (`/waf`)
+
+**职责**：
+- 雷池 WAF API 令牌管理
+- SSL 证书列表查询
+- 向雷池 WAF 添加 SSL 证书
+- 雷池 WAF 基础URL设置
+
+**核心组件**：
+- `LeiChiWafController`: 雷池WAF API控制器
+- `LeiChiWafService`: 雷池WAF服务类
+- `LeiChiWafSslService`: 雷池WAF SSL证书服务类
+- `LeiChiSettingEntity`: 雷池WAF设置实体
+- **LeiChiSettingEntity**: 雷池WAF设置实体，存储API连接信息（baseUrl、token）
+- `LeiChiRepository`: 雷池设置存储库，提供数据持久化支持
+- `LeiChiWafAspect`: 雷池WAF AOP切面
+
+**API端点**：
+- `POST /hm/waf/lc/token`: 设置雷池WAF API令牌
+- `GET /hm/waf/lc/info`: 获取雷池WAF设置信息
+- `POST /hm/waf/lc/baseUrl`: 设置雷池WAF基础URL
+- `GET /hm/waf/lc/ssl/list`: 获取雷池WAF SSL证书列表
+- `POST /hm/waf/lc/ssl/modify`: 向雷池WAF添加SSL证书
+
+#### 2.2.8 网络服务模块 (`/network`)
+
+**职责**：
+- 网络服务模块预留
+- 为后续功能扩展提供基础架构支持
+
+**核心组件**：
+- `NetworkService`: 网络服务类
+
 ### 2.3 数据库设计
 
 #### 2.3.1 实体关系图
@@ -273,6 +351,7 @@ HMfront/hm-front/src/
 
 - **dns.vue**: DNS管理页面，提供DNS解析记录的增删改查功能
 - **login.vue/loginNew.vue**: 登录页面，用户认证入口
+- **network.vue**: 网络管理页面，展示UniFi站点和客户端信息
 - **pluginManager.vue**: 插件管理页面，管理DNS提供商插件
 - **logPage.vue**: 日志页面，显示实时日志信息
 - **setting.vue**: 设置页面，系统配置功能
@@ -380,7 +459,30 @@ HMfront/hm-front/src/
 
 ## 10. 项目版本历史
 
-### V0.0.1-Alpha (2025年12月) - 当前版本
+### V0.0.2-Alpha1 (2026年1月30日) - 当前版本
+
+**重大功能增强**:
+- **雷池 WAF 集成**: 新增雷池 WAF 系统集成支持，包括API令牌管理、SSL证书列表查询和添加功能
+- **LeiChiWafController**: 雷池WAF API控制器，提供令牌设置接口
+- **LeiChiWafService**: 雷池WAF服务类，管理令牌存储和验证
+- **LeiChiSettingEntity**: 雷池WAF设置实体，存储API连接信息（baseUrl、token）
+- **LeiChiRepository**: 雷池设置存储库，提供数据持久化支持
+- **SSL证书管理**: 新增 LeiChiWafSslService SSL证书服务类，封装SSL证书相关API调用功能
+- **雷池WafAspect**: 雷池WAF AOP切面，为需访问雷池API的方法提供日志记录和异常处理支持
+- **UniFi 网络管理增强**: 新增network.vue页面，展示UniFi站点和客户端信息
+- **Spring Boot 版本升级**: 升级到Spring Boot 4.0.2，修复已知问题并提升性能
+- **NetworkService 预留**: 新增网络服务模块，为后续功能扩展预留
+
+**技术优化**:
+- **Spring Boot 4.0.2**: 升级至最新稳定版本
+- **JSON 处理库更新**: 改用Spring Boot BOM统一管理的标准Jackson，移除tools.jackson依赖
+- **UniFi API 增强**: 新增站点客户端信息查询接口，支持本地和远程两种API授权方式
+
+**功能优化**:
+- **前端路由优化**: 优化全局前置守卫逻辑，提升认证检查效率
+- **网络页面增强**: network.vue页面完善，展示更丰富的UniFi网络信息
+
+### V0.0.1-Beta2 (2026年1月10日)
 
 **重大功能增强**:
 - **证书有效期管理**: 自动存储证书有效期信息（notBefore/notAfter），在DNS解析信息中展示证书有效期
