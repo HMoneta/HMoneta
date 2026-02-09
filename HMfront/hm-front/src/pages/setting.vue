@@ -45,18 +45,21 @@ const onUnifiSubmit = async () => {
 
 // LeiChi
 const leichi = reactive({
-  apiToken: ''
+  baseUrl: '',
+  token: ''
 })
 const queryLeiChiToken = async () => {
   try {
-    leichi.apiToken = await http.get("/waf/lc/info");
-    console.log(leichi.apiToken)
+    const resp = await http.get("/waf/lc/info");
+    leichi.token = resp.token
+    leichi.baseUrl = resp.baseUrl
+    console.log(leichi.token)
   } catch (err) {
   }
 }
 const onLeiChiSubmit = async () => {
   try {
-    await http.post("/waf/lc/token", leichi);
+    await http.post("/waf/lc/info", leichi);
     userNotificationStore().showSuccess("设置保存成功")
   } catch (err) {
 
@@ -107,8 +110,10 @@ onMounted(async () => {
           </v-card>
 
           <v-card class="pa-5" title="LeiChi设置">
+            <v-text-field clearable label="BaseUri" variant="solo-filled"
+                          v-model="leichi.baseUrl" class="mt-3"></v-text-field>
             <v-text-field clearable label="ApiToken" variant="solo-filled"
-                          v-model="leichi.apiToken" class="mt-3"></v-text-field>
+                          v-model="leichi.token" class="mt-3"></v-text-field>
             <v-btn color="primary" @click="onLeiChiSubmit" variant="flat">保存</v-btn>
           </v-card>
         </v-sheet>

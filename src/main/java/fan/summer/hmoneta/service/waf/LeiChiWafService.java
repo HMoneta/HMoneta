@@ -1,5 +1,6 @@
 package fan.summer.hmoneta.service.waf;
 
+import fan.summer.hmoneta.controller.waf.dto.LeiChiSettingDto;
 import fan.summer.hmoneta.database.entity.waf.LeiChiSettingEntity;
 import fan.summer.hmoneta.database.repository.waf.LeiChiRepository;
 import fan.summer.hmoneta.service.waf.dto.LeiChiWafApiResp;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 雷池 WAF 服务
@@ -73,9 +75,17 @@ public class LeiChiWafService {
      *
      * @return 雷池 API 令牌字符串，如果未配置则返回 null
      */
-    public String queryLeiChiToken() {
-        String s = leiChiRepository.findAll().stream().findFirst().map(LeiChiSettingEntity::getToken).orElse(null);
-        return s;
+    public LeiChiSettingDto queryLeiChiSetting() {
+        Optional<LeiChiSettingEntity> first = leiChiRepository.findAll().stream().findFirst();
+        if (first.isPresent()) {
+            LeiChiSettingEntity leiChiSettingEntity = first.get();
+            LeiChiSettingDto dto = new LeiChiSettingDto();
+            dto.setToken(leiChiSettingEntity.getToken());
+            dto.setBaseUrl(leiChiSettingEntity.getBaseUrl());
+            return dto;
+        } else {
+            return null;
+        }
     }
 
     /**

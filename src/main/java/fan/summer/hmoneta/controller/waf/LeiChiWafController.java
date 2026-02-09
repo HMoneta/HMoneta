@@ -47,8 +47,9 @@ public class LeiChiWafController {
      * @apiEndpoint GET /hm/waf/lc/info
      */
     @GetMapping("/info")
-    public ResponseEntity<String> queryLeichiToken() {
-        return ResponseEntity.ok(leiChiWafService.queryLeiChiToken());
+    public ResponseEntity<LeiChiSettingDto> queryLeichiToken() {
+        LeiChiSettingDto dto = leiChiWafService.queryLeiChiSetting();
+        return ResponseEntity.ok(dto);
     }
 
     /**
@@ -62,7 +63,7 @@ public class LeiChiWafController {
      * @return 始终返回 true，表示操作成功
      * @apiEndpoint POST /hm/waf/lc/token
      */
-    @PostMapping("/token")
+    @PostMapping("/info")
     public ResponseEntity<Boolean> setLeiChiApiToken(@RequestBody LeiChiSettingDto leiChiSettingDto) {
         LeiChiSettingEntity leiChiSettingEntity = new LeiChiSettingEntity();
         leiChiSettingEntity.setToken(leiChiSettingDto.getToken());
