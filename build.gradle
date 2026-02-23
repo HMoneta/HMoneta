@@ -4,7 +4,7 @@
 
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.0.2'
+    id 'org.springframework.boot' version '4.0.3'
     id 'io.spring.dependency-management' version '1.1.6'
     id 'maven-publish'
 }
@@ -77,7 +77,7 @@ java {
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.boot:spring-boot-dependencies:4.0.1'
+        mavenBom 'org.springframework.boot:spring-boot-dependencies:4.0.3'
     }
 }
 
