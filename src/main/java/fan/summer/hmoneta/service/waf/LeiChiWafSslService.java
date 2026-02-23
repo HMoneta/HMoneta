@@ -25,6 +25,10 @@ public class LeiChiWafSslService {
 
     /**
      * 查询雷池 WAF 系统中所有 SSL 证书信息
+     * <p>
+     * 调用雷池 WAF 系统的 /open/cert 接口获取所有已添加的 SSL 证书列表，
+     * 返回结果包含证书节点列表（nodes）和总数（total），用于前端展示和证书管理。
+     * </p>
      *
      * @param webApiUtil Web API 调用工具类，用于执行 HTTP 请求
      * @return 雷池 API 响应，包含证书列表信息（nodes）和总数（total）
@@ -42,6 +46,20 @@ public class LeiChiWafSslService {
         return result;
     }
 
+    /**
+     * 向雷池 WAF 系统添加 SSL 证书
+     * <p>
+     * 通过手动方式（manual）向雷池 WAF 系统添加 SSL 证书。
+     * 证书类型设置为 2（表示手动添加的非自动申请证书）。
+     * 单独处理 WebClientResponseException 以便捕获雷池 API 返回的错误信息，
+     * 包括 HTTP 状态码和响应体，便于问题排查和错误提示。
+     * </p>
+     *
+     * @param webApiUtil Web API 调用工具类
+     * @param crt        证书内容（PEM 格式）
+     * @param key        私钥内容（PEM 格式）
+     * @return API 响应结果
+     */
     protected String modifySslCert(WebApiUtil webApiUtil, String crt, String key) {
         LeiChiSslCerInsertReq req = new LeiChiSslCerInsertReq();
         LeiChiSslCerInsertReq.CertInfo certInfo = new LeiChiSslCerInsertReq.CertInfo();
