@@ -182,7 +182,6 @@ const getCertificateClass = (certInfo) => {
 }
 
 const getPopText = (certInfo) => {
-  console.log(certInfo)
   if (!certInfo.acmeCerInfo) return '申请证书'
   const acmeCerInfo = certInfo.acmeCerInfo
   if (acmeCerInfo.haveCer) return '下载证书(有效期：' + acmeCerInfo.notAfter + ")"
@@ -206,6 +205,10 @@ watch(urls, (newVal) => {
     dnsGroup.urls = urls.value.split('\n')
   }
 })
+
+
+// 证书Dialog开关
+const certDialogSwitch = ref(false)
 
 
 onMounted(() => {
@@ -504,6 +507,19 @@ onMounted(() => {
       </v-card-actions>
     </v-card>
   </v-dialog>
+  <!-- 证书操作dialog-->
+  <v-dialog
+    v-model="certDialogSwitch"
+    width="auto"
+    persistent
+  >
+    <v-card>
+
+
+    </v-card>
+
+  </v-dialog>
+
 
 </template>
 
