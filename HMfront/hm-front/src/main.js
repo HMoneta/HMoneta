@@ -17,6 +17,7 @@ import {createPinia} from 'pinia';
 
 // Styles
 import 'unfonts.css'
+import '@/styles/global.scss'
 import {useUserStore} from "@/stores/app.js";
 
 const app = createApp(App)
