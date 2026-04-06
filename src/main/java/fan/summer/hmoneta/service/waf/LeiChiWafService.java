@@ -4,6 +4,7 @@ import fan.summer.hmoneta.controller.waf.dto.LeiChiSettingDto;
 import fan.summer.hmoneta.database.entity.waf.LeiChiSettingEntity;
 import fan.summer.hmoneta.database.repository.waf.LeiChiRepository;
 import fan.summer.hmoneta.service.waf.dto.LeiChiWafApiResp;
+import fan.summer.hmoneta.service.waf.dto.site.LeiChiSiteListResp;
 import fan.summer.hmoneta.service.waf.dto.ssl.LeiChiSslInfoResp;
 import fan.summer.hmoneta.util.WebApiUtil;
 import lombok.extern.log4j.Log4j2;
@@ -21,6 +22,7 @@ import java.util.Optional;
  *   <li>API 设置管理（令牌、基础URL配置）</li>
  *   <li>WebClient 初始化和连接管理</li>
  *   <li>SSL 证书查询功能</li>
+ *   <li>站点查询功能</li>
  * </ul>
  * </p>
  * <p>
@@ -57,14 +59,22 @@ public class LeiChiWafService {
     private final LeiChiWafSslService leiChiWafSslService;
 
     /**
+     * 雷池站点服务
+     */
+    private final LeiChiWafSiteService leiChiWafSiteService;
+
+    /**
      * 构造方法
      *
      * @param leiChiRepository    雷池设置存储库
      * @param leiChiWafSslService 雷池 SSL 证书服务
+     * @param leiChiWafSiteService 雷池站点服务
      */
-    public LeiChiWafService(LeiChiRepository leiChiRepository, LeiChiWafSslService leiChiWafSslService) {
+    public LeiChiWafService(LeiChiRepository leiChiRepository, LeiChiWafSslService leiChiWafSslService,
+                            LeiChiWafSiteService leiChiWafSiteService) {
         this.leiChiRepository = leiChiRepository;
         this.leiChiWafSslService = leiChiWafSslService;
+        this.leiChiWafSiteService = leiChiWafSiteService;
     }
 
     /**
@@ -136,6 +146,32 @@ public class LeiChiWafService {
     public void modifySslCert(String crt, String key) {
         String s = leiChiWafSslService.modifySslCert(webApiUtil, crt, key);
     }
+
+    /**
+     * 查询雷池 WAF 站点列表
+     * <p>
+     * 调用雷池 WAF API 获取所有站点信息，包括：
+     * <ul>
+     *   <li>站点 ID</li>
+     *   <li>站点名称/标题</li>
+     *   <li>域名列表</li>
+     *   <li>端口列表</li>
+     *   <li>上游服务器地址</li>
+     *   <li>证书信息</li>
+     *   <li>运行模式</li>
+     *   <li>启用状态</li>
+     * </ul>
+     * </p>
+     *
+     * @return 站点列表响应对象，包含站点列表和总数
+     */
+    public LeiChiSiteListResp listSite() {
+        return leiChiWafSiteService.listSite(webApiUtil).getData();
+    }
+
+
+
+
 
     /**
      * 初始化雷池 API WebClient
