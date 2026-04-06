@@ -51,10 +51,10 @@ git merge main
 
 ```bash
 # 清理并构建
-./gradlew clean build
+mvn clean package
 
 # 构建产物位置
-# build/libs/HMoneta-*.jar
+# target/HMoneta-*.jar
 ```
 
 ### Step 5: 构建前端
@@ -78,7 +78,7 @@ yarn build
 
 ```bash
 # 上传 jar 文件
-BACKEND_JAR=$(ls build/libs/HMoneta-*.jar | head -1)
+BACKEND_JAR=$(ls target/HMoneta-*.jar | head -1)
 BACKEND_IP="<后端服务器IP>"
 SSH_PORT="<SSH端口，默认22>"
 USER="<用户名>"
@@ -109,7 +109,7 @@ EOF
 
 ```bash
 # 仅上传文件
-scp -P $SSH_PORT build/libs/HMoneta-*.jar $USER@$BACKEND_IP:/tmp/
+scp -P $SSH_PORT target/HMoneta-*.jar $USER@$BACKEND_IP:/tmp/
 
 # 远程启动（单独命令）
 ssh -p $SSH_PORT $USER@$BACKEND_IP "pkill -f 'HMoneta.jar' || true; nohup java -jar /tmp/HMoneta.jar --spring.profiles.active=prod > /var/log/hmoneta.log 2>&1 &"
@@ -169,7 +169,7 @@ set -e
 BACKEND_IP="<后端IP>"
 BACKEND_SSH_PORT="22"
 BACKEND_SSH_USER="root"
-BACKEND_JAR_PATH="build/libs/HMoneta-*.jar"
+BACKEND_JAR_PATH="target/HMoneta-*.jar"
 
 FRONTEND_IP="<前端IP>"
 FRONTEND_PANEL_URL="https://$FRONTEND_IP:9999"
@@ -177,7 +177,7 @@ FRONTEND_API_KEY="<你的API Key>"
 # ====================================
 
 echo "=== 1. Building Backend ==="
-./gradlew clean build -x test
+mvn clean package -DskipTests
 
 echo "=== 2. Building Frontend ==="
 cd HMfront/hm-front

@@ -7,7 +7,7 @@
 - **认证方式**: JWT Token
 - **内容类型**: application/json
 - **项目版本**: V0.0.2-Alpha1
-- **构建系统**: Gradle 9.2.1
+- **构建系统**: Maven
 
 ## DNS 管理 API
 
@@ -905,7 +905,7 @@ fetch('http://localhost:8080/hm/dns/modify_group', {
 
 #### 🔧 框架升级
 
-- **Spring Boot 4.0.2**: 升级至最新稳定版本，修复已知问题并提升性能
+- **Spring Boot 4.0.5**: 升级至最新稳定版本，修复已知问题并提升性能
 - **JSON 处理库更新**: 改用 Spring Boot BOM 统一管理的标准 Jackson，移除 tools.jackson 依赖
 - **版本同步**: 与上游框架版本保持一致，获得最新的安全补丁和性能优化
 
@@ -1000,4 +1000,4 @@ fetch('http://localhost:8080/hm/dns/modify_group', {
 ---
 
 **当前版本**: V0.0.2-Alpha1 (2026年1月30日)
-**技术栈**: Spring Boot 4.0.2 + Java 25 + Vue 3 + Gradle 9.2.1
+**技术栈**: Spring Boot 4.0.5 + Java 25 + Vue 3 + Maven

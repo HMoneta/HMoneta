@@ -27,10 +27,10 @@ HMoneta 项目遵循前后端分离架构设计，由后端API服务和前端Web
 
 ### 1.2 技术栈
 
-- **后端**: Spring Boot 4.0.2, Java 25
+- **后端**: Spring Boot 4.0.5, Java 25
 - **前端**: Vue 3 (3.5.22), Vuetify 3 (3.10.5), Vite 7 (7.1.5), Pinia (3.0.3), Yarn 4.10.3
 - **数据库**: PostgreSQL, JPA/Hibernate
-- **依赖管理**: Gradle 9.2.1
+- **依赖管理**: Maven
 - **插件系统**: PF4J (Plugin Framework for Java) + Spring Boot Integration
 - **安全**: JWT 认证, MD5 密码加密 (通过MD5 + salt实现)
 - **定时任务**: Spring Scheduling
@@ -470,7 +470,7 @@ HMfront/hm-front/src/
 - **SSL证书管理**: 新增 LeiChiWafSslService SSL证书服务类，封装SSL证书相关API调用功能
 - **雷池WafAspect**: 雷池WAF AOP切面，为需访问雷池API的方法提供日志记录和异常处理支持
 - **UniFi 网络管理增强**: 新增network.vue页面，展示UniFi站点和客户端信息
-- **Spring Boot 版本升级**: 升级到Spring Boot 4.0.2，修复已知问题并提升性能
+- **Spring Boot 版本升级**: 升级到Spring Boot 4.0.5，修复已知问题并提升性能
 - **NetworkService 预留**: 新增网络服务模块，为后续功能扩展预留
 
 **技术优化**:
