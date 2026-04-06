@@ -146,10 +146,18 @@ const submitModify = async (isDelete) => {
 }
 
 // 证书申请
+const isCertificateExpiring = (certInfo) => {
+  if (!certInfo.acmeCerInfo || !certInfo.acmeCerInfo.notAfter) return false
+  const notAfter = new Date(certInfo.acmeCerInfo.notAfter)
+  const now = new Date()
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+  return notAfter <= thirtyDaysFromNow
+}
+
 const applyCertificate = async (item) => {
   try {
     if (item.acmeCerInfo) {
-      if (item.acmeCerInfo.haveCer) {
+      if (item.acmeCerInfo.haveCer && !isCertificateExpiring(item)) {
         // 下载证书文件
         const blob = await http.get('/acme/download-cert/' + item.url, null, {
           responseType: 'blob'  // 或者 'arraybuffer'
@@ -171,7 +179,7 @@ const applyCertificate = async (item) => {
         notificationStore.showSuccess("证书下载成功");
       } else {
         const resp = await http.get('/acme/apply', {"domain": item.url})
-        notificationStore.showSuccess("修改成功，任务号" + resp)
+        notificationStore.showSuccess("申请成功，任务号" + resp)
       }
     }
   } catch (err) {
@@ -181,13 +189,19 @@ const applyCertificate = async (item) => {
 const getCertificateClass = (certInfo) => {
   if (!certInfo.acmeCerInfo) return 'cert-unavailable'
   const acmeCerInfo = certInfo.acmeCerInfo
-  if (acmeCerInfo.haveCer) return 'cert-valid'
+  if (acmeCerInfo.haveCer) {
+    if (isCertificateExpiring(certInfo)) return 'cert-expired'
+    return 'cert-valid'
+  }
 }
 
 const getPopText = (certInfo) => {
   if (!certInfo.acmeCerInfo) return '申请证书'
   const acmeCerInfo = certInfo.acmeCerInfo
-  if (acmeCerInfo.haveCer) return '下载证书(有效期：' + acmeCerInfo.notAfter + ")"
+  if (acmeCerInfo.haveCer) {
+    if (isCertificateExpiring(certInfo)) return '申请证书(证书将在 ' + acmeCerInfo.notAfter + ' 到期)'
+    return '下载证书(有效期：' + acmeCerInfo.notAfter + ")"
+  }
 }
 
 
