@@ -4,7 +4,6 @@ import fan.summer.hmoneta.controller.acme.dto.AcmeUserReq;
 import fan.summer.hmoneta.database.entity.acme.AcmeUserInfoEntity;
 import fan.summer.hmoneta.service.acme.AcmeService;
 import org.springframework.beans.BeanUtils;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -65,5 +64,11 @@ public class AcmeController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    @GetMapping("/str-cert/{domain}")
+    public ResponseEntity<String[]> getCertAndKeyByDomain(@PathVariable String domain) throws IOException {
+        String[] certAndKeyByDomain = acmeService.getCertAndKeyByDomain(domain);
+        return ResponseEntity.ok(certAndKeyByDomain);
     }
 }

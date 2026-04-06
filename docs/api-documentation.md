@@ -6,7 +6,7 @@
 - **协议**: HTTP/HTTPS
 - **认证方式**: JWT Token
 - **内容类型**: application/json
-- **项目版本**: V0.0.1-Beta2
+- **项目版本**: V0.0.2-Alpha1
 - **构建系统**: Gradle 9.2.1
 
 ## DNS 管理 API
@@ -222,6 +222,188 @@
     - `Content-Type`: application/octet-stream
     - `Content-Disposition`: attachment; filename="{domain}_certificate.zip"
 
+## UniFi 管理 API
+
+### 1. 设置 UniFi API 连接信息
+
+- **接口路径**: `POST /hm/unifi/setting`
+- **功能描述**: 设置 UniFi API 连接信息（支持本地和远程两种授权方式）
+- **请求参数**:
+
+```json
+{
+  "baseUri": "https://unifi-host:8443",
+  "apiKey": "your-remote-api-key",
+  "localBaseUri": "https://unifi-device:8443",
+  "localApiKey": "your-local-api-key"
+}
+```
+
+- **参数说明**:
+    - `baseUri`: UniFi Host API 地址
+    - `apiKey`: 远程 API 密钥
+    - `localBaseUri`: 本地 API 地址
+    - `localApiKey`: 本地 API 密钥
+- **响应示例**: HTTP 200 OK
+
+### 2. 获取 UniFi 设置信息
+
+- **接口路径**: `GET /hm/unifi/info`
+- **功能描述**: 获取当前 UniFi 设置信息
+- **请求参数**: 无
+- **响应示例**:
+
+```json
+{
+  "baseUri": "https://unifi-host:8443",
+  "localBaseUri": "https://unifi-device:8443"
+}
+```
+
+### 3. 检查 UniFi 连接状态
+
+- **接口路径**: `GET /hm/unifi/status`
+- **功能描述**: 检查 UniFi 连接状态
+- **请求参数**: 无
+- **响应示例**: HTTP 200 OK
+
+### 4. 获取站点列表信息
+
+- **接口路径**: `GET /hm/unifi/sites/info`
+- **功能描述**: 获取 UniFi 站点列表信息
+- **请求参数**: 无
+- **响应示例**:
+
+```json
+{
+  "code": 0,
+  "data": {
+    "sites": [
+      {
+        "site_id": "default",
+        "name": "Default",
+        "desc": "Default site"
+      }
+    ]
+  }
+}
+```
+
+### 5. 获取站点客户端信息
+
+- **接口路径**: `GET /hm/unifi/sites/clients/info`
+- **功能描述**: 获取 UniFi 站点客户端信息
+- **请求参数**: 无
+- **响应示例**:
+
+```json
+{
+  "code": 0,
+  "data": {
+    "clients": [
+      {
+        "mac": "xx:xx:xx:xx:xx:xx",
+        "name": "Device Name",
+        "ip": "192.168.1.100",
+        "type": "wired",
+        "connected": true
+      }
+    ]
+  }
+}
+```
+
+## 雷池 WAF 管理 API
+
+### 1. 设置雷池 WAF API 令牌
+
+- **接口路径**: `POST /hm/waf/lc/token`
+- **功能描述**: 设置雷池 WAF API 访问令牌
+- **请求参数**:
+
+```json
+{
+  "token": "your-waf-api-token"
+}
+```
+
+- **响应示例**: HTTP 200 OK
+
+### 2. 获取雷池 WAF 设置信息
+
+- **接口路径**: `GET /hm/waf/lc/info`
+- **功能描述**: 获取当前雷池 WAF 设置信息
+- **请求参数**: 无
+- **响应示例**:
+
+```json
+{
+  "baseUrl": "https://waf.example.com",
+  "token": "your-waf-api-token"
+}
+```
+
+### 3. 设置雷池 WAF BaseUrl
+
+- **接口路径**: `POST /hm/waf/lc/baseUrl`
+- **功能描述**: 设置雷池 WAF 基础URL
+- **请求参数**:
+
+```json
+{
+  "baseUrl": "https://waf.example.com"
+}
+```
+
+- **响应示例**: HTTP 200 OK
+
+### 4. 获取雷池 WAF SSL 证书列表
+
+- **接口路径**: `GET /hm/waf/lc/ssl/list`
+- **功能描述**: 获取雷池 WAF 系统中所有 SSL 证书信息
+- **请求参数**: 无
+- **响应示例**:
+
+```json
+{
+  "err": null,
+  "msg": "",
+  "data": {
+    "nodes": [
+      {
+        "id": 8,
+        "domains": ["jump.summer.fan"],
+        "issuer": "R12",
+        "self_signature": false,
+        "trusted": false,
+        "revoked": false,
+        "expired": false,
+        "type": 2,
+        "acme_message": "",
+        "valid_before": "2026-04-27T13:12:23Z",
+        "related_sites": ["jump.summer.fan"]
+      }
+    ],
+    "total": 1
+  }
+}
+```
+
+### 5. 向雷池 WAF 添加 SSL 证书
+
+- **接口路径**: `POST /hm/waf/lc/ssl/modify`
+- **功能描述**: 向雷池 WAF 系统中添加 SSL 证书
+- **请求参数**:
+
+```json
+{
+  "crt": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----",
+  "key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+}
+```
+
+- **响应示例**: HTTP 200 OK
+
 ## WebSocket 实时日志 API
 
 ### 1. 日志推送连接
@@ -269,6 +451,188 @@ ACME证书管理功能通过`AcmeService`实现，主要功能包括：
     - 自动存储和管理证书有效期信息（notBefore/notAfter）
     - 提供证书有效期API查询接口
     - 在DNS解析信息中展示证书有效期
+
+## UniFi 管理 API
+
+### 1. 设置 UniFi API 连接信息
+
+- **接口路径**: `POST /hm/unifi/setting`
+- **功能描述**: 设置 UniFi API 连接信息（支持本地和远程两种授权方式）
+- **请求参数**:
+
+```json
+{
+  "baseUri": "https://unifi-host:8443",
+  "apiKey": "your-remote-api-key",
+  "localBaseUri": "https://unifi-device:8443",
+  "localApiKey": "your-local-api-key"
+}
+```
+
+- **参数说明**:
+    - `baseUri`: UniFi Host API 地址
+    - `apiKey`: 远程 API 密钥
+    - `localBaseUri`: 本地 API 地址
+    - `localApiKey`: 本地 API 密钥
+- **响应示例**: HTTP 200 OK
+
+### 2. 获取 UniFi 设置信息
+
+- **接口路径**: `GET /hm/unifi/info`
+- **功能描述**: 获取当前 UniFi 设置信息
+- **请求参数**: 无
+- **响应示例**:
+
+```json
+{
+  "baseUri": "https://unifi-host:8443",
+  "localBaseUri": "https://unifi-device:8443"
+}
+```
+
+### 3. 检查 UniFi 连接状态
+
+- **接口路径**: `GET /hm/unifi/status`
+- **功能描述**: 检查 UniFi 连接状态
+- **请求参数**: 无
+- **响应示例**: HTTP 200 OK
+
+### 4. 获取站点列表信息
+
+- **接口路径**: `GET /hm/unifi/sites/info`
+- **功能描述**: 获取 UniFi 站点列表信息
+- **请求参数**: 无
+- **响应示例**:
+
+```json
+{
+  "code": 0,
+  "data": {
+    "sites": [
+      {
+        "site_id": "default",
+        "name": "Default",
+        "desc": "Default site"
+      }
+    ]
+  }
+}
+```
+
+### 5. 获取站点客户端信息
+
+- **接口路径**: `GET /hm/unifi/sites/clients/info`
+- **功能描述**: 获取 UniFi 站点客户端信息
+- **请求参数**: 无
+- **响应示例**:
+
+```json
+{
+  "code": 0,
+  "data": {
+    "clients": [
+      {
+        "mac": "xx:xx:xx:xx:xx:xx",
+        "name": "Device Name",
+        "ip": "192.168.1.100",
+        "type": "wired",
+        "connected": true
+      }
+    ]
+  }
+}
+```
+
+## 雷池 WAF 管理 API
+
+### 1. 设置雷池 WAF API 令牌
+
+- **接口路径**: `POST /hm/waf/lc/token`
+- **功能描述**: 设置雷池 WAF API 访问令牌
+- **请求参数**:
+
+```json
+{
+  "token": "your-waf-api-token"
+}
+```
+
+- **响应示例**: HTTP 200 OK
+
+### 2. 获取雷池 WAF 设置信息
+
+- **接口路径**: `GET /hm/waf/lc/info`
+- **功能描述**: 获取当前雷池 WAF 设置信息
+- **请求参数**: 无
+- **响应示例**:
+
+```json
+{
+  "baseUrl": "https://waf.example.com",
+  "token": "your-waf-api-token"
+}
+```
+
+### 3. 设置雷池 WAF BaseUrl
+
+- **接口路径**: `POST /hm/waf/lc/baseUrl`
+- **功能描述**: 设置雷池 WAF 基础URL
+- **请求参数**:
+
+```json
+{
+  "baseUrl": "https://waf.example.com"
+}
+```
+
+- **响应示例**: HTTP 200 OK
+
+### 4. 获取雷池 WAF SSL 证书列表
+
+- **接口路径**: `GET /hm/waf/lc/ssl/list`
+- **功能描述**: 获取雷池 WAF 系统中所有 SSL 证书信息
+- **请求参数**: 无
+- **响应示例**:
+
+```json
+{
+  "err": null,
+  "msg": "",
+  "data": {
+    "nodes": [
+      {
+        "id": 8,
+        "domains": ["jump.summer.fan"],
+        "issuer": "R12",
+        "self_signature": false,
+        "trusted": false,
+        "revoked": false,
+        "expired": false,
+        "type": 2,
+        "acme_message": "",
+        "valid_before": "2026-04-27T13:12:23Z",
+        "related_sites": ["jump.summer.fan"]
+      }
+    ],
+    "total": 1
+  }
+}
+```
+
+### 5. 向雷池 WAF 添加 SSL 证书
+
+- **接口路径**: `POST /hm/waf/lc/ssl/modify`
+- **功能描述**: 向雷池 WAF 系统中添加 SSL 证书
+- **请求参数**:
+
+```json
+{
+  "crt": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----",
+  "key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+}
+```
+
+- **响应示例**: HTTP 200 OK
 
 ## 认证与授权
 
@@ -351,11 +715,55 @@ curl -X POST http://localhost:8080/hm/dns/url/modify \
   -H "Authorization: Bearer {JWT_TOKEN}" \
   -d '{"id": "URL记录ID", "url": "newdomain.com", "groupId": "分组ID"}'
 
-# 删除DNS URL
+// 删除DNS URL
 curl -X POST http://localhost:8080/hm/dns/url/delete \
   -H "Content-Type: text/plain" \
   -H "Authorization: Bearer {JWT_TOKEN}" \
   -d "URL记录ID"
+
+# 设置 UniFi API 连接信息
+curl -X POST http://localhost:8080/hm/unifi/setting \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {JWT_TOKEN}" \
+  -d '{"baseUri": "https://unifi-host:8443", "apiKey": "your-api-key", "localBaseUri": "https://unifi-device:8443", "localApiKey": "your-local-api-key"}'
+
+# 检查 UniFi 连接状态
+curl -X GET http://localhost:8080/hm/unifi/status \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+
+# 获取站点列表信息
+curl -X GET http://localhost:8080/hm/unifi/sites/info \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+
+# 获取站点客户端信息
+curl -X GET http://localhost:8080/hm/unifi/sites/clients/info \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+
+# 设置雷池 WAF API 令牌
+curl -X POST http://localhost:8080/hm/waf/lc/token \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {JWT_TOKEN}" \
+  -d '{"token": "your-waf-api-token"}'
+
+# 获取雷池 WAF 设置信息
+curl -X GET http://localhost:8080/hm/waf/lc/info \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+
+# 设置雷池 WAF BaseUrl
+curl -X POST http://localhost:8080/hm/waf/lc/baseUrl \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {JWT_TOKEN}" \
+  -d '{"baseUrl": "https://waf.example.com"}'
+
+# 获取雷池 WAF SSL 证书列表
+curl -X GET http://localhost:8080/hm/waf/lc/ssl/list \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+
+# 向雷池 WAF 添加 SSL 证书
+curl -X POST http://localhost:8080/hm/waf/lc/ssl/modify \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {JWT_TOKEN}" \
+  -d '{"crt": "-----BEGIN CERTIFICATE-----...", "key": "-----BEGIN PRIVATE KEY-----..."}'
 ```
 
 ### JavaScript/Fetch 示例
@@ -471,6 +879,48 @@ fetch('http://localhost:8080/hm/dns/modify_group', {
 
 ## 新增功能说明
 
+### V0.0.2-Alpha1 (2026年1月30日)
+
+#### 🛡️ 雷池 WAF 集成
+
+- **API 令牌管理**: 新增雷池 WAF API 令牌管理功能
+- **LeiChiWafController**: 雷池 WAF API 控制器，提供令牌设置接口
+- **LeiChiWafService**: 雷池 WAF 服务类，管理令牌存储和验证
+- **LeiChiSettingEntity**: 雷池 WAF 设置实体，存储 API 连接信息（baseUrl、token）
+- **LeiChiRepository**: 雷池设置存储库，提供数据持久化支持
+- **WAF 集成**: 支持与雷池 WAF 系统集成进行 Web 应用防火墙管理
+- **唯一性管理**: 系统自动管理设置的唯一性，保存新设置时会删除旧设置
+- **SSL证书管理**: 新增 SSL 证书列表查询功能 (`GET /hm/waf/lc/ssl/list`)，获取雷池 WAF 系统中所有 SSL 证书信息
+- **证书添加**: 新增向雷池 WAF 添加 SSL 证书功能 (`POST /hm/waf/lc/ssl/modify`)，支持证书文件和私钥内容提交
+- **BaseUrl设置**: 新增设置雷池 WAF 基础URL功能 (`POST /hm/waf/lc/baseUrl`)，支持自定义 API 服务器地址
+- **AOP切面**: 为需访问雷池 API 的方法增加统一切面 (`LeiChiWafAspect`)，提供日志记录和异常处理支持
+- **SSL服务**: 新增 `LeiChiWafSslService` 雷池 WAF SSL 证书服务类，封装 SSL 证书相关 API 调用功能
+
+#### 🌐 UniFi 网络管理增强
+
+- **网络管理页面**: 新增 network.vue 页面，展示 UniFi 站点和客户端信息
+- **站点客户端查询**: 新增站点客户端信息查询接口
+- **状态检查**: 新增 UniFi 连接状态检查接口
+- **客户端信息展示**: 在前端展示连接的客户端类型、设备名称、连接时间、IP 地址等信息
+
+#### 🔧 框架升级
+
+- **Spring Boot 4.0.2**: 升级至最新稳定版本，修复已知问题并提升性能
+- **JSON 处理库更新**: 改用 Spring Boot BOM 统一管理的标准 Jackson，移除 tools.jackson 依赖
+- **版本同步**: 与上游框架版本保持一致，获得最新的安全补丁和性能优化
+
+#### 🔌 网络服务预留
+
+- **NetworkService**: 新增网络服务模块，为后续功能扩展预留
+- **架构扩展**: 为未来的网络相关功能提供基础架构支持
+- **模块化设计**: 保持代码结构的模块化和可扩展性
+
+#### 📱 前端优化
+
+- **路由守卫优化**: 优化全局前置守卫逻辑，提升认证检查效率
+- **网络页面完善**: network.vue 页面完善，展示更丰富的 UniFi 网络信息
+- **用户体验**: 持续优化前端交互和用户体验
+
 ### V0.0.1-Beta2 (2026年1月10日)
 
 #### 架构升级
@@ -549,5 +999,5 @@ fetch('http://localhost:8080/hm/dns/modify_group', {
 
 ---
 
-**当前版本**: V0.0.1-Beta2 (2026年1月10日)
-**技术栈**: Spring Boot 4.0.1 + Java 25 + Vue 3 + Gradle 9.2.1
+**当前版本**: V0.0.2-Alpha1 (2026年1月30日)
+**技术栈**: Spring Boot 4.0.2 + Java 25 + Vue 3 + Gradle 9.2.1

@@ -40,5 +40,6 @@ build/
 /HMfront/hm-front/.yarn/install-state.gz
 /src/main/resources/application-dev.properties
 /certs/
-/gradle/
-/.gradle/
+/.iflow/
+/HMfront/hm-front/.yarn/releases/yarn-4.12.0.cjs
+/CLAUDE.md

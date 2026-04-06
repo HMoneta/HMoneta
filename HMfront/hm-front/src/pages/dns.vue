@@ -1,7 +1,10 @@
 <script setup>
 
 import {http} from "@/common/request.js";
-import {userNotificationStore} from '@/stores/app.js';
+import {userNotificationStore} from "@/stores/app.js";
+import PageHeader from "@/components/PageHeader.vue";
+import StatusBadge from "@/components/StatusBadge.vue";
+import EmptyState from "@/components/EmptyState.vue";
 
 let notificationStore = userNotificationStore();
 const loading = ref(false);
@@ -193,7 +196,6 @@ const getCertificateClass = (certInfo) => {
 }
 
 const getPopText = (certInfo) => {
-  console.log(certInfo)
   if (!certInfo.acmeCerInfo) return '申请证书'
   const acmeCerInfo = certInfo.acmeCerInfo
   if (acmeCerInfo.haveCer) {
@@ -222,6 +224,10 @@ watch(urls, (newVal) => {
 })
 
 
+// 证书Dialog开关
+const certDialogSwitch = ref(false)
+
+
 onMounted(() => {
   queryDnsProvider()
   queryAllDnsResolveInfo()
@@ -229,21 +235,29 @@ onMounted(() => {
 </script>
 
 <template>
-  <v-fab
-    icon="mdi-cloud-plus-outline"
-    location="bottom right"
-    size="large"
-    app
-    appear
-    class="mb-10"
-    @click="addDns"
-  ></v-fab>
+  <PageHeader
+    icon="mdi-dns"
+    title="DNS 管理"
+    subtitle="管理 DNS 解析组和域名证书"
+  >
+    <template #actions>
+      <v-fab
+        icon="mdi-cloud-plus-outline"
+        size="small"
+        app
+        appear
+        color="primary"
+        @click="addDns"
+      ></v-fab>
+    </template>
+  </PageHeader>
+
   <v-dialog
     v-model="dialog"
     width="auto"
     persistent
   >
-    <v-card>
+    <v-card class="create-dialog-card">
       <v-toolbar>
         <v-btn
           icon="mdi-close"
@@ -256,7 +270,7 @@ onMounted(() => {
         v-model="step"
         :items="['选择DNS服务商', '分组及服务商基本信息', '需解析的域名']">
         <template v-slot:item.1>
-          <v-card>
+          <v-card flat>
             <v-container>
               <v-row no-gutters>
                 <v-col
@@ -269,7 +283,8 @@ onMounted(() => {
                       v-model="selected"
                       label="选择DNS服务商"
                       :items="options"
-                      variant="solo-inverted"
+                      variant="outlined"
+                      prepend-inner-icon="mdi-server"
                     />
                   </v-sheet>
                 </v-col>
@@ -280,6 +295,8 @@ onMounted(() => {
                 >
                   <v-sheet
                     class="ma-2 pa-2 w-100"
+                    color="surface-variant"
+                    rounded="lg"
                   >
                     <v-list density="compact">
                       <v-list-subheader>DNS服务商简介</v-list-subheader>
@@ -307,7 +324,7 @@ onMounted(() => {
 
         <template v-slot:item.2>
           <v-card title="分组及服务商基本信息" flat>
-            <v-text-field v-model="dnsGroup.groupName" clearable label="分组名称" variant="outlined"/>
+            <v-text-field v-model="dnsGroup.groupName" clearable label="分组名称" variant="outlined" class="mb-4"/>
             <template v-for="(item, i) in dnsGroup.authenticateWay">
               <v-text-field v-model="dnsGroup.authenticateWayMap[item]" clearable :label="item"
                             variant="outlined"></v-text-field>
@@ -317,14 +334,14 @@ onMounted(() => {
 
         <template v-slot:item.3>
           <v-card title="需解析网址" flat>
-            <v-textarea v-model="urls" label="输入需解析的网址，每行一个网址" variant="outlined"></v-textarea>
+            <v-textarea v-model="urls" label="输入需解析的网址，每行一个网址" variant="outlined" rows="4"></v-textarea>
           </v-card>
         </template>
         <template v-slot:actions>
           <div class="stepper-actions">
             <v-btn
               v-if="step >= 1"
-              variant="plain"
+              variant="outlined"
               size="large"
               :ripple="true"
               class="stepper-btn stepper-btn-prev"
@@ -341,6 +358,7 @@ onMounted(() => {
               variant="elevated"
               :ripple="true"
               size="large"
+              color="primary"
               class="stepper-btn stepper-btn-next"
               @click="step++"
             >
@@ -366,15 +384,34 @@ onMounted(() => {
     </v-card>
 
   </v-dialog>
-  <v-sheet color="transparent">
-    <v-card class="mt-6" v-for="group in dnsGroups" :key="group.id">
-      <v-toolbar>
-        <v-toolbar-title>{{ group.groupName }}</v-toolbar-title>
+
+  <EmptyState
+    v-if="!dnsGroups || dnsGroups.length === 0"
+    icon="mdi-dns-outline"
+    title="暂无DNS解析组"
+    description="创建您的第一个DNS解析组来开始管理域名"
+  >
+    <v-btn color="primary" @click="addDns">
+      <v-icon start>mdi-plus</v-icon>
+      创建解析组
+    </v-btn>
+  </EmptyState>
+
+  <v-sheet color="transparent" v-if="dnsGroups && dnsGroups.length > 0">
+    <v-card
+      v-for="group in dnsGroups"
+      :key="group.id"
+      class="dns-group-card mb-4"
+    >
+      <v-toolbar class="dns-group-toolbar">
+        <v-toolbar-title class="font-weight-medium">{{ group.groupName }}</v-toolbar-title>
         <v-tooltip text="增加解析网址">
           <template v-slot:activator="{ props }">
             <v-btn
               v-bind="props"
               icon="mdi-plus-circle"
+              variant="text"
+              color="primary"
               @click="addurl(group)"
             ></v-btn>
           </template>
@@ -385,63 +422,46 @@ onMounted(() => {
             <v-btn
               v-bind="props"
               icon="mdi-pencil"
+              variant="text"
               @click="modifyGroupFuc(group)"
             ></v-btn>
           </template>
         </v-tooltip>
-
-
       </v-toolbar>
       <v-data-table-server
         :headers="headers"
         :items="group.urls"
         item-value="name"
+        class="dns-table"
       >
         <template v-slot:item.resolveStatus="{ item }">
-        <span v-if="item.resolveStatus === 0"><v-badge inline location="top right" color="error"
-                                                       content="解析失败"/></span>
-          <span v-else><v-badge inline location="top right" color="success" content="解析成功"/></span>
+          <StatusBadge
+            :status="item.resolveStatus === 0 ? 'error' : 'success'"
+            :label="item.resolveStatus === 0 ? '解析失败' : '解析成功'"
+          />
         </template>
         <template v-slot:item.action="{ item }">
-          <v-tooltip text="修改网址">
-            <template v-slot:activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon="mdi-pencil"
-                size="small"
-                variant="text"
-                @click="editItem(item)"
-              ></v-btn>
-            </template>
-          </v-tooltip>
-          <v-tooltip text="删除解析">
-            <template v-slot:activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon="mdi-delete"
-                size="small"
-                variant="text"
-                color="error"
-                @click="deleteItem(item)"
-              ></v-btn>
-            </template>
-          </v-tooltip>
-          <v-tooltip :text=getPopText(item)>
-            <template v-slot:activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon="mdi-certificate"
-                :class="getCertificateClass(item)"
-                size="small"
-                variant="text"
-                @click="applyCertificate(item)"
-              ></v-btn>
-            </template>
-          </v-tooltip>
-
-
+          <v-btn
+            icon="mdi-pencil"
+            size="small"
+            variant="text"
+            @click="editItem(item)"
+          />
+          <v-btn
+            icon="mdi-delete"
+            size="small"
+            variant="text"
+            color="error"
+            @click="deleteItem(item)"
+          />
+          <v-btn
+            icon="mdi-certificate"
+            :class="getCertificateClass(item)"
+            size="small"
+            variant="text"
+            @click="applyCertificate(item)"
+          />
         </template>
-
       </v-data-table-server>
     </v-card>
   </v-sheet>
@@ -518,6 +538,19 @@ onMounted(() => {
       </v-card-actions>
     </v-card>
   </v-dialog>
+  <!-- 证书操作dialog-->
+  <v-dialog
+    v-model="certDialogSwitch"
+    width="auto"
+    persistent
+  >
+    <v-card>
+
+
+    </v-card>
+
+  </v-dialog>
+
 
 </template>
 
@@ -528,23 +561,21 @@ onMounted(() => {
   align-items: center;
   width: 100%;
   padding: 20px;
-  background-color: #2a2a2a;
+  background-color: rgb(var(--v-theme-surface));
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .stepper-btn {
   min-width: 100px;
   height: 40px;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  letter-spacing: 0.5px;
   border-radius: 8px;
 }
 
 .stepper-btn-prev {
-  background-color: #2a2a2a !important;
-  color: white !important;
-  border: 1px solid #4a4a4a;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .stepper-btn-prev:disabled {
@@ -552,34 +583,51 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-.stepper-btn-prev:hover:not(:disabled) {
-  background-color: #3a3a3a !important;
-}
-
 .stepper-btn-next,
 .stepper-btn-submit {
-  margin-left: auto; /* 确保右侧按钮靠右 */
+  margin-left: auto;
 }
 
 .cert-unavailable {
-  color: grey;
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 
-.cert-expired {
-  color: red;
-}
-
-.cert-warn {
-  color: orange;
-}
-
+.cert-expired,
+.cert-warn,
 .cert-soon {
-  color: orange;
+  color: rgb(var(--v-theme-warning));
 }
 
 .cert-valid {
-  color: green;
+  color: rgb(var(--v-theme-success));
 }
 
+.create-dialog-card {
+  border-radius: 12px;
+  overflow: hidden;
+}
 
+.dns-group-card {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: box-shadow var(--transition-normal), border-color var(--transition-normal);
+}
+
+.dns-group-card:hover {
+  border-color: rgba(16, 185, 129, 0.2);
+  box-shadow: var(--shadow-glow);
+}
+
+.dns-group-toolbar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dns-table {
+  background: transparent !important;
+}
+
+.dns-table :deep(tr:hover) {
+  background-color: rgba(16, 185, 129, 0.04) !important;
+}
 </style>

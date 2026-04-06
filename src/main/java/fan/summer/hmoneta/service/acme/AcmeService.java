@@ -19,6 +19,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -156,6 +157,48 @@ public class AcmeService {
             }
         }
         return byteArrayOutputStream.toByteArray();
+    }
+
+
+    /**
+     * 根据域名获取本地存储的证书和私钥
+     * <p>
+     * 从本地的 certs/{domain} 目录读取证书文件 (.crt) 和私钥文件 (.key)，
+     * 返回包含证书内容和私钥的字符串数组。
+     * 用于向雷池 WAF 系统添加证书时获取证书内容。
+     * </p>
+     *
+     * @param domain 域名，用于定位证书文件目录
+     * @return 字符串数组，[0] 为证书内容 (crt)，[1] 为私钥内容 (key)
+     * @throws IOException 如果读取文件失败
+     */
+    public String[] getCertAndKeyByDomain(String domain) throws IOException {
+        String dirPath = "certs/" + domain;
+        Path basePath = Paths.get(dirPath);
+        if (!Files.exists(basePath)) {
+            log.warn("证书目录不存在: {}", dirPath);
+            throw new HMException(AcmeExceptionEnum.CER_ERROR_FOLDER_NOT_EXIST);
+        } else if (!Files.isDirectory(basePath)) {
+            log.error("路径存在但不是目录: {}", dirPath);
+            throw new HMException(AcmeExceptionEnum.CER_ERROR_FOLDER_NOT_EXIST);
+        }
+
+        // 检查目录中是否有证书文件
+        List<Path> certFiles = Files.walk(basePath)
+                .filter(Files::isRegularFile)
+                .toList();
+
+        if (certFiles.isEmpty()) {
+            log.warn("证书目录中没有文件: {}", dirPath);
+            throw new HMException(AcmeExceptionEnum.CER_NOT_EXIST_ERROR);
+        }
+        File crtFile = new File(dirPath, domain + ".crt");
+        File keyFile = new File(dirPath, domain + ".key");
+
+        String crt = Files.readString(crtFile.toPath());
+        String key = Files.readString(keyFile.toPath());
+
+        return new String[]{crt, key};
     }
 
     /**
