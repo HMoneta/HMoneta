@@ -3,6 +3,8 @@ package fan.summer.hmoneta.service.waf;
 import fan.summer.hmoneta.service.waf.dto.LeiChiWafApiResp;
 import fan.summer.hmoneta.service.waf.dto.site.LeiChiSiteListResp;
 import fan.summer.hmoneta.util.WebApiUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,8 @@ import reactor.core.publisher.Mono;
 @Service
 public class LeiChiWafSiteService {
 
+    private static final Logger log = LoggerFactory.getLogger(LeiChiWafSiteService.class);
+
     /**
      * 查询雷池 WAF 系统中所有站点信息
      * <p>
@@ -32,6 +36,8 @@ public class LeiChiWafSiteService {
      * @return 雷池 API 响应，包含站点列表信息（data）和总数（total）
      */
     protected LeiChiWafApiResp<LeiChiSiteListResp> listSite(WebApiUtil webApiUtil) {
+        log.info("[雷池WAF] 查询站点列表 - 请求路径: /open/site");
+
         Mono<LeiChiWafApiResp<LeiChiSiteListResp>> api = webApiUtil.api(
                 HttpMethod.GET,
                 "/open/site",
@@ -40,6 +46,9 @@ public class LeiChiWafSiteService {
                 new ParameterizedTypeReference<LeiChiWafApiResp<LeiChiSiteListResp>>() {
                 }
         );
-        return api.block();
+        LeiChiWafApiResp<LeiChiSiteListResp> result = api.block();
+
+        log.info("[雷池WAF] 查询站点列表完成 - 返回结果: {}", result);
+        return result;
     }
 }

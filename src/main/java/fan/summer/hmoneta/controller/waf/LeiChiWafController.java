@@ -66,6 +66,7 @@ public class LeiChiWafController {
     @PostMapping("/info")
     public ResponseEntity<Boolean> setLeiChiApiToken(@RequestBody LeiChiSettingDto leiChiSettingDto) {
         LeiChiSettingEntity leiChiSettingEntity = new LeiChiSettingEntity();
+        leiChiSettingEntity.setBaseUrl(leiChiSettingDto.getBaseUrl());
         leiChiSettingEntity.setToken(leiChiSettingDto.getToken());
         leiChiWafService.insertLeiChiApiToken(leiChiSettingEntity);
         return ResponseEntity.ok(true);

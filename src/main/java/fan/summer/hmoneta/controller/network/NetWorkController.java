@@ -37,7 +37,6 @@ public class NetWorkController {
      */
     @GetMapping("/devices")
     public List<DevicesInfoDto> listHomeNetDevices() {
-        System.out.printf("1");
         return networkService.listHomeNetDevices();
     }
 
