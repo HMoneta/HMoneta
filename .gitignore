@@ -43,3 +43,10 @@ build/
 /.iflow/
 /HMfront/hm-front/.yarn/releases/yarn-4.12.0.cjs
 /CLAUDE.md
+
+### macOS ###
+.DS_Store
+HMfront/.DS_Store
+
+### AI Tools ###
+.ai/
