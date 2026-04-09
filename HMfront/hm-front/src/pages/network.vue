@@ -30,7 +30,7 @@ const clientsHeaders = ref([
   {title: '类型', key: 'type', align: 'center'},
   {title: '设备名称', key: 'name', align: 'center'},
   {title: 'Ip地址', key: 'ipAddress', align: 'center'},
-  {title: 'WAF站点', key: 'title', align: 'center'},
+  {title: 'WAF站点', key: 'server_names', align: 'center'},
   {title: '服务状态', key: 'exposed', align: 'center'},
 ])
 
@@ -41,16 +41,16 @@ const connectionStatus = computed(() => {
 
 const exposedCount = computed(() => {
   // 对外服务：leiChiId 不为空且站点已启用
-  return devices.value.filter(d => d.leiChiId != null && d.isEnabled).length
+  return devices.value.filter(d => d.leiChiId != null && d.is_enabled).length
 })
 
 const notExposedCount = computed(() => {
   // 非对外服务：没有匹配站点或站点未启用
-  return devices.value.filter(d => d.leiChiId == null || !d.isEnabled).length
+  return devices.value.filter(d => d.leiChiId == null || !d.is_enabled).length
 })
 
 const getExposureBadge = (item) => {
-  if (item.leiChiId != null && item.isEnabled) {
+  if (item.leiChiId != null && item.is_enabled) {
     return {color: 'success', text: '对外服务', icon: 'mdi-web'}
   }
   return {color: 'warning', text: '非对外服务', icon: 'mdi-web-off'}

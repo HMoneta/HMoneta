@@ -7,6 +7,7 @@ import fan.summer.hmoneta.service.waf.dto.LeiChiWafApiResp;
 import fan.summer.hmoneta.service.waf.dto.site.LeiChiSiteListResp;
 import fan.summer.hmoneta.service.waf.dto.ssl.LeiChiSslInfoResp;
 import fan.summer.hmoneta.util.WebApiUtil;
+import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +41,16 @@ public class LeiChiWafService {
 
     /**
      * WebClient 是否已初始化标志
+     * -- GETTER --
+     *  检查 WebClient 是否已初始化
+     *  <p>
+     *  用于在调用 API 前检查连接状态，避免因未初始化导致的异常。
+     *  </p>
+     *
+     * @return true 表示已初始化可以调用 API，false 表示未配置或初始化失败
+
      */
+    @Getter
     private boolean isWebApiUtilInit = false;
 
     /**
@@ -114,9 +124,8 @@ public class LeiChiWafService {
         List<LeiChiSettingEntity> all = leiChiRepository.findAll();
         if (!all.isEmpty()) {
             leiChiRepository.deleteAll();
-        } else {
-            leiChiRepository.save(leiChiSettingEntity);
         }
+        leiChiRepository.save(leiChiSettingEntity);
     }
 
     /**
@@ -197,8 +206,10 @@ public class LeiChiWafService {
         }
         try {
             LeiChiSettingEntity leiChiSettingEntity = leiChiRepository.findAll().stream().findFirst().orElse(null);
-            if (leiChiSettingEntity == null) {
+            if (leiChiSettingEntity == null || leiChiSettingEntity.getBaseUrl() == null || leiChiSettingEntity.getBaseUrl().isBlank()
+                    || leiChiSettingEntity.getToken() == null || leiChiSettingEntity.getToken().isBlank()) {
                 this.isWebApiUtilInit = false;
+                log.error("雷池WAF初始化失败: baseUrl 或 token 未配置");
                 return;
             }
             this.webApiUtil = WebApiUtil.buildIgnoreSsl(leiChiSettingEntity.getBaseUrl(),
@@ -206,20 +217,9 @@ public class LeiChiWafService {
             this.isWebApiUtilInit = true;
         } catch (Exception e) {
             this.isWebApiUtilInit = false;
-            log.error("LeiChiApiUtil初始化异常:{}", e.getMessage());
+            log.error("雷池WAF初始化异常:{}", e.getMessage());
         }
     }
 
-    /**
-     * 检查 WebClient 是否已初始化
-     * <p>
-     * 用于在调用 API 前检查连接状态，避免因未初始化导致的异常。
-     * </p>
-     *
-     * @return true 表示已初始化可以调用 API，false 表示未配置或初始化失败
-     */
-    public boolean isWebApiUtilInit() {
-        return isWebApiUtilInit;
-    }
 }
 

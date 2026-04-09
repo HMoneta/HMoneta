@@ -143,12 +143,19 @@ public class NetworkService {
         if (upstream == null || upstream.isEmpty()) {
             return null;
         }
-        // 如果包含端口号，截取 IP 部分
-        int colonIndex = upstream.indexOf(':');
-        if (colonIndex > 0) {
-            return upstream.substring(0, colonIndex);
+        // 去除协议前缀 (http:// 或 https://)
+        String stripped = upstream;
+        if (stripped.startsWith("http://")) {
+            stripped = stripped.substring(7);
+        } else if (stripped.startsWith("https://")) {
+            stripped = stripped.substring(8);
         }
-        return upstream;
+        // 如果包含端口号，截取 IP 部分
+        int colonIndex = stripped.indexOf(':');
+        if (colonIndex > 0) {
+            return stripped.substring(0, colonIndex);
+        }
+        return stripped;
     }
 
     /**
