@@ -12,10 +12,30 @@
     <appender name="WEBSOCKET" class="fan.summer.hmoneta.websocket.log.WebSocketLogAppender">
     </appender>
 
+    <!-- 日志文件路径属性，支持通过环境变量LOG_PATH覆盖 -->
+    <property name="LOG_PATH" value="${LOG_PATH:-logs}"/>
+
+    <!-- 文件滚动输出 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/hmoneta.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/hmoneta.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <!-- 根日志级别 -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="WEBSOCKET"/>
+        <appender-ref ref="FILE"/>
     </root>
 
     <!-- 可以为特定包设置日志级别 -->
