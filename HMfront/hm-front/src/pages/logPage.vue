@@ -54,9 +54,37 @@ watch(data, (newData) => {
     try {
       const logMessage = JSON.parse(newData);
       if (logMessage.type !== 'pong') {
+        let level = 'info';
+        let levelColor = '#10b981';
+        let content = logMessage.message || '';
+
+        // System messages (connected, subscribed, etc.)
+        if (logMessage.type === 'connected' || logMessage.type === 'subscribed') {
+          level = 'system';
+          levelColor = '#10b981';
+          content = logMessage.message || logMessage.type;
+        }
+        // Error messages
+        else if (logMessage.level === 'ERROR' || logMessage.level === 'WARN') {
+          level = logMessage.level.toLowerCase();
+          levelColor = logMessage.level === 'ERROR' ? '#ef4444' : '#f59e0b';
+        }
+        // Log level from backend
+        else if (logMessage.level) {
+          level = logMessage.level.toLowerCase();
+          if (level === 'error') levelColor = '#ef4444';
+          else if (level === 'warn') levelColor = '#f59e0b';
+          else if (level === 'debug') levelColor = '#8b5cf6';
+        }
+
         logs.value.push({
-          time: new Date().toLocaleTimeString(),
-          content: JSON.stringify(logMessage)
+          time: new Date(logMessage.timestamp || Date.now()).toLocaleTimeString(),
+          level: level.toUpperCase(),
+          levelColor,
+          service: logMessage.service || '',
+          content: content,
+          thread: logMessage.thread || '',
+          raw: logMessage
         });
       }
       if (logs.value.length > 500) {
@@ -64,7 +92,17 @@ watch(data, (newData) => {
       }
       scrollToBottom();
     } catch (error) {
-      console.error('解析日志数据失败:', error);
+      // Fallback for non-JSON messages
+      logs.value.push({
+        time: new Date().toLocaleTimeString(),
+        level: 'INFO',
+        levelColor: '#10b981',
+        service: '',
+        content: newData,
+        thread: '',
+        raw: null
+      });
+      scrollToBottom();
     }
   }
 });
@@ -122,7 +160,10 @@ onMounted(() => {
       <template v-slot:default="{ item }">
         <div class="log-entry">
           <span class="log-time">{{ item.time }}</span>
+          <span v-if="item.service" class="log-service" :style="{ color: item.levelColor }">{{ item.service }}</span>
+          <span class="log-level" :style="{ color: item.levelColor }">[{{ item.level }}]</span>
           <span class="log-content">{{ item.content }}</span>
+          <span v-if="item.thread" class="log-thread">{{ item.thread }}</span>
         </div>
       </template>
     </v-virtual-scroll>
@@ -152,7 +193,8 @@ onMounted(() => {
   line-height: 1.6;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  align-items: flex-start;
 }
 
 .log-entry:hover {
@@ -163,11 +205,42 @@ onMounted(() => {
   color: #6b7280;
   flex-shrink: 0;
   font-size: 11px;
+  min-width: 70px;
+}
+
+.log-service {
+  font-weight: 600;
+  flex-shrink: 0;
+  min-width: 80px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.log-level {
+  font-weight: 700;
+  flex-shrink: 0;
+  min-width: 55px;
 }
 
 .log-content {
   color: #e5e5e5;
+  flex: 1;
   word-break: break-all;
   white-space: pre-wrap;
+}
+
+.log-thread {
+  color: #6b7280;
+  flex-shrink: 0;
+  font-size: 10px;
+  padding: 0 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
