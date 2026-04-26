@@ -114,6 +114,23 @@ public class AcmeService {
         return acmeTaskContext.getTaskId();
     }
 
+    /**
+     * 执行证书续期
+     * 复用 applyCertification 方法发起异步续期任务
+     *
+     * @param domain 需要续期的域名
+     * @param taskId 任务追踪ID
+     */
+    public void renewCertification(String domain, String taskId) {
+        log.info("[ACME-Renew:{}] 开始为域名 {} 执行证书续期", taskId, domain);
+        try {
+            applyCertification(domain);
+            log.info("[ACME-Renew:{}] 证书续期任务已提交，域名: {}", taskId, domain);
+        } catch (Exception e) {
+            log.error("[ACME-Renew:{}] 域名 {} 证书续期失败: {}", taskId, domain, e.getMessage());
+        }
+    }
+
     public AcmeCertificationEntity queryCertificationInfo(String domain) {
         return acmeCertificationRepository.findOneByDomain(domain);
     }
