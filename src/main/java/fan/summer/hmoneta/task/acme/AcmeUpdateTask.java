@@ -40,7 +40,7 @@ public class AcmeUpdateTask {
     }
 
     @Scheduled(fixedRate = 86400000)
-    protected void acmeUpdater() {
+    public void acmeUpdater() {
         String taskId = UUID.randomUUID().toString();
         Date today = new Date();
         List<AcmeCertificationEntity> allAcmeInfos = acmeCertificationRepository.findAll();
