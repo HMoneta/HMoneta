@@ -31,7 +31,6 @@ public class DnsUpdateTask {
         this.dnsResolveUrlRepository = dnsResolveUrlRepository;
     }
 
-    @Scheduled(fixedRate = 600000)
     public void updater() {
         log.info("===============开始DDNS定时任务===============");
         log.info("-开始查询公网IP");

@@ -3,7 +3,6 @@ package fan.summer.hmoneta.controller.acme;
 import fan.summer.hmoneta.controller.acme.dto.AcmeUserReq;
 import fan.summer.hmoneta.database.entity.acme.AcmeUserInfoEntity;
 import fan.summer.hmoneta.service.acme.AcmeService;
-import fan.summer.hmoneta.task.acme.AcmeUpdateTask;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 
 /**
- * 类的详细说明
+ * ACME 证书管理控制器
  *
  * @author phoebej
  * @version 1.00
@@ -23,11 +22,9 @@ import java.io.IOException;
 @RequestMapping("/hm/acme")
 public class AcmeController {
     private final AcmeService acmeService;
-    private final AcmeUpdateTask acmeUpdateTask;
 
-    public AcmeController(AcmeService acmeService, AcmeUpdateTask acmeUpdateTask) {
+    public AcmeController(AcmeService acmeService) {
         this.acmeService = acmeService;
-        this.acmeUpdateTask = acmeUpdateTask;
     }
 
     @PostMapping("/modify")
@@ -73,11 +70,5 @@ public class AcmeController {
     public ResponseEntity<String[]> getCertAndKeyByDomain(@PathVariable String domain) throws IOException {
         String[] certAndKeyByDomain = acmeService.getCertAndKeyByDomain(domain);
         return ResponseEntity.ok(certAndKeyByDomain);
-    }
-
-    @GetMapping("/check-renewal")
-    public ResponseEntity<String> checkCertificateRenewal() {
-        acmeUpdateTask.acmeUpdater();
-        return ResponseEntity.ok("Certificate renewal check triggered");
     }
 }

@@ -39,7 +39,6 @@ public class AcmeUpdateTask {
         this.acmeService = acmeService;
     }
 
-    @Scheduled(fixedRate = 86400000)
     public void acmeUpdater() {
         String taskId = UUID.randomUUID().toString();
         Date today = new Date();
