@@ -1,5 +1,6 @@
 package fan.summer.hmoneta.task.acme;
 
+import fan.summer.hmoneta.common.annotation.ScheduledTask;
 import fan.summer.hmoneta.database.entity.acme.AcmeCertificationEntity;
 import fan.summer.hmoneta.database.repository.acme.AcmeCertificationRepository;
 import fan.summer.hmoneta.service.acme.AcmeService;
@@ -26,6 +27,7 @@ import java.util.UUID;
 @Slf4j
 @Component
 @Profile("!dev")
+@ScheduledTask(name = "AcmeUpdateTask", defaultCron="", methodName = "acmeUpdater")
 public class AcmeUpdateTask {
 
     private final AcmeCertificationRepository acmeCertificationRepository;

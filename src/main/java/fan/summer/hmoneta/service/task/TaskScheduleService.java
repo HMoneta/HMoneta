@@ -1,10 +1,13 @@
 package fan.summer.hmoneta.service.task;
 
+import fan.summer.hmoneta.common.annotation.ScheduledTask;
 import fan.summer.hmoneta.controller.task.dto.TaskInfoResp;
 import fan.summer.hmoneta.database.entity.task.TaskConfigEntity;
 import fan.summer.hmoneta.database.repository.task.TaskConfigRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
@@ -27,8 +30,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Service
-@Lazy
-public class TaskScheduleService {
+public class TaskScheduleService implements ApplicationListener<ApplicationReadyEvent> {
 
     private final ApplicationContext applicationContext;
     private final TaskConfigRepository taskConfigRepository;
@@ -56,45 +58,32 @@ public class TaskScheduleService {
      * 初始化任务注册表
      * 根据任务名称查找对应的 bean 和方法
      */
-    @jakarta.annotation.PostConstruct
-    public void init() {
-        log.info("[TaskSchedule] 开始初始化定时任务...");
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        log.info("[TaskSchedule] 容器启动完成，开始扫描定时任务...");
 
-        // 定义已知任务配置：taskName -> (描述, 默认cron, 方法名)
-        Map<String, TaskDefinition> knownTasks = new HashMap<>();
-        knownTasks.put("dnsUpdateTask", new TaskDefinition("dnsUpdateTask", "DDNS 更新任务", "0 0/10 * * * ?", "updater"));
-        knownTasks.put("acmeUpdateTask", new TaskDefinition("acmeUpdateTask", "ACME 证书续期任务", "0 0 0 * * ?", "acmeUpdater"));
-
-        // 扫描所有 Bean
-        Map<String, Object> beans = applicationContext.getBeansWithAnnotation(org.springframework.stereotype.Component.class);
+        Map<String, Object> beans = applicationContext.getBeansWithAnnotation(ScheduledTask.class);
 
         for (Object bean : beans.values()) {
-            Class<?> beanClass = bean.getClass();
-            String beanName = beanClass.getSimpleName();
-            String taskName = beanName.substring(0, 1).toLowerCase() + beanName.substring(1);
+            ScheduledTask annotation = bean.getClass().getAnnotation(ScheduledTask.class);
+            // 此时容器已完全就绪，不会有循环依赖问题
+            TaskDefinition definition = new TaskDefinition(
+                    annotation.name(),
+                    annotation.description(),
+                    annotation.defaultCron(),
+                    annotation.methodName()
+            );
 
-            // 检查是否是已知任务
-            TaskDefinition definition = knownTasks.get(taskName);
-            if (definition == null) {
-                continue;
-            }
+            Method taskMethod = findTaskMethod(bean.getClass(), annotation.methodName());
+            if (taskMethod == null) continue;
 
-            // 查找指定名称的方法
-            Method taskMethod = findTaskMethod(beanClass, definition.methodName);
-            if (taskMethod == null) {
-                log.warn("[TaskSchedule] 任务 {} 的方法 {} 未找到", taskName, definition.methodName);
-                continue;
-            }
+            Optional<TaskConfigEntity> configOpt = taskConfigRepository.findById(annotation.name());
+            TaskConfigEntity config = configOpt.orElseGet(() -> createDefaultConfig(annotation.name()));
 
-            // 获取保存的配置
-            Optional<TaskConfigEntity> configOpt = taskConfigRepository.findById(taskName);
-            TaskConfigEntity config = configOpt.orElseGet(() -> createDefaultConfig(taskName));
-
-            // 注册任务
-            registerTask(taskName, definition, bean, taskMethod, config);
+            registerTask(annotation.name(), definition, bean, taskMethod, config);
         }
 
-        log.info("[TaskSchedule] 定时任务初始化完成，共注册 {} 个任务", taskRegistry.size());
+        log.info("[TaskSchedule] 共注册 {} 个任务", taskRegistry.size());
     }
 
     private Method findTaskMethod(Class<?> beanClass, String methodName) {
