@@ -50,3 +50,5 @@ HMfront/.DS_Store
 
 ### AI Tools ###
 .ai/
+/Jenkinsfile
+/logs/
