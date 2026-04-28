@@ -20,6 +20,13 @@ import java.util.Map;
 public class IpUtil {
     private static final Logger log = LoggerFactory.getLogger(IpUtil.class);
 
+    private static final String[] IP_SERVICES = {
+            "https://api.ipify.org",
+            "https://icanhazip.com",
+            "https://checkip.amazonaws.com",
+            "https://ip.sb",
+    };
+
     public static boolean isIpMatchMask(String ip, String maskCidr) {
         int ipInt = ipToInt(ip);
         int maskInt = maskToInt(maskCidr);
@@ -179,56 +186,50 @@ public class IpUtil {
 
     /**
      * 获取当前设备的公网IP地址。
-     * 通过访问https://api.ipify.org API来获取IP地址。
+     * 按顺序尝试多个服务提供商，确保稳定性。
      *
-     * @return 当前设备的公网IP地址字符串，如果无法获取则返回null。
+     * @return 当前设备的公网IP地址字符串，如果所有方式都失败则返回null。
      */
     public static String getPublicIp() {
         String ip = null;
-        HttpClient client = HttpClient.newHttpClient();
-        try {
-            log.info("-------------开始获取公网IP地址-------------");
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://ipinfo.io/ip"))
-                    .timeout(Duration.ofSeconds(60))
-                    .build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
 
-            if (response.statusCode() == 200) {
+        for (String ipService : IP_SERVICES) {
+            try {
+                log.info("-------------开始获取公网IP地址-------------");
+                log.info("尝试服务: {}", ipService);
 
-                ip = response.body();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(ipService))
+                        .timeout(Duration.ofSeconds(30))
+                        .build();
 
-                log.info("公网Ip为:{}", ip);
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            } else log.info("无法获取IP地址。HTTP状态码: {}", response.statusCode());
+                if (response.statusCode() == 200) {
+                    ip = response.body().trim();
 
-        } catch (IOException e) {
-
-            log.error("发生IO错误: {}", e.getMessage());
-
-            log.warn(String.valueOf(e.fillInStackTrace()));
-
-        } catch (InterruptedException e) {
-
-            log.error("发生中断错误: {}", e.getMessage());
-
-            Thread.currentThread().interrupt(); // 重新设置中断标志
-
-        } catch (Exception e) {
-
-            log.error("发生未预期的错误: {}", e.getMessage());
-
-        } finally {
-
-            // HttpClient doesn't need explicit closing in Java 17, but we'll log it for consistency
-
-            log.debug("HttpClient usage completed");
-
+                    // 简单验证返回的是否是有效 IP 地址
+                    if (ip != null && ip.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}")) {
+                        log.info("成功获取公网IP: {} (服务商: {})", ip, ipService);
+                        log.info("-------------完成获取公网IP地址-------------");
+                        return ip;
+                    } else {
+                        log.warn("服务 {} 返回了无效的IP格式: {}", ipService, ip);
+                    }
+                } else {
+                    log.warn("服务 {} 返回 HTTP状态码: {}", ipService, response.statusCode());
+                }
+            } catch (Exception e) {
+                log.warn("服务 {} 获取失败: {}", ipService, e.getMessage());
+            }
         }
 
+        log.error("所有公网IP获取服务均失败");
         log.info("-------------完成获取公网IP地址-------------");
 
-
-        return ip;
+        return null;
     }
 }

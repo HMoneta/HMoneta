@@ -34,39 +34,66 @@ public class DnsUpdateTask {
     }
 
     public void updater() {
-        log.info("===============开始DDNS定时任务===============");
-        log.info("-开始查询公网IP");
+        log.info("==============================================");
+        log.info("DDNS定时任务开始");
+
+        // 获取公网IP
+        log.info("[1/4] 正在获取公网IP地址...");
         String publicIp = IpUtil.getPublicIp();
-        log.info("-当前公网IP: {}", publicIp);
 
-        try {
-            List<DnsResolveUrlEntity> allUrls = dnsResolveUrlRepository.findAll();
-            if (allUrls.isEmpty()) {
-                log.info("-未找到任何DNS解析记录");
-                return;
-            }
-
-            log.info("-共 {} 条DNS解析记录，开始检查IP变化", allUrls.size());
-
-            for (DnsResolveUrlEntity dnsResolveUrl : allUrls) {
-                String storedIp = dnsResolveUrl.getIpAddress();
-                log.info("-检查域名: {}, 当前解析IP: {}, 公网IP: {}",
-                        dnsResolveUrl.getUrl(), storedIp, publicIp);
-
-                if (publicIp.equals(storedIp)) {
-                    log.info("-域名 {} IP未变化，跳过更新", dnsResolveUrl.getUrl());
-                    continue;
-                }
-
-                log.info("-域名 {} IP发生变化，开始更新DNS解析", dnsResolveUrl.getUrl());
-                dnsService.updateDnsResolveUrl(dnsResolveUrl, publicIp);
-                log.info("-域名 {} DNS更新完成", dnsResolveUrl.getUrl());
-            }
-
-        } catch (Exception e) {
-            log.error("DDNS任务执行异常: {}", e.getMessage(), e);
-        } finally {
-            log.info("===============结束DDNS定时任务===============");
+        if (publicIp == null || publicIp.isEmpty()) {
+            log.error("[!] 获取公网IP失败，跳过本次DDNS任务");
+            return;
         }
+        log.info("[OK] 当前公网IP: {}", publicIp);
+
+        // 查询DNS记录
+        log.info("[2/4] 正在查询DNS解析记录...");
+        List<DnsResolveUrlEntity> allUrls = dnsResolveUrlRepository.findAll();
+
+        if (allUrls.isEmpty()) {
+            log.info("[OK] 未找到任何DNS解析记录，任务结束");
+            return;
+        }
+        log.info("[OK] 共找到 {} 条DNS解析记录", allUrls.size());
+
+        // 检查并更新IP
+        log.info("[3/4] 开始检查IP变化...");
+        int updatedCount = 0;
+        int skippedCount = 0;
+
+        for (DnsResolveUrlEntity dnsResolveUrl : allUrls) {
+            String storedIp = dnsResolveUrl.getIpAddress();
+            String domain = dnsResolveUrl.getUrl();
+
+            log.info("  └── 检查域名: {}", domain);
+            log.info("      ├─ 数据库存储IP: {}", storedIp != null ? storedIp : "(空)");
+            log.info("      ├─ 当前公网IP: {}", publicIp);
+            log.info("      └─ 对比结果: ", storedIp);
+
+            boolean ipChanged = (storedIp == null) || (!publicIp.equals(storedIp));
+
+            if (!ipChanged) {
+                log.info("      └── [跳过] IP未变化，无需更新");
+                skippedCount++;
+                continue;
+            }
+
+            log.info("      └── [更新] IP已变化，开始更新DNS解析...");
+            try {
+                dnsService.updateDnsResolveUrl(dnsResolveUrl, publicIp);
+                log.info("      └── [成功] 域名 {} DNS更新完成", domain);
+                updatedCount++;
+            } catch (Exception e) {
+                log.error("      └── [失败] 域名 {} 更新异常: {}", domain, e.getMessage());
+            }
+        }
+
+        // 任务总结
+        log.info("[4/4] DDNS任务执行完成");
+        log.info("  ├── 总记录数: {}", allUrls.size());
+        log.info("  ├── 更新数量: {}", updatedCount);
+        log.info("  └── 跳过数量: {}", skippedCount);
+        log.info("==============================================");
     }
 }
