@@ -80,6 +80,7 @@ const menuItems = ref([
   { title: '网络', route: '/network', icon: 'mdi-network' },
   { title: '插件管理', route: '/pluginManager', icon: 'mdi-puzzle-outline' },
   { title: '日志', route: '/logPage', icon: 'mdi-file-document-outline' },
+  { title: '定时任务', route: '/taskManager', icon: 'mdi-clock-outline' },
   { title: '设置', route: '/setting', icon: 'mdi-cog-outline' },
 ]);
 
