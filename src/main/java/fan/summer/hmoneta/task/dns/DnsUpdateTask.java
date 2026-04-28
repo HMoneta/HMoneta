@@ -1,23 +1,23 @@
 package fan.summer.hmoneta.task.dns;
 
+import fan.summer.hmoneta.common.annotation.ScheduledTask;
 import fan.summer.hmoneta.database.repository.dns.DnsResolveUrlRepository;
 import fan.summer.hmoneta.service.dns.DnsService;
 import fan.summer.hmoneta.util.IpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * 类的详细说明
+ * DDNS 更新定时任务
  *
  * @author phoebej
  * @version 1.00
  * @Date 2025/11/1
  */
 @Component
-@Profile("!dev")
+@ScheduledTask(name = "dnsUpdateTask", description = "DDNS 更新任务", defaultCron = "0 0/10 * * * ?", methodName = "updater")
 public class DnsUpdateTask {
 
     private static final Logger log = LoggerFactory.getLogger(DnsUpdateTask.class);

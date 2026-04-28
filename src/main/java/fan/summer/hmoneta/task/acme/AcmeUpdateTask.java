@@ -7,7 +7,6 @@ import fan.summer.hmoneta.service.acme.AcmeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.ZoneId;
@@ -26,8 +25,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Component
-@Profile("!dev")
-@ScheduledTask(name = "AcmeUpdateTask", defaultCron="", methodName = "acmeUpdater")
+@ScheduledTask(name = "acmeUpdateTask", description = "ACME 证书续期任务", defaultCron = "0 0 0 * * ?", methodName = "acmeUpdater")
 public class AcmeUpdateTask {
 
     private final AcmeCertificationRepository acmeCertificationRepository;
