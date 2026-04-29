@@ -8,8 +8,8 @@
         </encoder>
     </appender>
 
-    <!-- WebSocket输出 -->
-    <appender name="WEBSOCKET" class="fan.summer.hmoneta.websocket.log.WebSocketLogAppender">
+    <!-- 数据库日志输出 -->
+    <appender name="DB_LOG" class="fan.summer.hmoneta.websocket.log.DbLogAppender">
     </appender>
 
     <!-- 日志文件路径属性，支持通过环境变量LOG_PATH覆盖 -->
@@ -34,14 +34,13 @@
     <!-- 根日志级别 -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="WEBSOCKET"/>
         <appender-ref ref="FILE"/>
+        <appender-ref ref="DB_LOG"/>
     </root>
 
     <!-- 可以为特定包设置日志级别 -->
     <logger name="com.example.service" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="WEBSOCKET"/>
     </logger>
 
 </configuration>
