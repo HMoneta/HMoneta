@@ -2,7 +2,7 @@
 
 > 致力于每人都可以玩转家庭服务
 
-> 2026年农历新年快乐！Happy Chinese New Year！
+> Happy Birthday To My Sunshine 
 
 [GitHub](https://github.com/HMoneta/HMoneta)
 [Get Started](README)

@@ -42,7 +42,6 @@ build/
 /certs/
 /.iflow/
 /HMfront/hm-front/.yarn/releases/yarn-4.12.0.cjs
-/CLAUDE.md
 
 ### macOS ###
 .DS_Store
