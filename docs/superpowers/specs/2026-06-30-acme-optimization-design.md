@@ -74,7 +74,8 @@ acme_certification
 ├─ domains        (替换原 domain 字段 → SAN 列表)
 │   ├─ @JdbcTypeCode(SqlTypes.JSON) List<String>, PG 存 jsonb
 │   └─ 含泛域名 *.example.com; 第一个为 CN/主域名
-├─ provider_name  (保留, DNS 供应商, 续期用)
+├─ dns_group_id   (新增, 续期时据此回查 DNS 组获取插件凭据; 替代仅靠 provider_name)
+├─ provider_name  (保留, DNS 供应商显示名)
 ├─ cert_public_key / cert_private_key  (保留, 证书本身的 KeyPair)
 ├─ cert_apply_time / not_before / not_after  (保留)
 └─ (删除原 domain 字段)
@@ -197,7 +198,7 @@ acme_global_config
 | GET | `/hm/acme/cas` | 列出可选 CA（含 staging⚠️标记） | 新增 |
 | GET | `/hm/acme/list` | 列出所有证书（certId/name/domains/ca/有效期/临期标志） | 新增 |
 | GET | `/hm/acme/{certId}` | 单证书详情 | 新增 |
-| POST | `/hm/acme/apply` | body `{name, caCode, domains[], providerName?}` → `{taskId}` | 扩展原 `/apply` |
+| POST | `/hm/acme/apply` | body `{name, caCode, domains[], dnsGroupId}` → `{taskId}` | 扩展原 `/apply` |
 | POST | `/hm/acme/renew/{certId}` | 手动续期 → `{taskId}` | 新增 |
 | DELETE | `/hm/acme/{certId}` | 删 DB 记录 + `certs/{certId}/`（仅本地） | 新增 |
 | GET | `/hm/acme/task/{taskId}` | 查任务状态（PENDING/RUNNING/SUCCESS/FAILED + logInfo + domains） | 新增 |
