@@ -51,3 +51,6 @@ HMfront/.DS_Store
 .ai/
 /Jenkinsfile
 /logs/
+
+### Docker deploy runtime data ###
+/data/

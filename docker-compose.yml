@@ -1,0 +1,49 @@
+# HMoneta 一键部署：
+#   docker compose up -d --build
+# 首次启动会自动创建 admin 用户，随机密码见: docker compose logs hmoneta | grep Password
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hmoneta
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hmoneta}
+      POSTGRES_DB: hmoneta
+      TZ: Asia/Shanghai
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hmoneta -d hmoneta"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  hmoneta:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      TZ: Asia/Shanghai
+      DB_URL: jdbc:postgresql://postgres:5432/hmoneta
+      DB_USERNAME: hmoneta
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-hmoneta}
+      # 默认使用 Let's Encrypt staging（dev 配置），申请正式证书时取消注释：
+      # ACME_URL: https://acme-v02.api.letsencrypt.org/directory
+    volumes:
+      # ACME 证书 / PF4J 插件 / 滚动日志 持久化到宿主机
+      - ./data/certs:/app/certs
+      - ./data/plugins:/app/plugins
+      - ./data/logs:/app/logs
+
+  web:
+    build: ./HMfront/hm-front
+    restart: unless-stopped
+    depends_on:
+      - hmoneta
+    ports:
+      - "${WEB_PORT:-80}:80"
+
+volumes:
+  pgdata:

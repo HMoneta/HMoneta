@@ -25,6 +25,7 @@ HMoneta 是一个基于 Spring Boot 的 DNS 动态更新服务（DDNS），主�
 ### 核心功能
 - 🔄 **动态 DNS 更新**: 定时检测公网 IP 变化，自动更新 DNS 解析记录
 - 🔌 **多 DNS 提供商支持**: 通过插件系统支持不同的 DNS 服务提供商
+- ☁️ **Cloudflare DDNS 与 CDN**: 内置 Cloudflare 提供商，API Token 认证，支持根域名/多级子域名，可开启 CDN 代理（橙云）隐藏源站 IP
 - 🌐 **Web 管理界面**: 提供前端界面进行 DNS 配置和管理
 - 📡 **WebSocket 实时日志**: 通过 WebSocket 实现实时日志推送
 - 🔐 **用户认证**: JWT 基础的用户认证系统，自动创建默认管理员账户
@@ -68,6 +69,34 @@ HMoneta 是一个基于 Spring Boot 的 DNS 动态更新服务（DDNS），主�
 - **代码检查**: ESLint 9.35.0
 
 ## 快速开始
+
+### Docker 一键部署（推荐）
+
+只需安装 Docker，一条命令拉起完整栈（PostgreSQL + 后端 + 前端 nginx）：
+
+```bash
+git clone https://github.com/HMoneta/HMoneta.git
+cd HMoneta
+docker compose up -d --build
+```
+
+启动完成后：
+
+- **管理界面**: http://localhost （nginx 托管前端并反代后端 API / SSE 日志流）
+- **默认账户**: `admin`，随机初始密码在启动日志中查看：
+  ```bash
+  docker compose logs hmoneta | grep "系统用户信息"
+  ```
+
+说明：
+
+- 数据库数据存于 named volume `pgdata`；ACME 证书、插件、滚动日志持久化在 `./data/` 目录
+- 自定义端口/密码：`WEB_PORT=8081 POSTGRES_PASSWORD=xxx docker compose up -d`
+- 默认 ACME 地址为 Let's Encrypt staging（dev 配置），申请正式证书时在 `docker-compose.yml` 中取消 `ACME_URL` 注释
+- 常用操作：`docker compose logs -f hmoneta`（日志）、`docker compose down`（停止，数据保留）、`docker compose down -v`（连数据一起删除）
+
+<details>
+<summary>本地开发环境（不使用 Docker）</summary>
 
 ### 环境要求
 
@@ -160,6 +189,8 @@ yarn lint
 - **API文档**: [docs/api-documentation.md](docs/api-documentation.md)
 
 默认管理员账户将在首次启动时自动创建。
+
+</details>
 
 ## 项目结构
 
@@ -259,6 +290,13 @@ HMoneta/
 ## 插件系统
 
 HMoneta支持通过插件扩展DNS提供商功能。插件需要实现`HmDnsProviderPlugin`接口。
+
+除外部插件外，HMoneta 还内置了 **Cloudflare** 提供商（`service/dns/cloudflare/`），随应用启动自动注册：
+
+1. 在 Cloudflare 控制台创建 API Token（建议仅授予 `Zone - DNS - Edit` 权限）
+2. 前端「DNS 管理」页创建解析组时选择 `Cloudflare` 服务商，填入 `apiToken`
+3. 通过「开启CDN」开关决定 A 记录是否以 Cloudflare 代理（橙云）方式解析；ACME DNS-01 校验使用的 TXT 记录始终不代理
+4. 修改分组凭据（如切换 CDN 开关、轮换 Token）后会立即重新同步，无需等待定时任务
 
 更多详细信息请参考：
 - [插件开发文档](docs/architecture.md#222-插件管理模块)

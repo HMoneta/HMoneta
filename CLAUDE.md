@@ -84,6 +84,8 @@ HMoneta/
 - Plugin interface: `fan.summer.HmDnsProviderPlugin` (published to Maven Local as `fan.summer:HMoneta-Official-Plugin-Api:0.1.0`)
 - Plugins directory: `plugins/`
 - `PluginService` manages plugin lifecycle (load, unload, start, stop)
+- Built-in providers: Spring beans implementing `HmDnsProviderPlugin` (e.g. Cloudflare in `service/dns/cloudflare/`) are registered alongside PF4J plugins; external plugin with same name takes precedence
+- Cloudflare built-in provider: credentials `apiToken` + `proxied` (CDN/orange-cloud proxy flag); TXT records are never proxied; zone lookup walks up domain labels and caches for 10 min
 
 ### Scheduled Tasks
 
@@ -157,6 +159,13 @@ HMoneta/
 **Backend**: `application.yml` with Spring Profiles
 - `application-dev.yml` - Dev profile (disables DnsUpdateTask)
 - Environment variables: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `jwt.secret`, `jwt.expiration`
+- Dev datasource placeholders have defaults pointing at local Docker PostgreSQL (docker run postgres:16-alpine on :5432, user/pass/db `hmoneta`)
+
+## Docker Deployment
+
+- Root `Dockerfile`: multi-stage build (maven:3.9-eclipse-temurin-25 → eclipse-temurin:25-jre); `docker/libs/` carries the non-public `HMoneta-Official-Plugin-Api` artifact into the image's local Maven repo
+- `HMfront/hm-front/Dockerfile`: node:22-alpine build (`--mode docker` → relative `/hm` API base in `.env.docker`) → nginx:alpine serving SPA, proxying `/hm` (and unbuffered SSE `/hm/logs/stream`) to the `hmoneta` service
+- `docker-compose.yml`: postgres (healthcheck) + hmoneta + web; `docker compose up -d --build`; web on `${WEB_PORT:-80}`; data persisted in `pgdata` volume and `./data/{certs,plugins,logs}`
 
 **Frontend**: Environment files in `HMfront/hm-front/`:
 - `.env.development`: `VITE_API_BASE_URL=http://localhost:8080/hm`, `VITE_WS_BASE_URL=ws://localhost:8080/ws/logs`
