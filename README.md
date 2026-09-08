@@ -77,6 +77,7 @@ HMoneta 是一个基于 Spring Boot 的 DNS 动态更新服务（DDNS），主�
 ```bash
 git clone https://github.com/HMoneta/HMoneta.git
 cd HMoneta
+mkdir -p data/certs data/plugins data/logs   # 以普通用户创建（容器内以 uid 1000 运行）
 docker compose up -d --build
 ```
 
@@ -91,6 +92,8 @@ docker compose up -d --build
 说明：
 
 - 数据库数据存于 named volume `pgdata`；ACME 证书、插件、滚动日志持久化在 `./data/` 目录
+- 后端容器以非 root 用户（uid 1000）运行。若 `./data` 被自动创建为 root 属主导致启动失败
+  （日志报 `Permission denied`），执行 `sudo chown -R 1000:1000 data` 后重启即可
 - 自定义端口/密码：`WEB_PORT=8081 POSTGRES_PASSWORD=xxx docker compose up -d`
 - 默认 ACME 地址为 Let's Encrypt staging（dev 配置），申请正式证书时在 `docker-compose.yml` 中取消 `ACME_URL` 注释
 - 常用操作：`docker compose logs -f hmoneta`（日志）、`docker compose down`（停止，数据保留）、`docker compose down -v`（连数据一起删除）

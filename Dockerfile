@@ -24,12 +24,13 @@ WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends tzdata \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --system --home /app appuser \
     && mkdir -p /app/plugins /app/certs /app/logs \
-    && chown -R appuser:appuser /app
+    && chown -R 1000:1000 /app
 
-COPY --from=build --chown=appuser:appuser /build/target/*.jar /app/app.jar
+COPY --from=build --chown=1000:1000 /build/target/*.jar /app/app.jar
 
-USER appuser
+# 复用基础镜像自带的 ubuntu 用户（uid/gid=1000，与 Linux 普通用户默认 uid 一致），
+# 宿主机以同 uid 创建 ./data 挂载目录即可直接写入
+USER ubuntu
 EXPOSE 8080
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]

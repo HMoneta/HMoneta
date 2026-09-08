@@ -1,6 +1,8 @@
 # HMoneta 一键部署：
+#   mkdir -p data/certs data/plugins data/logs   # 以普通用户(uid 1000)创建，容器内同 uid 可写
 #   docker compose up -d --build
 # 首次启动会自动创建 admin 用户，随机密码见: docker compose logs hmoneta | grep Password
+# 若 ./data 由 root 自动创建导致后端启动失败（Permission denied），执行: sudo chown -R 1000:1000 data
 services:
   postgres:
     image: postgres:16-alpine
