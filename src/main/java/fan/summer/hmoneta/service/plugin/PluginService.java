@@ -15,6 +15,7 @@ import org.pf4j.spring.SpringPluginManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -22,6 +23,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -36,13 +38,16 @@ public class PluginService {
     private static final Logger logger = LoggerFactory.getLogger(PluginService.class);
 
     private final SpringPluginManager pluginManager;
-    private final Map<String, HmDnsProviderPlugin> dnsProviders = new ConcurrentHashMap<>();
     private final DnsProviderRepository dnsProviderRepository;
+    private final ObjectProvider<HmDnsProviderPlugin> builtInDnsProviders;
+    private final Map<String, HmDnsProviderPlugin> dnsProviders = new ConcurrentHashMap<>();
 
     @Autowired
-    public PluginService(SpringPluginManager pluginManager, DnsProviderRepository dnsProviderRepository) {
+    public PluginService(SpringPluginManager pluginManager, DnsProviderRepository dnsProviderRepository,
+                         ObjectProvider<HmDnsProviderPlugin> builtInDnsProviders) {
         this.pluginManager = pluginManager;
         this.dnsProviderRepository = dnsProviderRepository;
+        this.builtInDnsProviders = builtInDnsProviders;
     }
 
     @PostConstruct
@@ -120,14 +125,24 @@ public class PluginService {
 
     /**
      * 初始化 DNS 提供者
+     * <p>
+     * 提供商来源有两类，同名时外部 PF4J 插件优先覆盖内置实现：
+     * <ul>
+     *   <li>内置提供商 —— Spring 容器中实现 {@link HmDnsProviderPlugin} 的 Bean（如 Cloudflare）</li>
+     *   <li>外部插件 —— plugins 目录中通过 PF4J 加载的扩展</li>
+     * </ul>
+     * </p>
      */
     private void initDnsProviders() {
         logger.info("步骤3: 开始初始化 DNS 插件...");
 
         // 获取所有 HmDnsProviderPlugin 扩展
-        List<HmDnsProviderPlugin> providers = pluginManager.getExtensions(HmDnsProviderPlugin.class);
+        List<HmDnsProviderPlugin> providers = new ArrayList<>(builtInDnsProviders.stream().toList());
+        List<HmDnsProviderPlugin> pluginProviders = pluginManager.getExtensions(HmDnsProviderPlugin.class);
+        providers.addAll(pluginProviders);
 
-        logger.info("发现 {} 个 DNS Provider 插件", providers.size());
+        logger.info("发现 {} 个 DNS Provider（内置 {} 个，插件 {} 个）",
+                providers.size(), providers.size() - pluginProviders.size(), pluginProviders.size());
 
         int successCount = 0;
         if(!providers.isEmpty()) {
@@ -157,6 +172,13 @@ public class PluginService {
                         byProviderName.setUpdatedAt(LocalDateTime.now());
                         dnsProviderRepository.save(byProviderName);
                         logger.info("{}插件,完成更新数据库记录", provider.providerName());
+                    }
+                    // authenticateWay 每次启动都刷新，保证新增凭据键（如 proxied）能下发到既有记录
+                    if(!provider.authenticateWay().equals(byProviderName.getAuthenticateWay())) {
+                        byProviderName.setAuthenticateWay(provider.authenticateWay());
+                        byProviderName.setUpdatedAt(LocalDateTime.now());
+                        dnsProviderRepository.save(byProviderName);
+                        logger.info("{}插件,凭据键已刷新: {}", provider.providerName(), provider.authenticateWay());
                     }
                 }
                 dnsProviders.put(provider.providerName(), provider);
@@ -216,6 +238,6 @@ public class PluginService {
 
     private String getPluginVersion(Object extension) {
         PluginWrapper plugin = pluginManager.whichPlugin(extension.getClass());
-        return plugin != null ? plugin.getDescriptor().getVersion() : "unknown";
+        return plugin != null ? plugin.getDescriptor().getVersion() : "built-in";
     }
 }

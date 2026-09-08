@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -86,7 +87,8 @@ class DnsServiceTest {
 //        entity.setAuthId(UUID.randomUUID().toString());
 //        entity.setAuthKey(UUID.randomUUID().toString());
         entity.setProviderId(UUID.randomUUID().toString());
-        entity.setUrls(Arrays.asList("dfkafafefa_dfaefef.sfafae"));
+        entity.setAuthenticateWayMap(Map.of("apiToken", "test-token"));
+        entity.setUrls(Arrays.asList("http://test.example.com"));
         HMException ex = assertThrows(HMException.class,
                 () -> dnsService.insertDnsResolveGroup(entity));
         assertEquals(DnsExceptionEnum.DNS_GROUP_URL_WITH_PROTOCOL_ERROR.getMessage(),

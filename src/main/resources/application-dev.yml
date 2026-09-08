@@ -6,9 +6,12 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: org.postgresql.Driver
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    # 默认指向本地 Docker 测试库（docker run -d --name hmoneta-pg -e POSTGRES_USER=hmoneta
+    # -e POSTGRES_PASSWORD=hmoneta -e POSTGRES_DB=hmoneta -p 5432:5432 postgres:16-alpine），
+    # 环境变量可覆盖
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/hmoneta}
+    username: ${DB_USERNAME:hmoneta}
+    password: ${DB_PASSWORD:hmoneta}
 
     hikari:
       pool-name: HomeLabPostgreSQLPool        # 设置连接池名称

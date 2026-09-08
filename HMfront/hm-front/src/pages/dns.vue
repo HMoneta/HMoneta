@@ -204,6 +204,9 @@ const getPopText = (certInfo) => {
   }
 }
 
+// 分组是否开启CDN（Cloudflare 代理/橙云）
+const isCdnEnabled = (group) => group.authenticateWayMap?.proxied === 'true'
+
 
 // 监听DNS服务商选择变化
 watch(selected, (newVal) => {
@@ -213,6 +216,10 @@ watch(selected, (newVal) => {
     dnsGroup.providerId = _provider.id
     dnsGroup.authenticateWay = _provider.authenticateWay
     providerDesc.value.push({text: "服务商插件更新时间：" + _provider.updatedAt, icon: "mdi-clock"})
+    // CDN 开关默认开启（仅支持该键的服务商，如 Cloudflare，会出现此开关）
+    if (dnsGroup.authenticateWay?.includes('proxied') && dnsGroup.authenticateWayMap.proxied === undefined) {
+      dnsGroup.authenticateWayMap.proxied = 'true'
+    }
   }
 
 })
@@ -326,7 +333,15 @@ onMounted(() => {
           <v-card title="分组及服务商基本信息" flat>
             <v-text-field v-model="dnsGroup.groupName" clearable label="分组名称" variant="outlined" class="mb-4"/>
             <template v-for="(item, i) in dnsGroup.authenticateWay">
-              <v-text-field v-model="dnsGroup.authenticateWayMap[item]" clearable :label="item"
+              <v-switch
+                v-if="item === 'proxied'"
+                :model-value="dnsGroup.authenticateWayMap[item] === 'true'"
+                label="开启CDN（Cloudflare 代理，隐藏源站IP）"
+                color="orange"
+                inset
+                @update:model-value="val => dnsGroup.authenticateWayMap[item] = String(val)"
+              />
+              <v-text-field v-else v-model="dnsGroup.authenticateWayMap[item]" clearable :label="item"
                             variant="outlined"></v-text-field>
             </template>
           </v-card>
@@ -405,6 +420,20 @@ onMounted(() => {
     >
       <v-toolbar class="dns-group-toolbar">
         <v-toolbar-title class="font-weight-medium">{{ group.groupName }}</v-toolbar-title>
+        <v-tooltip v-if="isCdnEnabled(group)" text="Cloudflare CDN（代理）已开启：域名经 Cloudflare 代理解析，源站IP被隐藏">
+          <template v-slot:activator="{ props }">
+            <v-chip
+              v-bind="props"
+              size="small"
+              color="orange"
+              variant="tonal"
+              class="mr-2"
+              prepend-icon="mdi-cloud-outline"
+            >
+              CDN
+            </v-chip>
+          </template>
+        </v-tooltip>
         <v-tooltip text="增加解析网址">
           <template v-slot:activator="{ props }">
             <v-btn
@@ -482,7 +511,16 @@ onMounted(() => {
       <v-text-field class="pt-4 pl-2 pr-2" v-model="modifyGroup.groupName" clearable label="分组名称"
                     variant="outlined"/>
       <template v-for="(item, i) in modifyGroup.authenticateWay">
-        <v-text-field class="pl-2 pr-2" v-model="modifyGroup.authenticateWayMap[item]" clearable :label="item"
+        <v-switch
+          v-if="item === 'proxied'"
+          class="pl-2 pr-2"
+          :model-value="modifyGroup.authenticateWayMap[item] === 'true'"
+          label="开启CDN（Cloudflare 代理，隐藏源站IP）"
+          color="orange"
+          inset
+          @update:model-value="val => modifyGroup.authenticateWayMap[item] = String(val)"
+        />
+        <v-text-field v-else class="pl-2 pr-2" v-model="modifyGroup.authenticateWayMap[item]" clearable :label="item"
                       variant="outlined"/>
       </template>
       <v-card-actions>

@@ -183,9 +183,39 @@ public class DnsService {
                 dnsResolveGroupEntity.setGroupName(req.getGroupName());
                 dnsResolveGroupEntity.setCredentials(req.getAuthenticateWayMap());
                 dnsResolveGroupRepository.save(dnsResolveGroupEntity);
+                // 凭据可能影响记录的非值属性（如 Cloudflare CDN 代理开关），变更后立即强制重新同步
+                resyncGroupUrls(id);
             });
         }
 
+    }
+
+    /**
+     * 强制重新同步分组下的所有解析记录
+     * <p>
+     * 清空本地缓存的 IP 后立即触发一次更新，使新凭据（Token 轮换、CDN 开关等）
+     * 无需等待下一次定时任务即可生效。单条失败不影响其余记录。
+     * </p>
+     *
+     * @param groupId 分组 ID
+     */
+    private void resyncGroupUrls(String groupId) {
+        List<DnsResolveUrlEntity> urls = dnsResolveUrlRepository.findAllByGroupId(groupId);
+        if (ObjectUtil.isEmpty(urls)) {
+            return;
+        }
+        String publicIp = IpUtil.getPublicIp();
+        if (ObjectUtil.isEmpty(publicIp)) {
+            log.warn("[DNS] 获取公网 IP 失败，分组 {} 将由下次定时任务重新同步", groupId);
+            return;
+        }
+        for (DnsResolveUrlEntity url : urls) {
+            try {
+                updateDnsResolveUrl(url, publicIp);
+            } catch (Exception e) {
+                log.error("[DNS] 分组 {} 下 {} 重新同步失败: {}", groupId, url.getUrl(), e.getMessage());
+            }
+        }
     }
 
     /**
@@ -291,6 +321,9 @@ public class DnsService {
             HmDnsProviderPlugin dnsProvider = pluginService.getDnsProvider(dnsProviderEntity.getProviderName());
             dnsProvider.authenticate(dnsResolveGroupEntity.getCredentials());
             Map<String, String> urlMap = WebUtil.extractParts(dnsResolveUrlEntity.getUrl());
+            if (urlMap == null) {
+                throw new HMException(DnsExceptionEnum.DNS_GROUP_URL_FORMAT_ERROR);
+            }
             boolean b = dnsProvider.deleteDns(urlMap.get("host"), urlMap.get("sub"), "A");
             if (b) {
                 dnsResolveUrlRepository.deleteById(urlId);
@@ -353,7 +386,8 @@ public class DnsService {
      * 2. 初始化插件 - 加载并认证 DNS 提供商插件
      * 3. 解析域名 - 分离主域名和子域名 (如 www.example.com -> host:example.com, sub:www)
      * 4. 检查现有记录 - 查询 DNS 提供商当前生效的记录
-     * 5. 对比/创建记录 - 如果记录存在且IP不同则更新，否则直接创建
+     * 5. 同步/创建记录 - 记录不存在则创建；存在则执行幂等更新（即使 IP 一致，
+     *    以便记录的非值属性（如 Cloudflare CDN 代理开关）随配置生效）
      * 6. 保存结果 - 更新数据库中的解析状态和IP
      * </p>
      *
@@ -365,6 +399,17 @@ public class DnsService {
         log.info("[DNS] 开始更新 DNS 解析");
         log.info("[DNS]   ├── 域名: {}", entity.getUrl());
         log.info("[DNS]   └── 目标IP: {}", ip);
+
+        // Step 0: 解析域名结构 - 分离主域名和子域名
+        Map<String, String> urlMap = WebUtil.extractParts(entity.getUrl());
+        if (urlMap == null) {
+            log.error("[DNS] [!] 域名格式错误: {}", entity.getUrl());
+            entity.setResolveStatus(0);
+            entity.setUpdateTime(LocalDateTime.now());
+            entity.setIpAddress("");
+            dnsResolveUrlRepository.save(entity);
+            return;
+        }
 
         // Step 1: 根据分组ID获取分组信息
         String groupId = entity.getGroupId();
@@ -388,7 +433,6 @@ public class DnsService {
 
                 // Step 4: 解析域名结构 - 分离主域名和子域名
                 log.info("[DNS] ══ 步骤3: 解析域名结构");
-                Map<String, String> urlMap = WebUtil.extractParts(entity.getUrl());
                 String host = urlMap.get("host");   // 主域名, 如 example.com
                 String sub = urlMap.get("sub");     // 子域名, 如 www 或 null(根域名)
                 log.info("[DNS]   ├── 主域名(host): {}", host);
@@ -401,30 +445,24 @@ public class DnsService {
                 boolean dnsResult = false;
 
                 if (ObjectUtil.isNotEmpty(dnsRecordInfos)) {
-                    // 存在现有记录, 需要对比IP决定是否更新
+                    // 存在现有记录。即使 IP 一致也执行一次更新（modifyDns 为幂等 upsert），
+                    // 使记录的非值属性（如 Cloudflare CDN 代理开关）能随配置变更生效
                     log.info("[DNS]   └── [发现] 存在 {} 条DNS记录", dnsRecordInfos.size());
-                    log.info("[DNS] ══ 步骤5: 对比现有记录与目标IP");
+                    log.info("[DNS] ══ 步骤5: 同步现有记录");
 
                     for (int i = 0; i < dnsRecordInfos.size(); i++) {
                         DNSRecordInfo record = dnsRecordInfos.get(i);
                         String currentValue = record.getvalue();
-                        boolean needsUpdate = !ip.equals(currentValue);
+                        boolean ipChanged = !ip.equals(currentValue);
 
                         log.info("[DNS]   ├── 记录#{}/{}:", i + 1, dnsRecordInfos.size());
                         log.info("[DNS]   │   ├── 当前IP: {}", currentValue);
                         log.info("[DNS]   │   ├── 目标IP: {}", ip);
-                        log.info("[DNS]   │   └── 状态: {}", needsUpdate ? "需更新" : "无需更新");
+                        log.info("[DNS]   │   └── 状态: {}", ipChanged ? "IP变更，需更新" : "IP一致，仍执行同步");
 
-                        if (needsUpdate) {
-                            // IP不一致, 调用DNS提供商更新记录
-                            log.info("[DNS]   │   └── 执行DNS更新...");
-                            dnsResult = dnsProviderPlugin.modifyDns(host, sub, "A", ip);
-                            log.info("[DNS]   │   └── 更新结果: {}", dnsResult ? "成功" : "失败");
-                        } else {
-                            // IP一致, 跳过更新
-                            log.info("[DNS]   │   └── [跳过] IP一致，跳过更新");
-                            dnsResult = true;
-                        }
+                        log.info("[DNS]   │   └── 执行DNS同步...");
+                        dnsResult = dnsProviderPlugin.modifyDns(host, sub, "A", ip);
+                        log.info("[DNS]   │   └── 同步结果: {}", dnsResult ? "成功" : "失败");
                     }
                 } else {
                     // 无现有记录, 直接创建新记录
